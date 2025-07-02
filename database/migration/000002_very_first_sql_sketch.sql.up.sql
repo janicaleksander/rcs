@@ -1,0 +1,50 @@
+CREATE TABLE IF NOT EXISTS person
+(
+    id UUID PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS unit
+(
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS device
+(
+    id INT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS squad
+(
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    root_id UUID REFERENCES unit(id) NULL
+);
+
+CREATE TABLE IF NOT EXISTS roles
+(
+    role VARCHAR(255) PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS person_to_unit
+(
+    person_id UUID REFERENCES person(id) NOT NULL,
+    unit_id UUID REFERENCES unit(id) NOT NULL,
+    role VARCHAR(255) REFERENCES roles(role) NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS device_to_unit
+(
+    unit_id UUID REFERENCES unit(id) NOT NULL,
+    device_id INT REFERENCES device(id) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS unit_to_squad
+(
+    squad_id UUID REFERENCES squad(id) NOT NULL,
+    unit_id UUID REFERENCES  unit(id) NOT NULL
+);

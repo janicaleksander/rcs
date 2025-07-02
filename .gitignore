@@ -26,7 +26,8 @@ go.work.sum
 
 # env file
 .env
-
+TODO
+Taskfile.yml
 # Editor/IDE
 .idea/
 .vscode/
