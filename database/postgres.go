@@ -1,20 +1,22 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"github.com/janicaleksander/bcs/User"
 	"strconv"
 )
 
-// TODO
-// 1. Migrations
-// 2. Come up with basic base structure
-// 3.Create basic method in interface
-// 4. Implement interface
+// Postgres: Struct that is made to implement Storage interface
+// It holds connection to make queries to PostgreSQL.
 type Postgres struct {
-	Conn *sql.DB
+	conn *sql.DB
 }
 
+// NewPostgres: Constructor of  new PostgreSQL. It can be modified by optional options.
+// It has to be filled up with database credentials to perform connection.
+// If no errors occur it returns pointer to struct
 func NewPostgres(
 	dbname string,
 	user string,
@@ -36,30 +38,52 @@ func NewPostgres(
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
-	return &Postgres{Conn: db}, nil
+	return &Postgres{conn: db}, nil
 }
 
-// Timeout in seconds
+// WithConnectionTimeout:Database setting: Timeout in seconds
 func WithConnectionTimeout(timeout uint) func(*string) {
 	return func(s *string) {
 		*s += "connect_timeout=" + strconv.Itoa(int(timeout)) + "&"
 	}
 }
 
+// WithSSLCert: Database setting
 func WithSSLCert(cert string) func(*string) {
 	return func(s *string) {
 		*s += "sslcert=" + cert + "&"
 	}
 }
 
+// WithSSLKey: Database setting
 func WithSSLKey(key string) func(*string) {
 	return func(s *string) {
 		*s += "sslkey=" + key + "&"
 	}
 }
 
+// WithSSLRootCert: Database setting
 func WithSSLRootCert(sslRootCert string) func(*string) {
 	return func(s *string) {
 		*s += "sslrootcert=" + sslRootCert + "&"
 	}
+}
+
+// InsertUser: Implemented function from Storage interface.
+// It takes context (e.g. to set max time for query), User and if no errors insert into database.
+// If error occurs -> return it, and rollback transaction.
+func (p *Postgres) InsertUser(ctx context.Context, user User.User) error {
+	tx, err := p.conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, "INSERT INTO users (id,email,password) VALUES ($1,$2,$3)", user.ID, user.Email, user.Password)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
 }

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS person
+CREATE TABLE IF NOT EXISTS users
 (
     id UUID PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -24,16 +24,17 @@ CREATE TABLE IF NOT EXISTS squad
     root_id UUID REFERENCES unit(id) NULL
 );
 
-CREATE TABLE IF NOT EXISTS roles
+CREATE TABLE IF NOT EXISTS role
 (
-    role VARCHAR(255) PRIMARY KEY
+    role VARCHAR(255) PRIMARY KEY,
+    rule_level INT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS person_to_unit
+CREATE TABLE IF NOT EXISTS user_to_unit
 (
-    person_id UUID REFERENCES person(id) NOT NULL,
+    user_id UUID REFERENCES users(id) NOT NULL,
     unit_id UUID REFERENCES unit(id) NOT NULL,
-    role VARCHAR(255) REFERENCES roles(role) NOT NULL
+    role VARCHAR(255) REFERENCES role(role) NOT NULL
 );
 
 

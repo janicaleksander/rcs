@@ -1,3 +1,15 @@
 package db
 
-type Storage interface{}
+import (
+	"context"
+	"github.com/janicaleksander/bcs/User"
+)
+
+// Storage: Database interface that is used in application
+type Storage interface {
+	InsertUser(context.Context, User.User) error
+	//InsertUnit(context.Context, Unit.Unit) error
+	//InsertRole(context.Context, string) error
+	//InsertDevice(context.Context, Device.Device) error
+	//InsertSquad(context.Context, Squad.Squad) error
+}
