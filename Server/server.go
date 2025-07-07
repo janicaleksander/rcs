@@ -1,8 +1,10 @@
 package Server
 
 import (
+	"fmt"
 	"github.com/anthdm/hollywood/actor"
 	db "github.com/janicaleksander/bcs/Database"
+	"github.com/janicaleksander/bcs/Proto"
 	"log/slog"
 	"net"
 	"os"
@@ -37,8 +39,11 @@ func (s *Server) Receive(ctx *actor.Context) {
 		Logger.Info("Server has started")
 	case actor.Stopped:
 		Logger.Info("Server has stopped")
+	case *Proto.Req:
+		Logger.Info("Server got unknown message", msg, reflect.TypeOf(msg).String())
 
 	default:
+		fmt.Println(msg)
 		Logger.Warn("Server got unknown message", reflect.TypeOf(msg).String())
 		_ = msg
 

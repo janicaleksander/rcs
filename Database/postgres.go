@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/janicaleksander/bcs/User"
+	_ "github.com/lib/pq"
 	"strconv"
 )
 
