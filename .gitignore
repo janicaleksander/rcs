@@ -32,4 +32,5 @@ Taskfile.yml
 .idea/
 .vscode/
 *.xml
-
+.air.toml
+tmp

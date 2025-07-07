@@ -1,11 +1,11 @@
-package db
+package Database
 
 import (
 	"context"
 	"github.com/janicaleksander/bcs/User"
 )
 
-// Storage: Database interface that is used in application
+// Database interface that is used in application
 type Storage interface {
 	InsertUser(context.Context, User.User) error
 	//InsertUnit(context.Context, Unit.Unit) error

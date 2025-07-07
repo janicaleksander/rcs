@@ -1,4 +1,4 @@
-package db
+package Database
 
 import (
 	"context"
@@ -8,14 +8,14 @@ import (
 	"strconv"
 )
 
-// Postgres: Struct that is made to implement Storage interface
+// Struct that is made to implement Storage interface
 // It holds connection to make queries to PostgreSQL.
 type Postgres struct {
 	conn *sql.DB
 }
 
-// NewPostgres: Constructor of  new PostgreSQL. It can be modified by optional options.
-// It has to be filled up with database credentials to perform connection.
+// Constructor of  new PostgreSQL. It can be modified by optional options.
+// It has to be filled up with Database credentials to perform connection.
 // If no errors occur it returns pointer to struct
 func NewPostgres(
 	dbname string,
@@ -41,36 +41,36 @@ func NewPostgres(
 	return &Postgres{conn: db}, nil
 }
 
-// WithConnectionTimeout:Database setting: Timeout in seconds
+// Database setting: Timeout in seconds
 func WithConnectionTimeout(timeout uint) func(*string) {
 	return func(s *string) {
 		*s += "connect_timeout=" + strconv.Itoa(int(timeout)) + "&"
 	}
 }
 
-// WithSSLCert: Database setting
+// Database setting
 func WithSSLCert(cert string) func(*string) {
 	return func(s *string) {
 		*s += "sslcert=" + cert + "&"
 	}
 }
 
-// WithSSLKey: Database setting
+// Database setting
 func WithSSLKey(key string) func(*string) {
 	return func(s *string) {
 		*s += "sslkey=" + key + "&"
 	}
 }
 
-// WithSSLRootCert: Database setting
+// Database setting
 func WithSSLRootCert(sslRootCert string) func(*string) {
 	return func(s *string) {
 		*s += "sslrootcert=" + sslRootCert + "&"
 	}
 }
 
-// InsertUser: Implemented function from Storage interface.
-// It takes context (e.g. to set max time for query), User and if no errors insert into database.
+// Implemented function from Storage interface.
+// It takes context (e.g. to set max time for query), User and if no errors insert into Database.
 // If error occurs -> return it, and rollback transaction.
 func (p *Postgres) InsertUser(ctx context.Context, user User.User) error {
 	tx, err := p.conn.BeginTx(ctx, nil)
