@@ -24,13 +24,13 @@ func NewUnit(ext *External.External) actor.Producer {
 func (u *Unit) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		Server.Logger.Info("Server has initialized")
+		Server.Logger.Info("Unit has initialized")
 	case actor.Started:
-		Server.Logger.Info("Server has started")
+		Server.Logger.Info("Unit has started")
 	case actor.Stopped:
-		Server.Logger.Info("Server has stopped")
+		Server.Logger.Info("Unit has stopped")
 	default:
-		Server.Logger.Warn("Server got unknown message", "Type", reflect.TypeOf(msg).String())
+		Server.Logger.Warn("Unit got unknown message", "Type", reflect.TypeOf(msg).String())
 		_ = msg
 
 	}
