@@ -1,6 +1,7 @@
 package Server
 
 import (
+	"context"
 	"fmt"
 	"github.com/anthdm/hollywood/actor"
 	db "github.com/janicaleksander/bcs/Database"
@@ -39,13 +40,31 @@ func (s *Server) Receive(ctx *actor.Context) {
 		Logger.Info("Server has started")
 	case actor.Stopped:
 		Logger.Info("Server has stopped")
-	case *Proto.Req:
-		Logger.Info("Server got unknown message", msg, reflect.TypeOf(msg).String())
-
+	//case to update connection map in connection/disconnection
+	case *Proto.IsServerRunning:
+		ctx.Respond(&Proto.Running{})
+	case *Proto.NeedServerConfiguration:
+		ctx.Respond(&Proto.NeededServerConfiguration{
+			ServerPID: &Proto.PID{
+				Address: ctx.PID().GetAddress(),
+				Id:      ctx.PID().GetID(),
+			}})
+	case *Proto.LoginUser:
+		s.loginUser(ctx, msg.Email, msg.Password)
+		ctx.Respond(&Proto.Accept{})
 	default:
-		fmt.Println(msg)
 		Logger.Warn("Server got unknown message", reflect.TypeOf(msg).String())
-		_ = msg
 
+	}
+}
+
+func (s *Server) loginUser(ctx *actor.Context, email, password string) {
+	c := context.Background()
+	err := s.storage.LoginUser(c, email, password)
+	fmt.Println(err)
+	if err != nil {
+		ctx.Respond(&Proto.Deny{})
+	} else {
+		ctx.Respond(&Proto.Accept{})
 	}
 }
