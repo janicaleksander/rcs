@@ -3,48 +3,40 @@ package main
 import (
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
-	"github.com/janicaleksander/bcs/External"
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/Server"
-	"github.com/janicaleksander/bcs/Unit"
+	cli_app "github.com/janicaleksander/bcs/cli-app"
 	"github.com/joho/godotenv"
 	"os"
 	"time"
 )
 
 func main() {
-	//some way to first configure a unit e.g. created by general,
-	//and we need to configure this unit in our based-station-server
 	err := godotenv.Load()
 	if err != nil {
 		Server.Logger.Error("Error loading .env file")
 		return
 	}
-
-	ext := External.NewExternal() //maybe its inside unit?
-	unit := Unit.NewUnit(ext)
-
-	r := remote.New(os.Getenv("UNIT_ADDR"), remote.NewConfig())
+	app := cli_app.NewCLI()
+	r := remote.New(os.Getenv("APP_ADDR"), remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
 		Server.Logger.Error(err.Error())
 		return
 	}
 
-	Server.Logger.Info("Unit is running on:", "Addr:", os.Getenv("UNIT_ADDR"))
+	Server.Logger.Info("App is running on:", "Addr:", os.Getenv("APP_ADDR"))
 	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
 
 	//ping server
 	resp := e.Request(serverPID, &Proto.IsServerRunning{}, time.Second)
 	_, err = resp.Result()
 	if err != nil {
-		Server.Logger.Error("Servers is not running", "err: ", err)
+		Server.Logger.Error("Server is not running", "err: ", err)
 		return
 	}
 
-	// TODO: prob in the future when server is down
-	// still we can operate on unit
-	unitPID := e.Spawn(unit, "unit") //this is creating new unit
+	appPID := e.Spawn(app, "app") //this is creating new app
 
 	resp = e.Request(serverPID, &Proto.NeedServerConfiguration{}, time.Second)
 	val, err := resp.Result()
@@ -53,7 +45,10 @@ func main() {
 		return
 	}
 	//neededServerConfiguration
-	e.Send(unitPID, val)
+	e.Send(appPID, val)
+
+	//run APP/CLI
+	e.Send(appPID, &Proto.StartCLI{})
 
 	select {}
 }
