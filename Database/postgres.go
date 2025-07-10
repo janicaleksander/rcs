@@ -3,6 +3,7 @@ package Database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/janicaleksander/bcs/User"
 	_ "github.com/lib/pq"
@@ -86,5 +87,24 @@ func (p *Postgres) InsertUser(ctx context.Context, user User.User) error {
 	if err = tx.Commit(); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (p *Postgres) LoginUser(ctx context.Context, email, password string) error {
+	rows, err := p.conn.Query(`SELECT password FROM users WHERE (email=$1)`, email)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	var hashPwd string
+	for rows.Next() {
+		if err = rows.Scan(&hashPwd); err != nil {
+			return err
+		}
+	}
+	if !User.DecryptHash(password, hashPwd) {
+		return errors.New("valid credentials")
+	}
+	fmt.Println("przeszlo")
 	return nil
 }

@@ -2,13 +2,15 @@ CREATE TABLE IF NOT EXISTS users
 (
     id UUID PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    rule_level INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS unit
 (
     id UUID PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE
+    name VARCHAR(255) NOT NULL UNIQUE,
+    is_configured BOOLEAN NOT NULL 
 );
 
 CREATE TABLE IF NOT EXISTS device
@@ -26,15 +28,14 @@ CREATE TABLE IF NOT EXISTS squad
 
 CREATE TABLE IF NOT EXISTS role
 (
-    role VARCHAR(255) PRIMARY KEY,
-    rule_level INT NOT NULL
+    role VARCHAR(255) PRIMARY KEY
 );
 
 CREATE TABLE IF NOT EXISTS user_to_unit
 (
     user_id UUID REFERENCES users(id) NOT NULL,
     unit_id UUID REFERENCES unit(id) NOT NULL,
-    role VARCHAR(255) REFERENCES role(role) NOT NULL
+    unit_role VARCHAR(255) REFERENCES role(role) NOT NULL
 );
 
 

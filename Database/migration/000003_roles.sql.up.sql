@@ -1,2 +1,2 @@
-INSERT INTO role (role,rule_level) VALUES ('Private',5);
-INSERT INTO role (role,rule_level) VALUES ('Commander',0)
+INSERT INTO role (role) VALUES ('Private');
+INSERT INTO role (role) VALUES ('Commander')

@@ -8,6 +8,7 @@ import (
 // Database interface that is used in application
 type Storage interface {
 	InsertUser(context.Context, User.User) error
+	LoginUser(ctx context.Context, email, password string) error
 	//InsertUnit(context.Context, Unit.Unit) error
 	//InsertRole(context.Context, string) error
 	//InsertDevice(context.Context, Device.Device) error
