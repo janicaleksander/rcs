@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package types;
+
+option go_package = "github.com/janicaleksander/bcs/Proto";
+
+
+//TODO: use these instead of golang struct
+message Role {
+  string name =1;
+  uint64 ruleLevel=2;
+}
+
+message User{
+  string id = 1;
+  string email =2;
+  string password =3;
+  optional Role role= 4;
+}
+
+message PID{
+  string address=1;
+  string id =2;
+}
+
+
+//REQUEST MESSAGES
+message IsServerRunning {}
+message Running{}
+message StartCLI{}
+message NeedServerConfiguration{}
+message Accept{}
+message Deny{}
+
+message NeededServerConfiguration {
+  PID serverPID = 1;
+}
+
+message CreatUser{
+  User user = 1;
+}
+
+message LoginUser{
+  string email = 1;
+  string password = 2;
+}
+
+message AssignUserToUnit{
+  //User
+  //Unit
+  //Role
+}
+
