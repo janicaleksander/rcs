@@ -51,7 +51,6 @@ func (s *Server) Receive(ctx *actor.Context) {
 			}})
 	case *Proto.LoginUser:
 		s.loginUser(ctx, msg.Email, msg.Password)
-		ctx.Respond(&Proto.Accept{})
 	default:
 		Logger.Warn("Server got unknown message", reflect.TypeOf(msg).String())
 
