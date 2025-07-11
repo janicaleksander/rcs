@@ -34,3 +34,5 @@ Taskfile.yml
 *.xml
 .air.toml
 tmp
+m_app.exe
+Unit/conf

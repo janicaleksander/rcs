@@ -1,4 +1,4 @@
-package cli_app
+package application
 
 import (
 	"github.com/anthdm/hollywood/actor"
@@ -7,28 +7,24 @@ import (
 	"reflect"
 )
 
-type Application struct{}
-
-type CLI struct {
-	serverPID   *actor.PID
-	application Application
-}
-
-func NewCLI() actor.Producer {
+func NewApp() actor.Producer {
 	return func() actor.Receiver {
-		return &CLI{}
+		return &App{}
 	}
 }
 
-func (c *CLI) Receive(ctx *actor.Context) {
+type App struct {
+	//actors
+	serverPID *actor.PID
+}
+
+func (a *App) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Started:
 	case actor.Initialized:
 	case actor.Stopped:
 	case *Proto.NeededServerConfiguration:
-		c.serverPID = actor.NewPID(msg.ServerPID.Address, msg.ServerPID.Id)
-	case *Proto.StartCLI:
-
+		a.serverPID = actor.NewPID(msg.ServerPID.Address, msg.ServerPID.Id)
 	default:
 		Server.Logger.Warn("Server got unknown message", "Type:", reflect.TypeOf(msg).String())
 	}

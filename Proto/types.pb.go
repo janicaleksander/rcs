@@ -267,26 +267,26 @@ func (*Running) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{4}
 }
 
-type StartCLI struct {
+type StartApp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *StartCLI) Reset() {
-	*x = StartCLI{}
+func (x *StartApp) Reset() {
+	*x = StartApp{}
 	mi := &file_types_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *StartCLI) String() string {
+func (x *StartApp) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*StartCLI) ProtoMessage() {}
+func (*StartApp) ProtoMessage() {}
 
-func (x *StartCLI) ProtoReflect() protoreflect.Message {
+func (x *StartApp) ProtoReflect() protoreflect.Message {
 	mi := &file_types_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -298,8 +298,8 @@ func (x *StartCLI) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use StartCLI.ProtoReflect.Descriptor instead.
-func (*StartCLI) Descriptor() ([]byte, []int) {
+// Deprecated: Use StartApp.ProtoReflect.Descriptor instead.
+func (*StartApp) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{5}
 }
 
@@ -607,7 +607,7 @@ const file_types_proto_rawDesc = "" +
 	"\x0fIsServerRunning\"\t\n" +
 	"\aRunning\"\n" +
 	"\n" +
-	"\bStartCLI\"\x19\n" +
+	"\bStartApp\"\x19\n" +
 	"\x17NeedServerConfiguration\"\b\n" +
 	"\x06Accept\"\x06\n" +
 	"\x04Deny\"E\n" +
@@ -640,7 +640,7 @@ var file_types_proto_goTypes = []any{
 	(*PID)(nil),                       // 2: types.PID
 	(*IsServerRunning)(nil),           // 3: types.IsServerRunning
 	(*Running)(nil),                   // 4: types.Running
-	(*StartCLI)(nil),                  // 5: types.StartCLI
+	(*StartApp)(nil),                  // 5: types.StartApp
 	(*NeedServerConfiguration)(nil),   // 6: types.NeedServerConfiguration
 	(*Accept)(nil),                    // 7: types.Accept
 	(*Deny)(nil),                      // 8: types.Deny

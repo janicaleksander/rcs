@@ -27,7 +27,7 @@ message PID{
 //REQUEST MESSAGES
 message IsServerRunning {}
 message Running{}
-message StartCLI{}
+message StartApp{}
 message NeedServerConfiguration{}
 message Accept{}
 message Deny{}

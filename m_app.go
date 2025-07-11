@@ -5,7 +5,7 @@ import (
 	"github.com/anthdm/hollywood/remote"
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/Server"
-	cli_app "github.com/janicaleksander/bcs/cli-app"
+	"github.com/janicaleksander/bcs/application"
 	"github.com/joho/godotenv"
 	"os"
 	"time"
@@ -17,7 +17,7 @@ func main() {
 		Server.Logger.Error("Error loading .env file")
 		return
 	}
-	app := cli_app.NewCLI()
+	app := application.NewApp()
 	r := remote.New(os.Getenv("APP_ADDR"), remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
@@ -47,8 +47,10 @@ func main() {
 	//neededServerConfiguration
 	e.Send(appPID, val)
 
-	//run APP/CLI
-	e.Send(appPID, &Proto.StartCLI{})
+	//window
+	window := application.NewWindow()
+	window.RunWindow()
 
-	select {}
+	//running here -> first scene is loading bar and change to loginPanel only if ping to server works
+	<-window.Done
 }
