@@ -587,6 +587,50 @@ func (*AssignUserToUnit) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{12}
 }
 
+type Payload struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Data          []byte                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Payload) Reset() {
+	*x = Payload{}
+	mi := &file_types_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Payload) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Payload) ProtoMessage() {}
+
+func (x *Payload) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Payload.ProtoReflect.Descriptor instead.
+func (*Payload) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *Payload) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
@@ -619,7 +663,9 @@ const file_types_proto_rawDesc = "" +
 	"\tLoginUser\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x12\n" +
-	"\x10AssignUserToUnitB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
+	"\x10AssignUserToUnit\"\x1d\n" +
+	"\aPayload\x12\x12\n" +
+	"\x04data\x18\x01 \x01(\fR\x04dataB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -633,7 +679,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                      // 0: types.Role
 	(*User)(nil),                      // 1: types.User
@@ -648,6 +694,7 @@ var file_types_proto_goTypes = []any{
 	(*CreatUser)(nil),                 // 10: types.CreatUser
 	(*LoginUser)(nil),                 // 11: types.LoginUser
 	(*AssignUserToUnit)(nil),          // 12: types.AssignUserToUnit
+	(*Payload)(nil),                   // 13: types.Payload
 }
 var file_types_proto_depIdxs = []int32{
 	0, // 0: types.User.role:type_name -> types.Role
@@ -672,7 +719,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

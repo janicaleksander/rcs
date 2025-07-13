@@ -17,7 +17,10 @@ func main() {
 		Server.Logger.Error("Error loading .env file")
 		return
 	}
-	app := application.NewApp()
+	//chan's part to send data between app actor and window:
+	test := make(chan *Proto.Payload, 1024)
+
+	app := application.NewApp(test)
 	r := remote.New(os.Getenv("APP_ADDR"), remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
@@ -48,7 +51,7 @@ func main() {
 	e.Send(appPID, val)
 
 	//window
-	window := application.NewWindow()
+	window := application.NewWindow(test)
 	window.RunWindow()
 
 	//running here -> first scene is loading bar and change to loginPanel only if ping to server works

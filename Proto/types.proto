@@ -51,3 +51,11 @@ message AssignUserToUnit{
   //Role
 }
 
+
+//TESTS
+
+
+message Payload {
+    bytes data = 1;
+}
+
