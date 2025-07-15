@@ -28,12 +28,23 @@ message PID{
 message IsServerRunning {}
 message Running{}
 message StartApp{}
-message NeedServerConfiguration{}
+
+message ConnectToServer{
+  PID client=1;
+}
+
 message Accept{}
 message Deny{}
+message Disconnect{}
+
 
 message NeededServerConfiguration {
   PID serverPID = 1;
+}
+
+//creat unit??
+message LoginUnit{
+  string id = 2;
 }
 
 message CreatUser{
@@ -41,8 +52,9 @@ message CreatUser{
 }
 
 message LoginUser{
-  string email = 1;
-  string password = 2;
+  PID pid =1;
+  string email = 2;
+  string password = 3;
 }
 
 message AssignUserToUnit{

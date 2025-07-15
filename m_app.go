@@ -41,13 +41,18 @@ func main() {
 
 	appPID := e.Spawn(app, "app") //this is creating new app
 
-	resp = e.Request(serverPID, &Proto.NeedServerConfiguration{}, time.Second)
+	resp = e.Request(serverPID, &Proto.ConnectToServer{
+		Client: &Proto.PID{
+			Address: appPID.GetAddress(),
+			Id:      appPID.GetID(),
+		},
+	}, time.Second)
 	val, err := resp.Result()
 	if err != nil {
-		Server.Logger.Error("Can't do the request!", "err: ", err)
+		Server.Logger.Error("Can't connect to the server!", "err: ", err)
 		return
 	}
-	//neededServerConfiguration
+	//respond to connect to server neededServerConfiguration
 	e.Send(appPID, val)
 
 	//window

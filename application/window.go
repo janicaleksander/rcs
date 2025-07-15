@@ -2,17 +2,27 @@ package application
 
 import (
 	"fmt"
+	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/Proto"
 	"runtime"
 )
 
+type GameState int
+
+const (
+	LoginState GameState = iota
+)
+
 type Window struct {
-	state      state
-	components components
-	running    bool
+	currentState GameState
+	running      bool
+
+	loginSceneData LoginScene
+	//menuSceneData MenuScene
 
 	// data from actor through chan's
+
 	Done chan bool
 	Test chan *Proto.Payload
 }
@@ -24,27 +34,22 @@ func NewWindow(test chan *Proto.Payload) *Window {
 	}
 }
 
-type components struct{}
-type state struct {
-	loginScene bool
-	//menuScene bool
-	//...Scene bool
-	//...Scene bool
-}
-
 func init() {
 	runtime.LockOSThread()
 }
 func (w *Window) setup() {
-	rl.InitWindow(800, 450, "raylib [core] example - basic window")
+	rl.InitWindow(1920, 1080, "BCS application")
 	rl.SetTargetFPS(60)
+	w.currentState = LoginState
 
+	//init login state
+	w.loginSceneSetup()
+	//
 	w.running = true
 
 }
 func (w *Window) quit() {
 	//maybe to quit some assets
-
 }
 
 func (w *Window) drawScene() {}
@@ -52,25 +57,21 @@ func (w *Window) input() {
 
 }
 
-var cmsg string
-
 func (w *Window) update() {
 	w.running = !rl.WindowShouldClose()
-	select {
-	case msg := <-w.Test:
-		cmsg = string(msg.Data)
-		fmt.Println("Received message:", msg)
-	default:
-		fmt.Println("xd")
-		cmsg = "nic nie ma"
+	switch w.currentState {
+	case LoginState:
+		w.updateLoginState()
 	}
 
 }
 func (w *Window) render() {
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.RayWhite)
-	rl.DrawText(cmsg, 190, 200, 20, rl.Red)
-
+	switch w.currentState {
+	case LoginState:
+		w.renderLoginState()
+	}
 	rl.EndDrawing()
 
 }
@@ -89,3 +90,28 @@ func (w *Window) RunWindow() {
 	}
 	w.quit()
 }
+
+// LOGIN STATE
+type LoginScene struct {
+	loginButton Button
+	emailTXT    string
+	passwordTXT string
+}
+
+func (w *Window) loginSceneSetup() {
+	w.loginSceneData.loginButton = Button{
+		position: rl.NewRectangle(
+			float32(rl.GetScreenWidth()/2-100),
+			float32(rl.GetScreenHeight()/2-100),
+			200, 40,
+		),
+		text: "Login",
+	}
+}
+func (w *Window) updateLoginState() {
+	//this is already rendering this button on the screen
+	if gui.Button(w.loginSceneData.loginButton.position, w.loginSceneData.loginButton.text) {
+		fmt.Println("ok")
+	}
+}
+func (w *Window) renderLoginState() {}

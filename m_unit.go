@@ -14,7 +14,8 @@ import (
 
 func main() {
 	//some way to first configure a unit e.g. created by general,
-	//and we need to configure this unit in our based-station-server
+
+	//we can assume that we provide as VENV uuid of unit
 	err := godotenv.Load()
 	if err != nil {
 		Server.Logger.Error("Error loading .env file")
@@ -22,7 +23,7 @@ func main() {
 	}
 
 	ext := External.NewExternal() //maybe its inside unit?
-	unit := Unit.NewUnit(ext)
+	unit := Unit.NewUnit("some id from venv", ext)
 
 	r := remote.New(os.Getenv("UNIT_ADDR"), remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
@@ -46,14 +47,20 @@ func main() {
 	// still we can operate on unit
 	unitPID := e.Spawn(unit, "unit") //this is creating new unit
 
-	resp = e.Request(serverPID, &Proto.NeedServerConfiguration{}, time.Second)
+	resp = e.Request(serverPID, &Proto.ConnectToServer{
+		Client: &Proto.PID{
+			Address: unitPID.GetAddress(),
+			Id:      unitPID.GetID(),
+		},
+	}, time.Second)
 	val, err := resp.Result()
 	if err != nil {
-		Server.Logger.Error("Can't do the request!", "err: ", err)
+		Server.Logger.Error("Can't connect to the server!", "err: ", err)
 		return
 	}
-	//neededServerConfiguration
+	//Respond to ConnectToServer neededServerConfiguration
 	e.Send(unitPID, val)
 
+	e.Send(unitPID, &Proto.LoginUnit{Id: "Id from venv"})
 	select {}
 }

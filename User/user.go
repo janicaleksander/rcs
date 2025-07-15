@@ -24,10 +24,7 @@ func HashPassword(password string) (string, error) {
 
 func DecryptHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 // Roles for each user

@@ -28,6 +28,7 @@ func (a *App) Receive(ctx *actor.Context) {
 	case actor.Started:
 	case actor.Initialized:
 	case actor.Stopped:
+
 	case *Proto.NeededServerConfiguration:
 		a.serverPID = actor.NewPID(msg.ServerPID.Address, msg.ServerPID.Id)
 	case *Proto.Payload:

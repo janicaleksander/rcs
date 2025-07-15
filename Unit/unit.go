@@ -2,7 +2,6 @@ package Unit
 
 import (
 	"github.com/anthdm/hollywood/actor"
-	"github.com/google/uuid"
 	"github.com/janicaleksander/bcs/External"
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/Server"
@@ -11,15 +10,16 @@ import (
 )
 
 type Unit struct {
-	id        uuid.UUID
+	id        string // uuid
 	serverPID *actor.PID
 	external  *External.External
 	users     []*User.User
 }
 
-func NewUnit(ext *External.External) actor.Producer {
+func NewUnit(id string, ext *External.External) actor.Producer {
 	return func() actor.Receiver {
 		return &Unit{
+			id:       id,
 			external: ext,
 			users:    make([]*User.User, 1024),
 		}
