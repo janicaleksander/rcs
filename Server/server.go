@@ -72,7 +72,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 	case *Proto.LoginUser:
 		id, err := s.loginUser(ctx, msg.Email, msg.Password)
 		if err == nil {
-			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id)
+			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
 			s.clients[id] = pid.GetAddress()
 		}
 	default:
@@ -83,11 +83,12 @@ func (s *Server) Receive(ctx *actor.Context) {
 
 func (s *Server) loginUser(ctx *actor.Context, email, password string) (string, error) {
 	c := context.Background()
-	err := s.storage.LoginUser(c, email, password)
+	id, err := s.storage.LoginUser(c, email, password)
 	if err != nil {
 		ctx.Respond(&Proto.Deny{})
+		return "", err
 	} else {
 		ctx.Respond(&Proto.Accept{})
 	}
-	return "here ID from DB", nil
+	return id, nil
 }

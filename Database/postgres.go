@@ -90,21 +90,21 @@ func (p *Postgres) InsertUser(ctx context.Context, user User.User) error {
 	return nil
 }
 
-func (p *Postgres) LoginUser(ctx context.Context, email, password string) error {
-	rows, err := p.conn.Query(`SELECT password FROM users WHERE (email=$1)`, email)
+func (p *Postgres) LoginUser(ctx context.Context, email, password string) (string, error) {
+	rows, err := p.conn.Query(`SELECT id, password FROM users WHERE (email=$1)`, email)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer rows.Close()
-	var hashPwd string
+	var id string
+	var pwd string
 	for rows.Next() {
-		if err = rows.Scan(&hashPwd); err != nil {
-			return err
+		if err = rows.Scan(&id, &pwd); err != nil {
+			return "", err
 		}
 	}
-	if !User.DecryptHash(password, hashPwd) {
-		return errors.New("valid credentials")
+	if !User.DecryptHash(password, pwd) {
+		return "", errors.New("valid credentials")
 	}
-	fmt.Println("przeszlo")
-	return nil
+	return id, nil
 }
