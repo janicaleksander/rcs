@@ -70,6 +70,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 		//	s.clients[id] = ctx.Sender().GetAddress()
 		//}
 	case *Proto.LoginUser:
+		// TODO: add jwt to login
 		id, err := s.loginUser(ctx, msg.Email, msg.Password)
 		if err == nil {
 			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
@@ -85,10 +86,10 @@ func (s *Server) loginUser(ctx *actor.Context, email, password string) (string, 
 	c := context.Background()
 	id, err := s.storage.LoginUser(c, email, password)
 	if err != nil {
-		ctx.Respond(&Proto.Deny{})
+		ctx.Respond(&Proto.DenyLogin{Info: err.Error()})
 		return "", err
 	} else {
-		ctx.Respond(&Proto.Accept{})
+		ctx.Respond(&Proto.AcceptLogin{Info: "Login successful! "})
 	}
 	return id, nil
 }

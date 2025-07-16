@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
+	"github.com/janicaleksander/bcs/Application"
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/Server"
-	"github.com/janicaleksander/bcs/application"
 	"github.com/joho/godotenv"
 	"os"
 	"time"
@@ -17,10 +17,8 @@ func main() {
 		Server.Logger.Error("Error loading .env file")
 		return
 	}
-	//chan's part to send data between app actor and window:
-	ChloginUser := make(chan *Proto.LoginUser, 1024)
 
-	app := application.NewApp(ChloginUser)
+	window := Application.NewWindow()
 	r := remote.New(os.Getenv("APP_ADDR"), remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
@@ -28,7 +26,7 @@ func main() {
 		return
 	}
 
-	Server.Logger.Info("App is running on:", "Addr:", os.Getenv("APP_ADDR"))
+	Server.Logger.Info("Window is running on:", "Addr:", os.Getenv("APP_ADDR"))
 	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
 
 	//ping server
@@ -38,7 +36,7 @@ func main() {
 		Server.Logger.Error("Server is not running", "err: ", err)
 		return
 	}
-
+	app := Application.NewWindowActor(window)
 	appPID := e.Spawn(app, "app") //this is creating new app
 
 	resp = e.Request(serverPID, &Proto.ConnectToServer{
@@ -56,9 +54,7 @@ func main() {
 	e.Send(appPID, val)
 
 	//window
-	window := application.NewWindow(ChloginUser)
 	window.RunWindow()
-
 	//running here -> first scene is loading bar and change to loginPanel only if ping to server works
 	<-window.Done
 }

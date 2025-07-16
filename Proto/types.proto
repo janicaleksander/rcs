@@ -3,8 +3,6 @@ syntax = "proto3";
 package types;
 
 option go_package = "github.com/janicaleksander/bcs/Proto";
-
-
 //TODO: use these instead of golang struct
 message Role {
   string name =1;
@@ -33,8 +31,12 @@ message ConnectToServer{
   PID client=1;
 }
 
-message Accept{}
-message Deny{}
+message AcceptLogin{
+  string info = 1;
+}
+message DenyLogin{
+  string info = 1;
+}
 message Disconnect{}
 
 
@@ -65,9 +67,4 @@ message AssignUserToUnit{
 
 
 //TESTS
-
-
-message Payload {
-    bytes data = 1;
-}
 

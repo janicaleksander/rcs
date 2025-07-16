@@ -5,7 +5,7 @@ import (
 	"github.com/janicaleksander/bcs/User"
 )
 
-// Database interface that is used in application
+// Database interface that is used in Application
 type Storage interface {
 	InsertUser(context.Context, User.User) error
 	LoginUser(ctx context.Context, email, password string) (string, error)

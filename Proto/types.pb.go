@@ -9,6 +9,7 @@ package Proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	_ "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -347,26 +348,27 @@ func (x *ConnectToServer) GetClient() *PID {
 	return nil
 }
 
-type Accept struct {
+type AcceptLogin struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Info          string                 `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Accept) Reset() {
-	*x = Accept{}
+func (x *AcceptLogin) Reset() {
+	*x = AcceptLogin{}
 	mi := &file_types_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Accept) String() string {
+func (x *AcceptLogin) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Accept) ProtoMessage() {}
+func (*AcceptLogin) ProtoMessage() {}
 
-func (x *Accept) ProtoReflect() protoreflect.Message {
+func (x *AcceptLogin) ProtoReflect() protoreflect.Message {
 	mi := &file_types_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -378,31 +380,39 @@ func (x *Accept) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Accept.ProtoReflect.Descriptor instead.
-func (*Accept) Descriptor() ([]byte, []int) {
+// Deprecated: Use AcceptLogin.ProtoReflect.Descriptor instead.
+func (*AcceptLogin) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{7}
 }
 
-type Deny struct {
+func (x *AcceptLogin) GetInfo() string {
+	if x != nil {
+		return x.Info
+	}
+	return ""
+}
+
+type DenyLogin struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Info          string                 `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Deny) Reset() {
-	*x = Deny{}
+func (x *DenyLogin) Reset() {
+	*x = DenyLogin{}
 	mi := &file_types_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Deny) String() string {
+func (x *DenyLogin) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Deny) ProtoMessage() {}
+func (*DenyLogin) ProtoMessage() {}
 
-func (x *Deny) ProtoReflect() protoreflect.Message {
+func (x *DenyLogin) ProtoReflect() protoreflect.Message {
 	mi := &file_types_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -414,9 +424,16 @@ func (x *Deny) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Deny.ProtoReflect.Descriptor instead.
-func (*Deny) Descriptor() ([]byte, []int) {
+// Deprecated: Use DenyLogin.ProtoReflect.Descriptor instead.
+func (*DenyLogin) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *DenyLogin) GetInfo() string {
+	if x != nil {
+		return x.Info
+	}
+	return ""
 }
 
 type Disconnect struct {
@@ -684,55 +701,11 @@ func (*AssignUserToUnit) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{14}
 }
 
-type Payload struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Data          []byte                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Payload) Reset() {
-	*x = Payload{}
-	mi := &file_types_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Payload) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Payload) ProtoMessage() {}
-
-func (x *Payload) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Payload.ProtoReflect.Descriptor instead.
-func (*Payload) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *Payload) GetData() []byte {
-	if x != nil {
-		return x.Data
-	}
-	return nil
-}
-
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
 	"\n" +
-	"\vtypes.proto\x12\x05types\"8\n" +
+	"\vtypes.proto\x12\x05types\x1a\x19google/protobuf/any.proto\"8\n" +
 	"\x04Role\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\truleLevel\x18\x02 \x01(\x04R\truleLevel\"w\n" +
@@ -751,9 +724,11 @@ const file_types_proto_rawDesc = "" +
 	"\bStartApp\"5\n" +
 	"\x0fConnectToServer\x12\"\n" +
 	"\x06client\x18\x01 \x01(\v2\n" +
-	".types.PIDR\x06client\"\b\n" +
-	"\x06Accept\"\x06\n" +
-	"\x04Deny\"\f\n" +
+	".types.PIDR\x06client\"!\n" +
+	"\vAcceptLogin\x12\x12\n" +
+	"\x04info\x18\x01 \x01(\tR\x04info\"\x1f\n" +
+	"\tDenyLogin\x12\x12\n" +
+	"\x04info\x18\x01 \x01(\tR\x04info\"\f\n" +
 	"\n" +
 	"Disconnect\"E\n" +
 	"\x19NeededServerConfiguration\x12(\n" +
@@ -768,9 +743,7 @@ const file_types_proto_rawDesc = "" +
 	".types.PIDR\x03pid\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x03 \x01(\tR\bpassword\"\x12\n" +
-	"\x10AssignUserToUnit\"\x1d\n" +
-	"\aPayload\x12\x12\n" +
-	"\x04data\x18\x01 \x01(\fR\x04dataB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
+	"\x10AssignUserToUnitB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -784,7 +757,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                      // 0: types.Role
 	(*User)(nil),                      // 1: types.User
@@ -793,15 +766,14 @@ var file_types_proto_goTypes = []any{
 	(*Running)(nil),                   // 4: types.Running
 	(*StartApp)(nil),                  // 5: types.StartApp
 	(*ConnectToServer)(nil),           // 6: types.ConnectToServer
-	(*Accept)(nil),                    // 7: types.Accept
-	(*Deny)(nil),                      // 8: types.Deny
+	(*AcceptLogin)(nil),               // 7: types.AcceptLogin
+	(*DenyLogin)(nil),                 // 8: types.DenyLogin
 	(*Disconnect)(nil),                // 9: types.Disconnect
 	(*NeededServerConfiguration)(nil), // 10: types.NeededServerConfiguration
 	(*LoginUnit)(nil),                 // 11: types.LoginUnit
 	(*CreatUser)(nil),                 // 12: types.CreatUser
 	(*LoginUser)(nil),                 // 13: types.LoginUser
 	(*AssignUserToUnit)(nil),          // 14: types.AssignUserToUnit
-	(*Payload)(nil),                   // 15: types.Payload
 }
 var file_types_proto_depIdxs = []int32{
 	0, // 0: types.User.role:type_name -> types.Role
@@ -828,7 +800,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

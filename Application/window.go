@@ -1,16 +1,20 @@
-package application
+package Application
 
 import (
+	"github.com/anthdm/hollywood/actor"
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/Proto"
+	"github.com/janicaleksander/bcs/Server"
+	"reflect"
 	"runtime"
+	"time"
 )
 
 type GameState int
 
 const (
-	WaitToLogin int = 3
+	WaitToLogin time.Duration = 3
 )
 
 const (
@@ -18,31 +22,52 @@ const (
 )
 
 type Window struct {
+	//server PID
+	serverPID *actor.PID
+	ctx       *actor.Context
+
 	currentState GameState
 	running      bool
 
 	loginSceneData LoginScene
 	//menuSceneData MenuScene
 
-	// data from actor through chan's
-
-	Done        chan bool
-	ChLoginUser chan *Proto.LoginUser
+	Done chan bool
 }
 
-func NewWindow(login chan *Proto.LoginUser) *Window {
-	return &Window{
-		Done:        make(chan bool),
-		ChLoginUser: login,
+func NewWindowActor(w *Window) actor.Producer {
+	return func() actor.Receiver {
+		return w
 	}
 }
 
+func NewWindow() *Window {
+	return &Window{
+		Done: make(chan bool, 1024),
+	}
+}
+
+func (w *Window) Receive(ctx *actor.Context) {
+	w.ctx = ctx
+	switch msg := ctx.Message().(type) {
+	case actor.Started:
+		Server.Logger.Info("Window actor started")
+	case actor.Initialized:
+		Server.Logger.Info("Actor initialized")
+	case actor.Stopped:
+		Server.Logger.Info("Actor stopped")
+	case *Proto.NeededServerConfiguration:
+		w.serverPID = actor.NewPID(msg.ServerPID.Address, msg.ServerPID.Id)
+	default:
+		Server.Logger.Warn("Server got unknown message", reflect.TypeOf(msg).String())
+	}
+}
 func init() {
 	runtime.LockOSThread()
 }
 func (w *Window) setup() {
 	rl.SetConfigFlags(rl.FlagWindowHighdpi)
-	rl.InitWindow(1280, 720, "BCS application")
+	rl.InitWindow(1280, 720, "BCS Application")
 	rl.SetTargetFPS(60)
 	w.currentState = LoginState
 
@@ -103,6 +128,9 @@ type LoginScene struct {
 
 	passwordTXT   string
 	passwordFocus bool
+
+	isLoginError      bool
+	loginErrorMessage string
 }
 
 func (w *Window) loginSceneSetup() {
@@ -117,22 +145,48 @@ func (w *Window) loginSceneSetup() {
 }
 func (w *Window) updateLoginState() {
 	//this is already rendering this button on the screen
-
 	//block multiple pressed button before receive respond, for const time LoginTime
 
 	if gui.Button(w.loginSceneData.loginButton.position, w.loginSceneData.loginButton.text) {
 		//valid login credentials -> send to server loginUser, wait for response
 		email := w.loginSceneData.emailTXT
 		pwd := w.loginSceneData.passwordTXT
-		w.ChLoginUser <- &Proto.LoginUser{
+		pid := &Proto.PID{
+			Address: w.ctx.PID().GetAddress(),
+			Id:      w.ctx.PID().GetID(),
+		}
+		resp := w.ctx.Request(w.serverPID, &Proto.LoginUser{
+			Pid:      pid,
 			Email:    email,
 			Password: pwd,
+		}, time.Second*WaitToLogin)
+		val, err := resp.Result()
+		//only if error this true
+		w.loginSceneData.isLoginError = true
+		if err != nil {
+			w.loginSceneData.loginErrorMessage = err.Error()
+		} else if msg, ok := val.(*Proto.AcceptLogin); ok {
+			w.loginSceneData.loginErrorMessage = msg.Info
+		} else if msg, ok := val.(*Proto.DenyLogin); ok {
+			w.loginSceneData.loginErrorMessage = msg.Info
+		} else {
+			w.loginSceneData.loginErrorMessage = "Unknown response type"
 		}
+
 	}
 
 }
 func (w *Window) renderLoginState() {
 	rl.DrawText("Login Page", 50, 50, 20, rl.DarkGray)
+
+	if w.loginSceneData.isLoginError {
+		rl.DrawText(w.loginSceneData.loginErrorMessage,
+			int32(rl.GetScreenWidth()/2-100),
+			int32(rl.GetScreenHeight()/2+40),
+			20,
+			rl.Red)
+
+	}
 	emailBounds := rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-140),
