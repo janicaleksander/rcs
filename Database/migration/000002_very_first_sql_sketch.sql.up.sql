@@ -19,24 +19,12 @@ CREATE TABLE IF NOT EXISTS device
     name VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS squad
-(
-    id UUID PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
-    root_id UUID REFERENCES unit(id) NULL
-);
-
-CREATE TABLE IF NOT EXISTS role
-(
-    role VARCHAR(255) PRIMARY KEY
-);
 
 CREATE TABLE IF NOT EXISTS user_to_unit
 (
     user_id UUID REFERENCES users(id) NOT NULL,
-    unit_id UUID REFERENCES unit(id) NOT NULL,
-    unit_role VARCHAR(255) REFERENCES role(role) NOT NULL
-);
+    unit_id UUID REFERENCES unit(id) NOT NULL
+    );
 
 
 CREATE TABLE IF NOT EXISTS device_to_unit
@@ -45,8 +33,4 @@ CREATE TABLE IF NOT EXISTS device_to_unit
     device_id INT REFERENCES device(id) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS unit_to_squad
-(
-    squad_id UUID REFERENCES squad(id) NOT NULL,
-    unit_id UUID REFERENCES  unit(id) NOT NULL
-);
+

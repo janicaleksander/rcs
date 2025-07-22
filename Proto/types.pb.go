@@ -9,7 +9,6 @@ package Proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -351,6 +350,7 @@ func (x *ConnectToServer) GetClient() *PID {
 type AcceptLogin struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Info          string                 `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
+	RuleLevel     int64                  `protobuf:"varint,2,opt,name=rule_level,json=ruleLevel,proto3" json:"rule_level,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -390,6 +390,13 @@ func (x *AcceptLogin) GetInfo() string {
 		return x.Info
 	}
 	return ""
+}
+
+func (x *AcceptLogin) GetRuleLevel() int64 {
+	if x != nil {
+		return x.RuleLevel
+	}
+	return 0
 }
 
 type DenyLogin struct {
@@ -705,7 +712,7 @@ var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
 	"\n" +
-	"\vtypes.proto\x12\x05types\x1a\x19google/protobuf/any.proto\"8\n" +
+	"\vtypes.proto\x12\x05types\"8\n" +
 	"\x04Role\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\truleLevel\x18\x02 \x01(\x04R\truleLevel\"w\n" +
@@ -724,9 +731,11 @@ const file_types_proto_rawDesc = "" +
 	"\bStartApp\"5\n" +
 	"\x0fConnectToServer\x12\"\n" +
 	"\x06client\x18\x01 \x01(\v2\n" +
-	".types.PIDR\x06client\"!\n" +
+	".types.PIDR\x06client\"@\n" +
 	"\vAcceptLogin\x12\x12\n" +
-	"\x04info\x18\x01 \x01(\tR\x04info\"\x1f\n" +
+	"\x04info\x18\x01 \x01(\tR\x04info\x12\x1d\n" +
+	"\n" +
+	"rule_level\x18\x02 \x01(\x03R\truleLevel\"\x1f\n" +
 	"\tDenyLogin\x12\x12\n" +
 	"\x04info\x18\x01 \x01(\tR\x04info\"\f\n" +
 	"\n" +

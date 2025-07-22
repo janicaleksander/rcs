@@ -33,6 +33,7 @@ message ConnectToServer{
 
 message AcceptLogin{
   string info = 1;
+  int64 rule_level =2;
 }
 message DenyLogin{
   string info = 1;
