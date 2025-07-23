@@ -79,7 +79,7 @@ type User struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
-	Role          *Role                  `protobuf:"bytes,4,opt,name=role,proto3,oneof" json:"role,omitempty"`
+	RuleLvl       int32                  `protobuf:"varint,4,opt,name=rule_lvl,json=ruleLvl,proto3" json:"rule_lvl,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -135,11 +135,11 @@ func (x *User) GetPassword() string {
 	return ""
 }
 
-func (x *User) GetRole() *Role {
+func (x *User) GetRuleLvl() int32 {
 	if x != nil {
-		return x.Role
+		return x.RuleLvl
 	}
-	return nil
+	return 0
 }
 
 type PID struct {
@@ -672,6 +672,50 @@ func (x *LoginUser) GetPassword() string {
 	return ""
 }
 
+type GetUserAboveLVL struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Users         []*User                `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUserAboveLVL) Reset() {
+	*x = GetUserAboveLVL{}
+	mi := &file_types_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUserAboveLVL) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserAboveLVL) ProtoMessage() {}
+
+func (x *GetUserAboveLVL) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserAboveLVL.ProtoReflect.Descriptor instead.
+func (*GetUserAboveLVL) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetUserAboveLVL) GetUsers() []*User {
+	if x != nil {
+		return x.Users
+	}
+	return nil
+}
+
 type AssignUserToUnit struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -680,7 +724,7 @@ type AssignUserToUnit struct {
 
 func (x *AssignUserToUnit) Reset() {
 	*x = AssignUserToUnit{}
-	mi := &file_types_proto_msgTypes[14]
+	mi := &file_types_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -692,7 +736,7 @@ func (x *AssignUserToUnit) String() string {
 func (*AssignUserToUnit) ProtoMessage() {}
 
 func (x *AssignUserToUnit) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[14]
+	mi := &file_types_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -705,7 +749,7 @@ func (x *AssignUserToUnit) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignUserToUnit.ProtoReflect.Descriptor instead.
 func (*AssignUserToUnit) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{14}
+	return file_types_proto_rawDescGZIP(), []int{15}
 }
 
 var File_types_proto protoreflect.FileDescriptor
@@ -715,13 +759,12 @@ const file_types_proto_rawDesc = "" +
 	"\vtypes.proto\x12\x05types\"8\n" +
 	"\x04Role\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
-	"\truleLevel\x18\x02 \x01(\x04R\truleLevel\"w\n" +
+	"\truleLevel\x18\x02 \x01(\x04R\truleLevel\"c\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x03 \x01(\tR\bpassword\x12$\n" +
-	"\x04role\x18\x04 \x01(\v2\v.types.RoleH\x00R\x04role\x88\x01\x01B\a\n" +
-	"\x05_role\"/\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\x12\x19\n" +
+	"\brule_lvl\x18\x04 \x01(\x05R\aruleLvl\"/\n" +
 	"\x03PID\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\"\x11\n" +
@@ -751,7 +794,9 @@ const file_types_proto_rawDesc = "" +
 	"\x03pid\x18\x01 \x01(\v2\n" +
 	".types.PIDR\x03pid\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x03 \x01(\tR\bpassword\"\x12\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\"4\n" +
+	"\x0fGetUserAboveLVL\x12!\n" +
+	"\x05users\x18\x01 \x03(\v2\v.types.UserR\x05users\"\x12\n" +
 	"\x10AssignUserToUnitB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
 
 var (
@@ -766,7 +811,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                      // 0: types.Role
 	(*User)(nil),                      // 1: types.User
@@ -782,14 +827,15 @@ var file_types_proto_goTypes = []any{
 	(*LoginUnit)(nil),                 // 11: types.LoginUnit
 	(*CreatUser)(nil),                 // 12: types.CreatUser
 	(*LoginUser)(nil),                 // 13: types.LoginUser
-	(*AssignUserToUnit)(nil),          // 14: types.AssignUserToUnit
+	(*GetUserAboveLVL)(nil),           // 14: types.GetUserAboveLVL
+	(*AssignUserToUnit)(nil),          // 15: types.AssignUserToUnit
 }
 var file_types_proto_depIdxs = []int32{
-	0, // 0: types.User.role:type_name -> types.Role
-	2, // 1: types.ConnectToServer.client:type_name -> types.PID
-	2, // 2: types.NeededServerConfiguration.serverPID:type_name -> types.PID
-	1, // 3: types.CreatUser.user:type_name -> types.User
-	2, // 4: types.LoginUser.pid:type_name -> types.PID
+	2, // 0: types.ConnectToServer.client:type_name -> types.PID
+	2, // 1: types.NeededServerConfiguration.serverPID:type_name -> types.PID
+	1, // 2: types.CreatUser.user:type_name -> types.User
+	2, // 3: types.LoginUser.pid:type_name -> types.PID
+	1, // 4: types.GetUserAboveLVL.users:type_name -> types.User
 	5, // [5:5] is the sub-list for method output_type
 	5, // [5:5] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name
@@ -802,14 +848,13 @@ func file_types_proto_init() {
 	if File_types_proto != nil {
 		return
 	}
-	file_types_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -2,13 +2,14 @@ package Database
 
 import (
 	"context"
-	"github.com/janicaleksander/bcs/User"
+	"github.com/janicaleksander/bcs/Proto"
 )
 
 // Database interface that is used in Application
 type Storage interface {
-	InsertUser(context.Context, User.User) error
+	InsertUser(context.Context, *Proto.User) error
 	LoginUser(ctx context.Context, email, password string) (string, int, error)
+	GetUsersWithLVL(ctx context.Context, lvl int) ([]*Proto.User, error)
 	//InsertUnit(context.Context, Unit.Unit) error
 	//InsertRole(context.Context, string) error
 	//InsertDevice(context.Context, Device.Device) error

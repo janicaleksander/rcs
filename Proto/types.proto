@@ -13,7 +13,7 @@ message User{
   string id = 1;
   string email =2;
   string password =3;
-  optional Role role= 4;
+  int32 rule_lvl = 4;
 }
 
 message PID{
@@ -58,6 +58,10 @@ message LoginUser{
   PID pid =1;
   string email = 2;
   string password = 3;
+}
+
+message GetUserAboveLVL{
+  repeated User users = 1;
 }
 
 message AssignUserToUnit{

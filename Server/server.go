@@ -2,6 +2,7 @@ package Server
 
 import (
 	"context"
+	"fmt"
 	"github.com/anthdm/hollywood/actor"
 	db "github.com/janicaleksander/bcs/Database"
 	"github.com/janicaleksander/bcs/Proto"
@@ -74,7 +75,18 @@ func (s *Server) Receive(ctx *actor.Context) {
 		id, err := s.loginUser(ctx, msg.Email, msg.Password)
 		if err == nil {
 			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
+			_, ok := s.clients[id]
+			if ok {
+				//TODO repair this
+				fmt.Println("byłem")
+			}
 			s.clients[id] = pid.GetAddress()
+		}
+	case *Proto.GetUserAboveLVL:
+		c := ctx.Context()
+		users, err := s.storage.GetUsersWithLVL(c, 4)
+		if err == nil {
+			ctx.Respond(&Proto.GetUserAboveLVL{Users: users})
 		}
 	default:
 		Logger.Warn("Server got unknown message", reflect.TypeOf(msg).String())
@@ -84,12 +96,12 @@ func (s *Server) Receive(ctx *actor.Context) {
 
 func (s *Server) loginUser(ctx *actor.Context, email, password string) (string, error) {
 	c := context.Background()
-	id, err := s.storage.LoginUser(c, email, password)
+	id, role, err := s.storage.LoginUser(c, email, password)
 	if err != nil {
 		ctx.Respond(&Proto.DenyLogin{Info: err.Error()})
 		return "", err
 	} else {
-		ctx.Respond(&Proto.AcceptLogin{Info: "Login successful! "})
+		ctx.Respond(&Proto.AcceptLogin{Info: "Login successful! ", RuleLevel: int64(role)})
 	}
 	return id, nil
 }

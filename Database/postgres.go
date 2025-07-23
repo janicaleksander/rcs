@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/User"
 	_ "github.com/lib/pq"
 	"strconv"
@@ -74,13 +75,13 @@ func WithSSLRootCert(sslRootCert string) func(*string) {
 // Implemented function from Storage interface.
 // It takes context (e.g. to set max time for query), User and if no errors insert into Database.
 // If error occurs -> return it, and rollback transaction.
-func (p *Postgres) InsertUser(ctx context.Context, user User.User) error {
+func (p *Postgres) InsertUser(ctx context.Context, user *Proto.User) error {
 	tx, err := p.conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	_, err = tx.ExecContext(ctx, "INSERT INTO users (id,email,password) VALUES ($1,$2,$3)", user.ID, user.Email, user.Password)
+	_, err = tx.ExecContext(ctx, "INSERT INTO users (id,email,password,rule_level) VALUES ($1,$2,$3,$4)", user.Id, user.Email, user.Password, user.RuleLvl)
 	if err != nil {
 		return err
 	}
@@ -109,4 +110,22 @@ func (p *Postgres) LoginUser(ctx context.Context, email, password string) (strin
 	}
 
 	return id, role, nil
+}
+
+func (p *Postgres) GetUsersWithLVL(ctx context.Context, lvl int) ([]*Proto.User, error) {
+	rows, err := p.conn.Query(`SELECT id,email,password,rule_level FROM users WHERE (rule_level>=$1)`, lvl)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	users := make([]*Proto.User, 0, 64)
+
+	for rows.Next() {
+		user := &Proto.User{}
+		if err := rows.Scan(&user.Id, &user.Email, &user.Password, &user.RuleLvl); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
 }

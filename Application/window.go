@@ -2,7 +2,6 @@ package Application
 
 import (
 	"github.com/anthdm/hollywood/actor"
-	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/Server"
@@ -19,9 +18,14 @@ const (
 
 const (
 	LoginState GameState = iota
+	HCMenuState
+	CreateUnitState
 )
 
 type Window struct {
+	sceneStack []GameState
+	width      int
+	height     int
 	//server PID
 	serverPID *actor.PID
 	ctx       *actor.Context
@@ -29,8 +33,9 @@ type Window struct {
 	currentState GameState
 	running      bool
 
-	loginSceneData LoginScene
-	//menuSceneData MenuScene
+	loginSceneData  LoginScene
+	hcMenuSceneData HCMenuScene
+	createUnitScene CreateUnitScene
 
 	Done chan bool
 }
@@ -67,8 +72,11 @@ func init() {
 }
 func (w *Window) setup() {
 	rl.SetConfigFlags(rl.FlagWindowHighdpi)
+	w.width = 1280
+	w.height = 720
 	rl.InitWindow(1280, 720, "BCS Application")
 	rl.SetTargetFPS(60)
+	w.sceneStack = append(w.sceneStack, LoginState)
 	w.currentState = LoginState
 
 	//init login state
@@ -91,6 +99,10 @@ func (w *Window) update() {
 	switch w.currentState {
 	case LoginState:
 		w.updateLoginState()
+	case HCMenuState:
+		w.updateHCMenuState()
+	case CreateUnitState:
+		w.updateCreateUnitState()
 	}
 
 }
@@ -100,6 +112,10 @@ func (w *Window) render() {
 	switch w.currentState {
 	case LoginState:
 		w.renderLoginState()
+	case HCMenuState:
+		w.renderHCMenuState()
+	case CreateUnitState:
+		w.renderCreateUnitState()
 	}
 	rl.EndDrawing()
 
@@ -120,97 +136,9 @@ func (w *Window) RunWindow() {
 	w.quit()
 }
 
-// LOGIN STATE
-type LoginScene struct {
-	loginButton Button
-	emailTXT    string
-	emailFocus  bool
-
-	passwordTXT   string
-	passwordFocus bool
-
-	isLoginError      bool
-	loginErrorMessage string
-}
-
-func (w *Window) loginSceneSetup() {
-	w.loginSceneData.loginButton = Button{
-		position: rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2-100),
-			float32(rl.GetScreenHeight()/2),
-			200, 40,
-		),
-		text: "Login",
+func (w *Window) goSceneBack() {
+	if len(w.sceneStack) > 1 {
+		w.sceneStack = w.sceneStack[:len(w.sceneStack)-1]
+		w.currentState = w.sceneStack[len(w.sceneStack)-1]
 	}
-}
-func (w *Window) updateLoginState() {
-	//this is already rendering this button on the screen
-	//block multiple pressed button before receive respond, for const time LoginTime
-
-	if gui.Button(w.loginSceneData.loginButton.position, w.loginSceneData.loginButton.text) {
-		//valid login credentials -> send to server loginUser, wait for response
-		email := w.loginSceneData.emailTXT
-		pwd := w.loginSceneData.passwordTXT
-		pid := &Proto.PID{
-			Address: w.ctx.PID().GetAddress(),
-			Id:      w.ctx.PID().GetID(),
-		}
-		resp := w.ctx.Request(w.serverPID, &Proto.LoginUser{
-			Pid:      pid,
-			Email:    email,
-			Password: pwd,
-		}, time.Second*WaitToLogin)
-		val, err := resp.Result()
-		//only if error this true
-		w.loginSceneData.isLoginError = true
-		if err != nil {
-			w.loginSceneData.loginErrorMessage = err.Error()
-		} else if msg, ok := val.(*Proto.AcceptLogin); ok {
-			w.loginSceneData.loginErrorMessage = msg.Info
-		} else if msg, ok := val.(*Proto.DenyLogin); ok {
-			w.loginSceneData.loginErrorMessage = msg.Info
-		} else {
-			w.loginSceneData.loginErrorMessage = "Unknown response type"
-		}
-
-	}
-
-}
-func (w *Window) renderLoginState() {
-	rl.DrawText("Login Page", 50, 50, 20, rl.DarkGray)
-
-	if w.loginSceneData.isLoginError {
-		rl.DrawText(w.loginSceneData.loginErrorMessage,
-			int32(rl.GetScreenWidth()/2-100),
-			int32(rl.GetScreenHeight()/2+40),
-			20,
-			rl.Red)
-
-	}
-	emailBounds := rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2-100),
-		float32(rl.GetScreenHeight()/2-140),
-		200, 30,
-	)
-	passwordBounds := rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2-100),
-		float32(rl.GetScreenHeight()/2-80),
-		200, 30,
-	)
-	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
-		mousePos := rl.GetMousePosition()
-		if rl.CheckCollisionPointRec(mousePos, emailBounds) {
-			w.loginSceneData.emailFocus = true
-			w.loginSceneData.passwordFocus = false
-		} else if rl.CheckCollisionPointRec(mousePos, passwordBounds) {
-			w.loginSceneData.emailFocus = false
-			w.loginSceneData.passwordFocus = true
-		} else {
-			w.loginSceneData.emailFocus = false
-			w.loginSceneData.passwordFocus = false
-		}
-	}
-	gui.TextBox(emailBounds, &w.loginSceneData.emailTXT, 64, w.loginSceneData.emailFocus)
-	gui.TextBox(passwordBounds, &w.loginSceneData.passwordTXT, 64, w.loginSceneData.passwordFocus)
-
 }
