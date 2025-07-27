@@ -3,73 +3,124 @@ syntax = "proto3";
 package types;
 
 option go_package = "github.com/janicaleksander/bcs/Proto";
-//TODO: use these instead of golang struct
+
+// ========================
+// DATA MODELS
+// ========================
+
 message Role {
-  string name =1;
-  uint64 ruleLevel=2;
+  string name = 1;
+  uint64 ruleLevel = 2;
 }
 
-message User{
+message Personal {
+  string name = 1;
+  string surname = 2;
+}
+
+message User {
   string id = 1;
-  string email =2;
-  string password =3;
+  string email = 2;
+  string password = 3;
   int32 rule_lvl = 4;
+  Personal personal = 5;
 }
 
-message PID{
-  string address=1;
-  string id =2;
+message Unit {
+  string id = 1;
+  string name = 2;
+  bool isConfigured = 3;
 }
 
+message PID {
+  string address = 1;
+  string id = 2;
+}
 
-//REQUEST MESSAGES
+// ========================
+// SYSTEM & STATUS MESSAGES
+// ========================
+
 message IsServerRunning {}
-message Running{}
-message StartApp{}
+message Running {}
+message StartApp {}
+message PingServer {}
+message Disconnect {}
 
-message ConnectToServer{
-  PID client=1;
+// ========================
+// AUTHENTICATION & LOGIN
+// ========================
+
+message LoginUser {
+  PID pid = 1;
+  string email = 2;
+  string password = 3;
 }
 
-message AcceptLogin{
+message AcceptLogin {
   string info = 1;
-  int64 rule_level =2;
+  int64 rule_level = 2;
 }
-message DenyLogin{
+
+message DenyLogin {
   string info = 1;
 }
-message Disconnect{}
 
+message GetLoggedInUUID {
+  PID pid = 1;
+}
+message LoggedInUUID {
+  string id = 1;
+}
+
+// ========================
+// SERVER CONFIGURATION
+// ========================
 
 message NeededServerConfiguration {
   PID serverPID = 1;
 }
 
-//creat unit??
-message LoginUnit{
+// ========================
+// UNIT OPERATIONS
+// ========================
+
+message CreateUnit {
+  string name = 1;
+  bool isConfigured = 2;
+  string userID = 3;
+}
+
+message AcceptCreateUnit {}
+message DenyCreateUnit {
+  string info = 1;
+}
+
+message GetAllUnits {}
+message AllUnits {
+  repeated Unit units = 1;
+}
+
+message LoginUnit {
   string id = 2;
 }
 
-message CreatUser{
-  User user = 1;
+// ========================
+// USER OPERATIONS
+// ========================
+
+message GetAllUsersInUnit {
+  string id = 1; //unit uuid
 }
 
-message LoginUser{
-  PID pid =1;
-  string email = 2;
-  string password = 3;
-}
-
-message GetUserAboveLVL{
+message AllUsersInUnit {
   repeated User users = 1;
 }
 
-message AssignUserToUnit{
-  //User
-  //Unit
-  //Role
+message GetUserAboveLVL {
+  repeated User users = 1;
 }
 
-
-//TESTS
-
+message AssignUserToUnit {
+  // TODO: add fields: userID, unitID, roleID
+}

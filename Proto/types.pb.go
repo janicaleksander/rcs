@@ -21,7 +21,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// TODO: use these instead of golang struct
 type Role struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -74,19 +73,72 @@ func (x *Role) GetRuleLevel() uint64 {
 	return 0
 }
 
+type Personal struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Surname       string                 `protobuf:"bytes,2,opt,name=surname,proto3" json:"surname,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Personal) Reset() {
+	*x = Personal{}
+	mi := &file_types_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Personal) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Personal) ProtoMessage() {}
+
+func (x *Personal) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Personal.ProtoReflect.Descriptor instead.
+func (*Personal) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Personal) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Personal) GetSurname() string {
+	if x != nil {
+		return x.Surname
+	}
+	return ""
+}
+
 type User struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
 	RuleLvl       int32                  `protobuf:"varint,4,opt,name=rule_lvl,json=ruleLvl,proto3" json:"rule_lvl,omitempty"`
+	Personal      *Personal              `protobuf:"bytes,5,opt,name=personal,proto3" json:"personal,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *User) Reset() {
 	*x = User{}
-	mi := &file_types_proto_msgTypes[1]
+	mi := &file_types_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -98,7 +150,7 @@ func (x *User) String() string {
 func (*User) ProtoMessage() {}
 
 func (x *User) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[1]
+	mi := &file_types_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -111,7 +163,7 @@ func (x *User) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User.ProtoReflect.Descriptor instead.
 func (*User) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{1}
+	return file_types_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *User) GetId() string {
@@ -142,6 +194,73 @@ func (x *User) GetRuleLvl() int32 {
 	return 0
 }
 
+func (x *User) GetPersonal() *Personal {
+	if x != nil {
+		return x.Personal
+	}
+	return nil
+}
+
+type Unit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IsConfigured  bool                   `protobuf:"varint,3,opt,name=isConfigured,proto3" json:"isConfigured,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Unit) Reset() {
+	*x = Unit{}
+	mi := &file_types_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Unit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Unit) ProtoMessage() {}
+
+func (x *Unit) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Unit.ProtoReflect.Descriptor instead.
+func (*Unit) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Unit) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Unit) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Unit) GetIsConfigured() bool {
+	if x != nil {
+		return x.IsConfigured
+	}
+	return false
+}
+
 type PID struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Address       string                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
@@ -152,7 +271,7 @@ type PID struct {
 
 func (x *PID) Reset() {
 	*x = PID{}
-	mi := &file_types_proto_msgTypes[2]
+	mi := &file_types_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -164,7 +283,7 @@ func (x *PID) String() string {
 func (*PID) ProtoMessage() {}
 
 func (x *PID) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[2]
+	mi := &file_types_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -177,7 +296,7 @@ func (x *PID) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PID.ProtoReflect.Descriptor instead.
 func (*PID) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{2}
+	return file_types_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *PID) GetAddress() string {
@@ -194,7 +313,6 @@ func (x *PID) GetId() string {
 	return ""
 }
 
-// REQUEST MESSAGES
 type IsServerRunning struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -203,7 +321,7 @@ type IsServerRunning struct {
 
 func (x *IsServerRunning) Reset() {
 	*x = IsServerRunning{}
-	mi := &file_types_proto_msgTypes[3]
+	mi := &file_types_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -215,7 +333,7 @@ func (x *IsServerRunning) String() string {
 func (*IsServerRunning) ProtoMessage() {}
 
 func (x *IsServerRunning) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[3]
+	mi := &file_types_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -228,7 +346,7 @@ func (x *IsServerRunning) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsServerRunning.ProtoReflect.Descriptor instead.
 func (*IsServerRunning) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{3}
+	return file_types_proto_rawDescGZIP(), []int{5}
 }
 
 type Running struct {
@@ -239,7 +357,7 @@ type Running struct {
 
 func (x *Running) Reset() {
 	*x = Running{}
-	mi := &file_types_proto_msgTypes[4]
+	mi := &file_types_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -251,7 +369,7 @@ func (x *Running) String() string {
 func (*Running) ProtoMessage() {}
 
 func (x *Running) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[4]
+	mi := &file_types_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -264,7 +382,7 @@ func (x *Running) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Running.ProtoReflect.Descriptor instead.
 func (*Running) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{4}
+	return file_types_proto_rawDescGZIP(), []int{6}
 }
 
 type StartApp struct {
@@ -275,7 +393,7 @@ type StartApp struct {
 
 func (x *StartApp) Reset() {
 	*x = StartApp{}
-	mi := &file_types_proto_msgTypes[5]
+	mi := &file_types_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -287,7 +405,7 @@ func (x *StartApp) String() string {
 func (*StartApp) ProtoMessage() {}
 
 func (x *StartApp) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[5]
+	mi := &file_types_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -300,126 +418,29 @@ func (x *StartApp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartApp.ProtoReflect.Descriptor instead.
 func (*StartApp) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{5}
-}
-
-type ConnectToServer struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Client        *PID                   `protobuf:"bytes,1,opt,name=client,proto3" json:"client,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ConnectToServer) Reset() {
-	*x = ConnectToServer{}
-	mi := &file_types_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ConnectToServer) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ConnectToServer) ProtoMessage() {}
-
-func (x *ConnectToServer) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ConnectToServer.ProtoReflect.Descriptor instead.
-func (*ConnectToServer) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *ConnectToServer) GetClient() *PID {
-	if x != nil {
-		return x.Client
-	}
-	return nil
-}
-
-type AcceptLogin struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Info          string                 `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
-	RuleLevel     int64                  `protobuf:"varint,2,opt,name=rule_level,json=ruleLevel,proto3" json:"rule_level,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AcceptLogin) Reset() {
-	*x = AcceptLogin{}
-	mi := &file_types_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AcceptLogin) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AcceptLogin) ProtoMessage() {}
-
-func (x *AcceptLogin) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AcceptLogin.ProtoReflect.Descriptor instead.
-func (*AcceptLogin) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *AcceptLogin) GetInfo() string {
-	if x != nil {
-		return x.Info
-	}
-	return ""
-}
-
-func (x *AcceptLogin) GetRuleLevel() int64 {
-	if x != nil {
-		return x.RuleLevel
-	}
-	return 0
-}
-
-type DenyLogin struct {
+type PingServer struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Info          string                 `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DenyLogin) Reset() {
-	*x = DenyLogin{}
+func (x *PingServer) Reset() {
+	*x = PingServer{}
 	mi := &file_types_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DenyLogin) String() string {
+func (x *PingServer) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DenyLogin) ProtoMessage() {}
+func (*PingServer) ProtoMessage() {}
 
-func (x *DenyLogin) ProtoReflect() protoreflect.Message {
+func (x *PingServer) ProtoReflect() protoreflect.Message {
 	mi := &file_types_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -431,16 +452,9 @@ func (x *DenyLogin) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DenyLogin.ProtoReflect.Descriptor instead.
-func (*DenyLogin) Descriptor() ([]byte, []int) {
+// Deprecated: Use PingServer.ProtoReflect.Descriptor instead.
+func (*PingServer) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *DenyLogin) GetInfo() string {
-	if x != nil {
-		return x.Info
-	}
-	return ""
 }
 
 type Disconnect struct {
@@ -479,139 +493,6 @@ func (*Disconnect) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{9}
 }
 
-type NeededServerConfiguration struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServerPID     *PID                   `protobuf:"bytes,1,opt,name=serverPID,proto3" json:"serverPID,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *NeededServerConfiguration) Reset() {
-	*x = NeededServerConfiguration{}
-	mi := &file_types_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *NeededServerConfiguration) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NeededServerConfiguration) ProtoMessage() {}
-
-func (x *NeededServerConfiguration) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use NeededServerConfiguration.ProtoReflect.Descriptor instead.
-func (*NeededServerConfiguration) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *NeededServerConfiguration) GetServerPID() *PID {
-	if x != nil {
-		return x.ServerPID
-	}
-	return nil
-}
-
-// creat unit??
-type LoginUnit struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LoginUnit) Reset() {
-	*x = LoginUnit{}
-	mi := &file_types_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LoginUnit) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LoginUnit) ProtoMessage() {}
-
-func (x *LoginUnit) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LoginUnit.ProtoReflect.Descriptor instead.
-func (*LoginUnit) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *LoginUnit) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-type CreatUser struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreatUser) Reset() {
-	*x = CreatUser{}
-	mi := &file_types_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreatUser) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreatUser) ProtoMessage() {}
-
-func (x *CreatUser) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreatUser.ProtoReflect.Descriptor instead.
-func (*CreatUser) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *CreatUser) GetUser() *User {
-	if x != nil {
-		return x.User
-	}
-	return nil
-}
-
 type LoginUser struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Pid           *PID                   `protobuf:"bytes,1,opt,name=pid,proto3" json:"pid,omitempty"`
@@ -623,7 +504,7 @@ type LoginUser struct {
 
 func (x *LoginUser) Reset() {
 	*x = LoginUser{}
-	mi := &file_types_proto_msgTypes[13]
+	mi := &file_types_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -635,7 +516,7 @@ func (x *LoginUser) String() string {
 func (*LoginUser) ProtoMessage() {}
 
 func (x *LoginUser) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[13]
+	mi := &file_types_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -648,7 +529,7 @@ func (x *LoginUser) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginUser.ProtoReflect.Descriptor instead.
 func (*LoginUser) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{13}
+	return file_types_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *LoginUser) GetPid() *PID {
@@ -672,6 +553,586 @@ func (x *LoginUser) GetPassword() string {
 	return ""
 }
 
+type AcceptLogin struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Info          string                 `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
+	RuleLevel     int64                  `protobuf:"varint,2,opt,name=rule_level,json=ruleLevel,proto3" json:"rule_level,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AcceptLogin) Reset() {
+	*x = AcceptLogin{}
+	mi := &file_types_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AcceptLogin) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AcceptLogin) ProtoMessage() {}
+
+func (x *AcceptLogin) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AcceptLogin.ProtoReflect.Descriptor instead.
+func (*AcceptLogin) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *AcceptLogin) GetInfo() string {
+	if x != nil {
+		return x.Info
+	}
+	return ""
+}
+
+func (x *AcceptLogin) GetRuleLevel() int64 {
+	if x != nil {
+		return x.RuleLevel
+	}
+	return 0
+}
+
+type DenyLogin struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Info          string                 `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DenyLogin) Reset() {
+	*x = DenyLogin{}
+	mi := &file_types_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DenyLogin) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenyLogin) ProtoMessage() {}
+
+func (x *DenyLogin) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DenyLogin.ProtoReflect.Descriptor instead.
+func (*DenyLogin) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *DenyLogin) GetInfo() string {
+	if x != nil {
+		return x.Info
+	}
+	return ""
+}
+
+type GetLoggedInUUID struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pid           *PID                   `protobuf:"bytes,1,opt,name=pid,proto3" json:"pid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetLoggedInUUID) Reset() {
+	*x = GetLoggedInUUID{}
+	mi := &file_types_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLoggedInUUID) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLoggedInUUID) ProtoMessage() {}
+
+func (x *GetLoggedInUUID) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLoggedInUUID.ProtoReflect.Descriptor instead.
+func (*GetLoggedInUUID) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *GetLoggedInUUID) GetPid() *PID {
+	if x != nil {
+		return x.Pid
+	}
+	return nil
+}
+
+type LoggedInUUID struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoggedInUUID) Reset() {
+	*x = LoggedInUUID{}
+	mi := &file_types_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoggedInUUID) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoggedInUUID) ProtoMessage() {}
+
+func (x *LoggedInUUID) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoggedInUUID.ProtoReflect.Descriptor instead.
+func (*LoggedInUUID) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *LoggedInUUID) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type NeededServerConfiguration struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerPID     *PID                   `protobuf:"bytes,1,opt,name=serverPID,proto3" json:"serverPID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NeededServerConfiguration) Reset() {
+	*x = NeededServerConfiguration{}
+	mi := &file_types_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NeededServerConfiguration) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NeededServerConfiguration) ProtoMessage() {}
+
+func (x *NeededServerConfiguration) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NeededServerConfiguration.ProtoReflect.Descriptor instead.
+func (*NeededServerConfiguration) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *NeededServerConfiguration) GetServerPID() *PID {
+	if x != nil {
+		return x.ServerPID
+	}
+	return nil
+}
+
+type CreateUnit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	IsConfigured  bool                   `protobuf:"varint,2,opt,name=isConfigured,proto3" json:"isConfigured,omitempty"`
+	UserID        string                 `protobuf:"bytes,3,opt,name=userID,proto3" json:"userID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateUnit) Reset() {
+	*x = CreateUnit{}
+	mi := &file_types_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateUnit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateUnit) ProtoMessage() {}
+
+func (x *CreateUnit) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateUnit.ProtoReflect.Descriptor instead.
+func (*CreateUnit) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *CreateUnit) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateUnit) GetIsConfigured() bool {
+	if x != nil {
+		return x.IsConfigured
+	}
+	return false
+}
+
+func (x *CreateUnit) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+type AcceptCreateUnit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AcceptCreateUnit) Reset() {
+	*x = AcceptCreateUnit{}
+	mi := &file_types_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AcceptCreateUnit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AcceptCreateUnit) ProtoMessage() {}
+
+func (x *AcceptCreateUnit) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AcceptCreateUnit.ProtoReflect.Descriptor instead.
+func (*AcceptCreateUnit) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{17}
+}
+
+type DenyCreateUnit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Info          string                 `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DenyCreateUnit) Reset() {
+	*x = DenyCreateUnit{}
+	mi := &file_types_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DenyCreateUnit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenyCreateUnit) ProtoMessage() {}
+
+func (x *DenyCreateUnit) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DenyCreateUnit.ProtoReflect.Descriptor instead.
+func (*DenyCreateUnit) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *DenyCreateUnit) GetInfo() string {
+	if x != nil {
+		return x.Info
+	}
+	return ""
+}
+
+type GetAllUnits struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAllUnits) Reset() {
+	*x = GetAllUnits{}
+	mi := &file_types_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAllUnits) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAllUnits) ProtoMessage() {}
+
+func (x *GetAllUnits) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAllUnits.ProtoReflect.Descriptor instead.
+func (*GetAllUnits) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{19}
+}
+
+type AllUnits struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Units         []*Unit                `protobuf:"bytes,1,rep,name=units,proto3" json:"units,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AllUnits) Reset() {
+	*x = AllUnits{}
+	mi := &file_types_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AllUnits) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AllUnits) ProtoMessage() {}
+
+func (x *AllUnits) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AllUnits.ProtoReflect.Descriptor instead.
+func (*AllUnits) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *AllUnits) GetUnits() []*Unit {
+	if x != nil {
+		return x.Units
+	}
+	return nil
+}
+
+type LoginUnit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginUnit) Reset() {
+	*x = LoginUnit{}
+	mi := &file_types_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginUnit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginUnit) ProtoMessage() {}
+
+func (x *LoginUnit) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginUnit.ProtoReflect.Descriptor instead.
+func (*LoginUnit) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *LoginUnit) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type GetAllUsersInUnit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAllUsersInUnit) Reset() {
+	*x = GetAllUsersInUnit{}
+	mi := &file_types_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAllUsersInUnit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAllUsersInUnit) ProtoMessage() {}
+
+func (x *GetAllUsersInUnit) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAllUsersInUnit.ProtoReflect.Descriptor instead.
+func (*GetAllUsersInUnit) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *GetAllUsersInUnit) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type AllUsersInUnit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Users         []*User                `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AllUsersInUnit) Reset() {
+	*x = AllUsersInUnit{}
+	mi := &file_types_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AllUsersInUnit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AllUsersInUnit) ProtoMessage() {}
+
+func (x *AllUsersInUnit) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AllUsersInUnit.ProtoReflect.Descriptor instead.
+func (*AllUsersInUnit) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *AllUsersInUnit) GetUsers() []*User {
+	if x != nil {
+		return x.Users
+	}
+	return nil
+}
+
 type GetUserAboveLVL struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Users         []*User                `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
@@ -681,7 +1142,7 @@ type GetUserAboveLVL struct {
 
 func (x *GetUserAboveLVL) Reset() {
 	*x = GetUserAboveLVL{}
-	mi := &file_types_proto_msgTypes[14]
+	mi := &file_types_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -693,7 +1154,7 @@ func (x *GetUserAboveLVL) String() string {
 func (*GetUserAboveLVL) ProtoMessage() {}
 
 func (x *GetUserAboveLVL) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[14]
+	mi := &file_types_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -706,7 +1167,7 @@ func (x *GetUserAboveLVL) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserAboveLVL.ProtoReflect.Descriptor instead.
 func (*GetUserAboveLVL) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{14}
+	return file_types_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetUserAboveLVL) GetUsers() []*User {
@@ -724,7 +1185,7 @@ type AssignUserToUnit struct {
 
 func (x *AssignUserToUnit) Reset() {
 	*x = AssignUserToUnit{}
-	mi := &file_types_proto_msgTypes[15]
+	mi := &file_types_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -736,7 +1197,7 @@ func (x *AssignUserToUnit) String() string {
 func (*AssignUserToUnit) ProtoMessage() {}
 
 func (x *AssignUserToUnit) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[15]
+	mi := &file_types_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -749,7 +1210,7 @@ func (x *AssignUserToUnit) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignUserToUnit.ProtoReflect.Descriptor instead.
 func (*AssignUserToUnit) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{15}
+	return file_types_proto_rawDescGZIP(), []int{25}
 }
 
 var File_types_proto protoreflect.FileDescriptor
@@ -759,42 +1220,67 @@ const file_types_proto_rawDesc = "" +
 	"\vtypes.proto\x12\x05types\"8\n" +
 	"\x04Role\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
-	"\truleLevel\x18\x02 \x01(\x04R\truleLevel\"c\n" +
+	"\truleLevel\x18\x02 \x01(\x04R\truleLevel\"8\n" +
+	"\bPersonal\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
+	"\asurname\x18\x02 \x01(\tR\asurname\"\x90\x01\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x03 \x01(\tR\bpassword\x12\x19\n" +
-	"\brule_lvl\x18\x04 \x01(\x05R\aruleLvl\"/\n" +
+	"\brule_lvl\x18\x04 \x01(\x05R\aruleLvl\x12+\n" +
+	"\bpersonal\x18\x05 \x01(\v2\x0f.types.PersonalR\bpersonal\"N\n" +
+	"\x04Unit\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\"\n" +
+	"\fisConfigured\x18\x03 \x01(\bR\fisConfigured\"/\n" +
 	"\x03PID\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\"\x11\n" +
 	"\x0fIsServerRunning\"\t\n" +
 	"\aRunning\"\n" +
 	"\n" +
-	"\bStartApp\"5\n" +
-	"\x0fConnectToServer\x12\"\n" +
-	"\x06client\x18\x01 \x01(\v2\n" +
-	".types.PIDR\x06client\"@\n" +
+	"\bStartApp\"\f\n" +
+	"\n" +
+	"PingServer\"\f\n" +
+	"\n" +
+	"Disconnect\"[\n" +
+	"\tLoginUser\x12\x1c\n" +
+	"\x03pid\x18\x01 \x01(\v2\n" +
+	".types.PIDR\x03pid\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\"@\n" +
 	"\vAcceptLogin\x12\x12\n" +
 	"\x04info\x18\x01 \x01(\tR\x04info\x12\x1d\n" +
 	"\n" +
 	"rule_level\x18\x02 \x01(\x03R\truleLevel\"\x1f\n" +
 	"\tDenyLogin\x12\x12\n" +
-	"\x04info\x18\x01 \x01(\tR\x04info\"\f\n" +
-	"\n" +
-	"Disconnect\"E\n" +
+	"\x04info\x18\x01 \x01(\tR\x04info\"/\n" +
+	"\x0fGetLoggedInUUID\x12\x1c\n" +
+	"\x03pid\x18\x01 \x01(\v2\n" +
+	".types.PIDR\x03pid\"\x1e\n" +
+	"\fLoggedInUUID\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"E\n" +
 	"\x19NeededServerConfiguration\x12(\n" +
 	"\tserverPID\x18\x01 \x01(\v2\n" +
-	".types.PIDR\tserverPID\"\x1b\n" +
+	".types.PIDR\tserverPID\"\\\n" +
+	"\n" +
+	"CreateUnit\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\"\n" +
+	"\fisConfigured\x18\x02 \x01(\bR\fisConfigured\x12\x16\n" +
+	"\x06userID\x18\x03 \x01(\tR\x06userID\"\x12\n" +
+	"\x10AcceptCreateUnit\"$\n" +
+	"\x0eDenyCreateUnit\x12\x12\n" +
+	"\x04info\x18\x01 \x01(\tR\x04info\"\r\n" +
+	"\vGetAllUnits\"-\n" +
+	"\bAllUnits\x12!\n" +
+	"\x05units\x18\x01 \x03(\v2\v.types.UnitR\x05units\"\x1b\n" +
 	"\tLoginUnit\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\tR\x02id\",\n" +
-	"\tCreatUser\x12\x1f\n" +
-	"\x04user\x18\x01 \x01(\v2\v.types.UserR\x04user\"[\n" +
-	"\tLoginUser\x12\x1c\n" +
-	"\x03pid\x18\x01 \x01(\v2\n" +
-	".types.PIDR\x03pid\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x03 \x01(\tR\bpassword\"4\n" +
+	"\x02id\x18\x02 \x01(\tR\x02id\"#\n" +
+	"\x11GetAllUsersInUnit\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"3\n" +
+	"\x0eAllUsersInUnit\x12!\n" +
+	"\x05users\x18\x01 \x03(\v2\v.types.UserR\x05users\"4\n" +
 	"\x0fGetUserAboveLVL\x12!\n" +
 	"\x05users\x18\x01 \x03(\v2\v.types.UserR\x05users\"\x12\n" +
 	"\x10AssignUserToUnitB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
@@ -811,36 +1297,48 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                      // 0: types.Role
-	(*User)(nil),                      // 1: types.User
-	(*PID)(nil),                       // 2: types.PID
-	(*IsServerRunning)(nil),           // 3: types.IsServerRunning
-	(*Running)(nil),                   // 4: types.Running
-	(*StartApp)(nil),                  // 5: types.StartApp
-	(*ConnectToServer)(nil),           // 6: types.ConnectToServer
-	(*AcceptLogin)(nil),               // 7: types.AcceptLogin
-	(*DenyLogin)(nil),                 // 8: types.DenyLogin
+	(*Personal)(nil),                  // 1: types.Personal
+	(*User)(nil),                      // 2: types.User
+	(*Unit)(nil),                      // 3: types.Unit
+	(*PID)(nil),                       // 4: types.PID
+	(*IsServerRunning)(nil),           // 5: types.IsServerRunning
+	(*Running)(nil),                   // 6: types.Running
+	(*StartApp)(nil),                  // 7: types.StartApp
+	(*PingServer)(nil),                // 8: types.PingServer
 	(*Disconnect)(nil),                // 9: types.Disconnect
-	(*NeededServerConfiguration)(nil), // 10: types.NeededServerConfiguration
-	(*LoginUnit)(nil),                 // 11: types.LoginUnit
-	(*CreatUser)(nil),                 // 12: types.CreatUser
-	(*LoginUser)(nil),                 // 13: types.LoginUser
-	(*GetUserAboveLVL)(nil),           // 14: types.GetUserAboveLVL
-	(*AssignUserToUnit)(nil),          // 15: types.AssignUserToUnit
+	(*LoginUser)(nil),                 // 10: types.LoginUser
+	(*AcceptLogin)(nil),               // 11: types.AcceptLogin
+	(*DenyLogin)(nil),                 // 12: types.DenyLogin
+	(*GetLoggedInUUID)(nil),           // 13: types.GetLoggedInUUID
+	(*LoggedInUUID)(nil),              // 14: types.LoggedInUUID
+	(*NeededServerConfiguration)(nil), // 15: types.NeededServerConfiguration
+	(*CreateUnit)(nil),                // 16: types.CreateUnit
+	(*AcceptCreateUnit)(nil),          // 17: types.AcceptCreateUnit
+	(*DenyCreateUnit)(nil),            // 18: types.DenyCreateUnit
+	(*GetAllUnits)(nil),               // 19: types.GetAllUnits
+	(*AllUnits)(nil),                  // 20: types.AllUnits
+	(*LoginUnit)(nil),                 // 21: types.LoginUnit
+	(*GetAllUsersInUnit)(nil),         // 22: types.GetAllUsersInUnit
+	(*AllUsersInUnit)(nil),            // 23: types.AllUsersInUnit
+	(*GetUserAboveLVL)(nil),           // 24: types.GetUserAboveLVL
+	(*AssignUserToUnit)(nil),          // 25: types.AssignUserToUnit
 }
 var file_types_proto_depIdxs = []int32{
-	2, // 0: types.ConnectToServer.client:type_name -> types.PID
-	2, // 1: types.NeededServerConfiguration.serverPID:type_name -> types.PID
-	1, // 2: types.CreatUser.user:type_name -> types.User
-	2, // 3: types.LoginUser.pid:type_name -> types.PID
-	1, // 4: types.GetUserAboveLVL.users:type_name -> types.User
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	1, // 0: types.User.personal:type_name -> types.Personal
+	4, // 1: types.LoginUser.pid:type_name -> types.PID
+	4, // 2: types.GetLoggedInUUID.pid:type_name -> types.PID
+	4, // 3: types.NeededServerConfiguration.serverPID:type_name -> types.PID
+	3, // 4: types.AllUnits.units:type_name -> types.Unit
+	2, // 5: types.AllUsersInUnit.users:type_name -> types.User
+	2, // 6: types.GetUserAboveLVL.users:type_name -> types.User
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }
@@ -854,7 +1352,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
