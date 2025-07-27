@@ -20,7 +20,13 @@ const (
 	LoginState GameState = iota
 	HCMenuState
 	CreateUnitState
+	InfoUnitState
 )
+
+type Position struct {
+	x int32
+	y int32
+}
 
 type Window struct {
 	sceneStack []GameState
@@ -36,6 +42,7 @@ type Window struct {
 	loginSceneData  LoginScene
 	hcMenuSceneData HCMenuScene
 	createUnitScene CreateUnitScene
+	infoUnitScene   InfoUnitScene
 
 	Done chan bool
 }
@@ -64,7 +71,7 @@ func (w *Window) Receive(ctx *actor.Context) {
 	case *Proto.NeededServerConfiguration:
 		w.serverPID = actor.NewPID(msg.ServerPID.Address, msg.ServerPID.Id)
 	default:
-		Server.Logger.Warn("Server got unknown message", reflect.TypeOf(msg).String())
+		Server.Logger.Warn("Server got unknown errorMessage", reflect.TypeOf(msg).String())
 	}
 }
 func init() {
@@ -103,6 +110,8 @@ func (w *Window) update() {
 		w.updateHCMenuState()
 	case CreateUnitState:
 		w.updateCreateUnitState()
+	case InfoUnitState:
+		w.updateInfoUnitState()
 	}
 
 }
@@ -116,6 +125,8 @@ func (w *Window) render() {
 		w.renderHCMenuState()
 	case CreateUnitState:
 		w.renderCreateUnitState()
+	case InfoUnitState:
+		w.renderInfoUnitState()
 	}
 	rl.EndDrawing()
 

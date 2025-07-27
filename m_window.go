@@ -39,12 +39,7 @@ func main() {
 	app := Application.NewWindowActor(window)
 	appPID := e.Spawn(app, "app") //this is creating new app
 
-	resp = e.Request(serverPID, &Proto.ConnectToServer{
-		Client: &Proto.PID{
-			Address: appPID.GetAddress(),
-			Id:      appPID.GetID(),
-		},
-	}, time.Second)
+	resp = e.Request(serverPID, &Proto.PingServer{}, time.Second)
 	val, err := resp.Result()
 	if err != nil {
 		Server.Logger.Error("Can't connect to the server!", "err: ", err)

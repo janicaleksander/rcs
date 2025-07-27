@@ -5,7 +5,6 @@ import (
 	"github.com/janicaleksander/bcs/External"
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/Server"
-	"github.com/janicaleksander/bcs/User"
 	"reflect"
 )
 
@@ -13,7 +12,7 @@ type Unit struct {
 	id        string // uuid
 	serverPID *actor.PID
 	external  *External.External
-	users     []*User.User
+	users     []*Proto.User
 }
 
 func NewUnit(id string, ext *External.External) actor.Producer {
@@ -21,7 +20,7 @@ func NewUnit(id string, ext *External.External) actor.Producer {
 		return &Unit{
 			id:       id,
 			external: ext,
-			users:    make([]*User.User, 1024),
+			users:    make([]*Proto.User, 1024),
 		}
 	}
 }

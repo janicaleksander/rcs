@@ -51,6 +51,11 @@ func (w *Window) updateLoginState() {
 		//valid login credentials -> send to server loginUser, wait for response
 		email := w.loginSceneData.emailTXT
 		pwd := w.loginSceneData.passwordTXT
+		if len(email) <= 0 || len(pwd) <= 0 {
+			w.loginSceneData.isLoginError = true
+			w.loginSceneData.loginErrorMessage = "Zero length input"
+			return
+		}
 		pid := &Proto.PID{
 			Address: w.ctx.PID().GetAddress(),
 			Id:      w.ctx.PID().GetID(),
@@ -71,6 +76,7 @@ func (w *Window) updateLoginState() {
 			//if role is 5 this
 			//else if ... others
 			if v.RuleLevel == 5 {
+				w.loginSceneData.isLoginError = false
 				w.menuHCSceneSetup()
 				w.currentState = HCMenuState
 				w.sceneStack = append(w.sceneStack, HCMenuState)
