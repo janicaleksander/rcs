@@ -46,7 +46,8 @@ message Running {}
 message StartApp {}
 message PingServer {}
 message Disconnect {}
-
+message Ping{}
+message Pong{}
 // ========================
 // AUTHENTICATION & LOGIN
 // ========================
@@ -118,9 +119,11 @@ message AllUsersInUnit {
 }
 
 message GetUserAboveLVL {
-  repeated User users = 1;
 }
 
+message UsersAboveLVL{
+  repeated User users = 1;
+}
 message AssignUserToUnit {
   // TODO: add fields: userID, unitID, roleID
 }

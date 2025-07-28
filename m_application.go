@@ -8,17 +8,15 @@ import (
 	"github.com/janicaleksander/bcs/Server"
 	"github.com/joho/godotenv"
 	"os"
-	"time"
 )
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		Server.Logger.Error("Error loading .env file")
+		Server.Logger.Error("Error with loading .env file")
 		return
 	}
-
-	window := Application.NewWindow()
+	//Setup remote access
 	r := remote.New(os.Getenv("APP_ADDR"), remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
@@ -26,30 +24,23 @@ func main() {
 		return
 	}
 
-	Server.Logger.Info("Window is running on:", "Addr:", os.Getenv("APP_ADDR"))
+	Server.Logger.Info("Application is running on:", "Addr:", os.Getenv("APP_ADDR"))
 	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
-
 	//ping server
-	resp := e.Request(serverPID, &Proto.IsServerRunning{}, time.Second)
+	resp := e.Request(serverPID, &Proto.IsServerRunning{}, Application.WaitTime)
 	_, err = resp.Result()
 	if err != nil {
 		Server.Logger.Error("Server is not running", "err: ", err)
 		return
 	}
-	app := Application.NewWindowActor(window)
-	appPID := e.Spawn(app, "app") //this is creating new app
-
-	resp = e.Request(serverPID, &Proto.PingServer{}, time.Second)
-	val, err := resp.Result()
-	if err != nil {
-		Server.Logger.Error("Can't connect to the server!", "err: ", err)
-		return
-	}
-	//respond to connect to server neededServerConfiguration
-	e.Send(appPID, val)
+	window := Application.NewWindow()
+	app := Application.NewWindowActor(window, serverPID)
+	e.Spawn(app, "app") //this is creating new app
 
 	//window
 	window.RunWindow()
-	//running here -> first scene is loading bar and change to loginPanel only if ping to server works
+
+	//we need a block because actor is non-blocking,
+	//so after we close application we close chanel and return from this
 	<-window.Done
 }

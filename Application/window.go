@@ -13,7 +13,9 @@ import (
 type GameState int
 
 const (
-	WaitToLogin time.Duration = 3
+	WIDTH                  = 1280
+	HEIGHT                 = 720
+	WaitTime time.Duration = 3 * time.Second
 )
 
 const (
@@ -47,15 +49,16 @@ type Window struct {
 	Done chan bool
 }
 
-func NewWindowActor(w *Window) actor.Producer {
+func NewWindowActor(w *Window, serverPID *actor.PID) actor.Producer {
 	return func() actor.Receiver {
+		w.serverPID = serverPID
 		return w
 	}
 }
 
 func NewWindow() *Window {
 	return &Window{
-		Done: make(chan bool, 1024),
+		Done: make(chan bool, 1),
 	}
 }
 
@@ -68,8 +71,8 @@ func (w *Window) Receive(ctx *actor.Context) {
 		Server.Logger.Info("Actor initialized")
 	case actor.Stopped:
 		Server.Logger.Info("Actor stopped")
-	case *Proto.NeededServerConfiguration:
-		w.serverPID = actor.NewPID(msg.ServerPID.Address, msg.ServerPID.Id)
+	case *Proto.Ping:
+		ctx.Respond(&Proto.Pong{})
 	default:
 		Server.Logger.Warn("Server got unknown errorMessage", reflect.TypeOf(msg).String())
 	}
@@ -79,16 +82,15 @@ func init() {
 }
 func (w *Window) setup() {
 	rl.SetConfigFlags(rl.FlagWindowHighdpi)
-	w.width = 1280
-	w.height = 720
-	rl.InitWindow(1280, 720, "BCS Application")
+	w.width = WIDTH
+	w.height = HEIGHT
+	rl.InitWindow(int32(w.width), int32(w.height), "BCS Application")
 	rl.SetTargetFPS(60)
 	w.sceneStack = append(w.sceneStack, LoginState)
-	w.currentState = LoginState
 
 	//init login state
+	w.currentState = LoginState
 	w.loginSceneSetup()
-	//
 	w.running = true
 
 }
@@ -96,7 +98,6 @@ func (w *Window) quit() {
 	//maybe to quit some assets
 }
 
-func (w *Window) drawScene() {}
 func (w *Window) input() {
 
 }

@@ -1,7 +1,6 @@
 package Application
 
 import (
-	"fmt"
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/Proto"
@@ -10,24 +9,21 @@ import (
 	"time"
 )
 
-// TODO make components e.g slider component to not repeat this properties
-
 type InfoUnitScene struct {
-	//first left side slider with names of units 3/12
 
 	//TODO refactor	other down list with other [], divide to two slices
 
+	//list of all units
 	units []*Proto.Unit
 
 	usersCache  map[string][]*Proto.User //preload users in each unit from units
 	unitsSlider ListSlider
 
-	//middle with general info about selected 5/12
-
+	//middle with general info about selected
 	descriptionBounds rl.Rectangle
 	//... some elements about unit
 
-	//last part with commander squad of selected unit (5,4,3 rank)  4/12
+	//last part with commander squad of selected unit (5,4,3 rank)
 	usersSlider ListSlider
 
 	//section with info about selected user
@@ -38,10 +34,12 @@ type InfoUnitScene struct {
 
 	lastProcessedUnitIdx int32
 	lastProcessedUserIdx int32
+
+	//TODO add error's field
+	//TODO add go back button
 }
 
 func (s *InfoUnitScene) Reset() {
-	//TODO
 	s.userInfoName = ""
 	s.userInfoSurname = ""
 	s.userInfoLVL = ""
@@ -93,7 +91,6 @@ func (w *Window) infoUnitSceneSetup() {
 		w.infoUnitScene.usersCache[v.id] = v.data
 	}
 
-	fmt.Println(w.infoUnitScene.usersCache)
 	w.infoUnitScene.unitsSlider = ListSlider{
 		strings: make([]string, 0),
 		bounds: rl.NewRectangle(
@@ -143,9 +140,9 @@ func (w *Window) infoUnitSceneSetup() {
 //TODO add some info where e.g. users are empty
 
 func (w *Window) updateInfoUnitState() {
-	currentUnitIdx := w.infoUnitScene.unitsSlider.idxActiveElement // 0 0
+	currentUnitIdx := w.infoUnitScene.unitsSlider.idxActiveElement
 	if currentUnitIdx != -1 && currentUnitIdx != w.infoUnitScene.lastProcessedUnitIdx {
-	
+
 		u := w.infoUnitScene.units[currentUnitIdx]
 		users := w.infoUnitScene.usersCache[u.Id]
 		w.infoUnitScene.usersSlider.strings = make([]string, 0, len(users))
@@ -160,7 +157,6 @@ func (w *Window) updateInfoUnitState() {
 		}
 
 		w.infoUnitScene.Reset()
-		//w.infoUnitScene.lastProcessedUserIdx = -1
 		w.infoUnitScene.lastProcessedUnitIdx = currentUnitIdx
 	}
 

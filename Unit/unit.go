@@ -15,12 +15,12 @@ type Unit struct {
 	users     []*Proto.User
 }
 
-func NewUnit(id string, ext *External.External) actor.Producer {
+func NewUnit(serverPID *actor.PID, ext *External.External) actor.Producer {
 	return func() actor.Receiver {
 		return &Unit{
-			id:       id,
-			external: ext,
-			users:    make([]*Proto.User, 1024),
+			serverPID: serverPID,
+			external:  ext,
+			users:     make([]*Proto.User, 1024),
 		}
 	}
 }
@@ -34,8 +34,6 @@ func (u *Unit) Receive(ctx *actor.Context) {
 		Server.Logger.Info("Unit has started")
 	case actor.Stopped:
 		Server.Logger.Info("Unit has stopped")
-	case *Proto.NeededServerConfiguration:
-		u.serverPID = actor.NewPID(msg.ServerPID.Address, msg.ServerPID.Id)
 	default:
 		Server.Logger.Warn("Unit got unknown message", "Type", reflect.TypeOf(msg).String())
 		_ = msg

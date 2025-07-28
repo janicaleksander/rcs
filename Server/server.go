@@ -9,19 +9,22 @@ import (
 	"log/slog"
 	"os"
 	"reflect"
+	"sync"
+	"time"
 )
 
-// TODO add logger statement everywhere
 var Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
-// actor with remote
+const (
+	PingPingTime = 3 * time.Second
+)
+
 type Server struct {
 	storage     db.Storage
 	listenAddr  string                // IP of (one) main server
 	connections map[*actor.PID]string // PID  to uuid
 }
 
-// TODO do refactor of Receive loop to make distinct functions
 func NewServer(listenAddr string, storage db.Storage) actor.Producer {
 	return func() actor.Receiver {
 		return &Server{
@@ -32,33 +35,24 @@ func NewServer(listenAddr string, storage db.Storage) actor.Producer {
 	}
 }
 
+// TODO In the future legal way to disconnect
+// TODO manage if err !=nil some log errors
 func (s *Server) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
 		Logger.Info("Server initialized")
 	case actor.Started:
 		Logger.Info("Server has started")
+		go s.heartbeat(ctx)
 	case actor.Stopped:
 		Logger.Info("Server has stopped")
-	//case to update connection map in connection/disconnection
 	case *Proto.IsServerRunning:
 		ctx.Respond(&Proto.Running{})
-	case *Proto.PingServer:
-		// TODO: implement maps of connections to server
-		// maybe login could only add sth to connections map (app)
-		// needs his ID (unit)
-		//respond to get others PID of server
-		ctx.Respond(&Proto.NeededServerConfiguration{
-			ServerPID: &Proto.PID{
-				Address: ctx.PID().GetAddress(),
-				Id:      ctx.PID().GetID(),
-			}})
-	case *Proto.Disconnect:
+	case *Proto.Disconnect: // after this switch state to loginScene
 		_, ok := s.connections[ctx.Sender()]
-		if !ok {
-			//sth
+		if ok {
+			delete(s.connections, ctx.Sender())
 		}
-		delete(s.connections, ctx.Sender())
 	case *Proto.LoginUnit:
 		//update use map
 		//id, err := s.loginUnit(ctx, msg.Email, msg.Password)
@@ -66,17 +60,15 @@ func (s *Server) Receive(ctx *actor.Context) {
 		//	s.clients[id] = ctx.Sender().GetAddress()
 		//}
 	case *Proto.LoginUser:
-		id, err := s.loginUser(ctx, msg.Email, msg.Password)
-		if err == nil {
+		id, role, err := s.loginUser(msg.Email, msg.Password)
+		if err != nil {
+			ctx.Respond(&Proto.DenyLogin{Info: err.Error()})
+		} else {
 			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
-			_, ok := s.connections[pid]
-			if ok {
-				//TODO repair this
-				fmt.Println("byłem")
-			}
-			s.connections[pid] = id //pid to uuid
+			s.connections[pid] = id                          //pid to uuid
+			ctx.Respond(&Proto.AcceptLogin{Info: "Login successful! ", RuleLevel: int64(role)})
 		}
-	case *Proto.GetLoggedInUUID:
+	case *Proto.GetLoggedInUUID: //returning an uuid of current logged-in user/unit
 		pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
 		id := s.connections[pid]
 		ctx.Respond(&Proto.LoggedInUUID{Id: id})
@@ -85,7 +77,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 		c := context.Background()
 		users, err := s.storage.GetUsersWithLVL(c, 4)
 		if err == nil {
-			ctx.Respond(&Proto.GetUserAboveLVL{Users: users})
+			ctx.Respond(&Proto.UsersAboveLVL{Users: users})
 		}
 	case *Proto.CreateUnit:
 		c := context.Background()
@@ -116,16 +108,33 @@ func (s *Server) Receive(ctx *actor.Context) {
 
 	}
 }
+func (s *Server) heartbeat(ctx *actor.Context) {
+	var mutex sync.RWMutex
 
-func (s *Server) loginUser(ctx *actor.Context, email, password string) (string, error) {
+	for {
+		time.Sleep(5 * time.Second)
+		for pid := range s.connections {
+			go func(p *actor.PID) {
+				resp := ctx.Request(p, &Proto.Ping{}, PingPingTime)
+				v, err := resp.Result()
+				if _, ok := v.(*Proto.Pong); !ok || err != nil {
+					mutex.Lock()
+					if _, exists := s.connections[p]; exists {
+						delete(s.connections, p)
+					}
+					mutex.Unlock()
+				}
+			}(pid)
+		}
+	}
+}
+
+func (s *Server) loginUser(email, password string) (string, int, error) {
 	// TODO: add jwt to login
 	c := context.Background()
 	id, role, err := s.storage.LoginUser(c, email, password)
 	if err != nil {
-		ctx.Respond(&Proto.DenyLogin{Info: err.Error()})
-		return "", err
-	} else {
-		ctx.Respond(&Proto.AcceptLogin{Info: "Login successful! ", RuleLevel: int64(role)})
+		return "", -1, err
 	}
-	return id, nil
+	return id, role, nil
 }

@@ -57,7 +57,7 @@ func (w *Window) menuHCSceneSetup() {
 
 	//create unit
 	w.hcMenuSceneData.createUnitButton = Button{
-		position: rl.NewRectangle(
+		bounds: rl.NewRectangle(
 			10+w.hcMenuSceneData.unitRectangle.X,
 			10+w.hcMenuSceneData.unitRectangle.Y,
 			200,
@@ -68,7 +68,7 @@ func (w *Window) menuHCSceneSetup() {
 
 	//info about units
 	w.hcMenuSceneData.infoUnitButton = Button{
-		position: rl.NewRectangle(
+		bounds: rl.NewRectangle(
 			10+w.hcMenuSceneData.unitRectangle.X,
 			80+w.hcMenuSceneData.unitRectangle.Y,
 			200,
@@ -79,14 +79,14 @@ func (w *Window) menuHCSceneSetup() {
 
 	// create user
 	w.hcMenuSceneData.createUserButton = Button{
-		position: rl.Rectangle{},
-		text:     "",
+		bounds: rl.Rectangle{},
+		text:   "",
 	}
 
 	//info about users
 	w.hcMenuSceneData.infoUserButton = Button{
-		position: rl.Rectangle{},
-		text:     "",
+		bounds: rl.Rectangle{},
+		text:   "",
 	}
 
 }
@@ -124,14 +124,14 @@ func (w *Window) renderHCMenuState() {
 		int32(w.hcMenuSceneData.inboxRectangle.Height), rl.Green)
 
 	//button create unit
-	if gui.Button(w.hcMenuSceneData.createUnitButton.position, w.hcMenuSceneData.createUnitButton.text) {
+	if gui.Button(w.hcMenuSceneData.createUnitButton.bounds, w.hcMenuSceneData.createUnitButton.text) {
 		w.createUnitSceneSetup()
 		w.currentState = CreateUnitState
 		w.sceneStack = append(w.sceneStack, CreateUnitState)
 	}
 
 	//button info units
-	if gui.Button(w.hcMenuSceneData.infoUnitButton.position, w.hcMenuSceneData.infoUnitButton.text) {
+	if gui.Button(w.hcMenuSceneData.infoUnitButton.bounds, w.hcMenuSceneData.infoUnitButton.text) {
 		w.infoUnitSceneSetup()
 		w.currentState = InfoUnitState
 		w.sceneStack = append(w.sceneStack, InfoUnitState)

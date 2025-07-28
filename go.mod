@@ -4,6 +4,7 @@ go 1.24.5
 
 require (
 	github.com/anthdm/hollywood v1.0.5
+	github.com/gen2brain/raylib-go/raygui v0.0.0-20250617194346-eddd038123ee
 	github.com/gen2brain/raylib-go/raylib v0.55.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
@@ -16,7 +17,6 @@ require (
 require (
 	github.com/DataDog/gostackparse v0.7.0 // indirect
 	github.com/ebitengine/purego v0.8.2 // indirect
-	github.com/gen2brain/raylib-go/raygui v0.0.0-20250617194346-eddd038123ee // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
 	github.com/planetscale/vtprotobuf v0.5.0 // indirect

@@ -3,8 +3,8 @@ package Application
 import rl "github.com/gen2brain/raylib-go/raylib"
 
 type Button struct {
-	position rl.Rectangle
-	text     string
+	bounds rl.Rectangle
+	text   string
 }
 
 type ListSlider struct {
@@ -13,4 +13,10 @@ type ListSlider struct {
 	idxActiveElement int32
 	focus            int32
 	idxScroll        int32
+}
+
+type InputField struct {
+	bounds rl.Rectangle
+	text   string
+	focus  bool
 }
