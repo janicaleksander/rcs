@@ -221,3 +221,12 @@ func (p *Postgres) GetUsersInUnit(ctx context.Context, id string) ([]*Proto.User
 	}
 	return users, nil
 }
+
+func (p *Postgres) IsUserInUnit(ctx context.Context, id string) (bool, error) {
+	var exists bool
+	err := p.conn.QueryRow(`SELECT EXISTS (SELECT 1 FROM user_to_unit WHERE user_id = $1)`, id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}

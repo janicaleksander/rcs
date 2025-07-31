@@ -39,7 +39,8 @@ func (w *Window) createUnitSceneSetup() {
 	w.createUnitScene.Reset()
 
 	//get user slice from DB
-	resp := w.ctx.Request(w.serverPID, &Proto.GetUserAboveLVL{}, WaitTime)
+	//TODO get proper lvl value
+	resp := w.ctx.Request(w.serverPID, &Proto.GetUserAboveLVL{Lvl: -1}, WaitTime)
 
 	val, err := resp.Result()
 	if err != nil {

@@ -1,6 +1,9 @@
 package Application
 
-import rl "github.com/gen2brain/raylib-go/raylib"
+import "C"
+import (
+	rl "github.com/gen2brain/raylib-go/raylib"
+)
 
 type Button struct {
 	bounds rl.Rectangle
@@ -16,7 +19,10 @@ type ListSlider struct {
 }
 
 type InputField struct {
-	bounds rl.Rectangle
-	text   string
-	focus  bool
+	bounds   rl.Rectangle
+	text     string
+	focus    bool
+	textSize int
 }
+
+//TODO add active status to users

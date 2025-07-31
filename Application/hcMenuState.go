@@ -79,14 +79,14 @@ func (w *Window) menuHCSceneSetup() {
 
 	// create user
 	w.hcMenuSceneData.createUserButton = Button{
-		bounds: rl.Rectangle{},
-		text:   "",
+		bounds: rl.NewRectangle(w.hcMenuSceneData.userRectangle.X, w.hcMenuSceneData.userRectangle.Y, 200, 40),
+		text:   "Create User",
 	}
 
 	//info about users
 	w.hcMenuSceneData.infoUserButton = Button{
-		bounds: rl.Rectangle{},
-		text:   "",
+		bounds: rl.NewRectangle(w.hcMenuSceneData.userRectangle.X, w.hcMenuSceneData.userRectangle.Y+80, 200, 40),
+		text:   "Users info",
 	}
 
 }
@@ -135,6 +135,18 @@ func (w *Window) renderHCMenuState() {
 		w.infoUnitSceneSetup()
 		w.currentState = InfoUnitState
 		w.sceneStack = append(w.sceneStack, InfoUnitState)
+	}
+	//button create user
+	if gui.Button(w.hcMenuSceneData.createUserButton.bounds, w.hcMenuSceneData.createUserButton.text) {
+		w.createUserSceneSetup()
+		w.currentState = CreateUserState
+		w.sceneStack = append(w.sceneStack, CreateUserState)
+	}
+	//info user button
+	if gui.Button(w.hcMenuSceneData.infoUserButton.bounds, w.hcMenuSceneData.infoUserButton.text) {
+		w.InfoUserSceneSetup()
+		w.currentState = InfoUserState
+		w.sceneStack = append(w.sceneStack, InfoUserState)
 	}
 
 }

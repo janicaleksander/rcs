@@ -4,7 +4,6 @@ import (
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/Proto"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -20,7 +19,11 @@ type InfoUnitScene struct {
 	unitsSlider ListSlider
 
 	//middle with general info about selected
-	descriptionBounds rl.Rectangle
+	descriptionBounds  rl.Rectangle
+	descriptionButton1 Button
+	descriptionButton2 Button
+	descriptionButton3 Button
+	descriptionButton4 Button
 	//... some elements about unit
 
 	//last part with commander squad of selected unit (5,4,3 rank)
@@ -28,9 +31,8 @@ type InfoUnitScene struct {
 
 	//section with info about selected user
 	userInfoBounds  rl.Rectangle
-	userInfoName    string
-	userInfoSurname string
-	userInfoLVL     string
+	userInfoButton1 Button //info
+	userInfoButton2 Button //send message
 
 	lastProcessedUnitIdx int32
 	lastProcessedUserIdx int32
@@ -40,9 +42,6 @@ type InfoUnitScene struct {
 }
 
 func (s *InfoUnitScene) Reset() {
-	s.userInfoName = ""
-	s.userInfoSurname = ""
-	s.userInfoLVL = ""
 	s.lastProcessedUnitIdx = -1
 	s.lastProcessedUserIdx = -1
 }
@@ -103,6 +102,9 @@ func (w *Window) infoUnitSceneSetup() {
 		focus:            1,
 		idxScroll:        0,
 	}
+	for _, v := range w.infoUnitScene.units {
+		w.infoUnitScene.unitsSlider.strings = append(w.infoUnitScene.unitsSlider.strings, v.Id[:5]+"..."+v.Id[31:])
+	}
 	w.infoUnitScene.descriptionBounds = rl.NewRectangle(
 		w.infoUnitScene.unitsSlider.bounds.Width,
 		w.infoUnitScene.unitsSlider.bounds.Y,
@@ -126,15 +128,69 @@ func (w *Window) infoUnitSceneSetup() {
 		w.infoUnitScene.usersSlider.bounds.Width,
 		(1.0/3.0)*float32(w.height))
 
-	for _, v := range w.infoUnitScene.units {
-		w.infoUnitScene.unitsSlider.strings = append(w.infoUnitScene.unitsSlider.strings, v.Id[:5]+"..."+v.Id[31:])
-	}
 	//TODO do full refactor of this conditions and check where have to have it
 	if len(w.infoUnitScene.units) > 0 {
 		w.infoUnitScene.unitsSlider.idxActiveElement = 0
 	} else {
 		w.infoUnitScene.usersSlider.idxActiveElement = -1
 	}
+
+	w.infoUnitScene.descriptionButton1 = Button{
+		bounds: rl.NewRectangle(
+			w.infoUnitScene.descriptionBounds.X,
+			w.infoUnitScene.descriptionBounds.Y,
+			w.infoUnitScene.descriptionBounds.Width/2,
+			w.infoUnitScene.descriptionBounds.Height/2,
+		),
+		text: "Button Info \n 1",
+	}
+	w.infoUnitScene.descriptionButton2 = Button{
+		bounds: rl.NewRectangle(
+			w.infoUnitScene.descriptionBounds.X+w.infoUnitScene.descriptionButton1.bounds.Width,
+			w.infoUnitScene.descriptionBounds.Y,
+			w.infoUnitScene.descriptionBounds.Width/2,
+			w.infoUnitScene.descriptionBounds.Height/2,
+		),
+		text: "Button Info \n 2",
+	}
+	w.infoUnitScene.descriptionButton3 = Button{
+		bounds: rl.NewRectangle(
+			w.infoUnitScene.descriptionBounds.X,
+			w.infoUnitScene.descriptionBounds.Y+w.infoUnitScene.descriptionButton1.bounds.Height,
+			w.infoUnitScene.descriptionBounds.Width/2,
+			w.infoUnitScene.descriptionBounds.Height/2,
+		),
+		text: "Button Info \n 3",
+	}
+	w.infoUnitScene.descriptionButton4 = Button{
+		bounds: rl.NewRectangle(
+			w.infoUnitScene.descriptionBounds.X+w.infoUnitScene.descriptionButton1.bounds.Width,
+			w.infoUnitScene.descriptionBounds.Y+w.infoUnitScene.descriptionButton1.bounds.Height,
+			w.infoUnitScene.descriptionBounds.Width/2,
+			w.infoUnitScene.descriptionBounds.Height/2,
+		),
+		text: "Button Info \n 4",
+	}
+
+	w.infoUnitScene.userInfoButton1 = Button{
+		bounds: rl.NewRectangle(
+			w.infoUnitScene.userInfoBounds.X,
+			w.infoUnitScene.userInfoBounds.Y,
+			w.infoUnitScene.userInfoBounds.Width,
+			w.infoUnitScene.userInfoBounds.Height/2,
+		),
+		text: "User info \n 1",
+	}
+	w.infoUnitScene.userInfoButton2 = Button{
+		bounds: rl.NewRectangle(
+			w.infoUnitScene.userInfoBounds.X,
+			w.infoUnitScene.userInfoBounds.Y+w.infoUnitScene.userInfoButton1.bounds.Height,
+			w.infoUnitScene.userInfoBounds.Width,
+			w.infoUnitScene.userInfoBounds.Height/2,
+		),
+		text: "User info \n 2",
+	}
+
 }
 
 //TODO add some info where e.g. users are empty
@@ -168,10 +224,7 @@ func (w *Window) updateInfoUnitState() {
 			unit := w.infoUnitScene.units[selectedUnitIdx]
 			users := w.infoUnitScene.usersCache[unit.Id]
 			if int(currentUserIdx) < len(users) {
-				user := users[currentUserIdx]
-				w.infoUnitScene.userInfoName = user.Personal.Name
-				w.infoUnitScene.userInfoSurname = user.Personal.Surname
-				w.infoUnitScene.userInfoLVL = strconv.Itoa(int(user.RuleLvl))
+				//user := users[currentUserIdx]
 			}
 		}
 
@@ -210,25 +263,12 @@ func (w *Window) renderInfoUnitState() {
 		int32(w.infoUnitScene.userInfoBounds.Height),
 		rl.White)
 
-	fontSize := int32(20)
-	padding := float32(10)
+	gui.Button(w.infoUnitScene.descriptionButton1.bounds, w.infoUnitScene.descriptionButton1.text)
+	gui.Button(w.infoUnitScene.descriptionButton2.bounds, w.infoUnitScene.descriptionButton2.text)
+	gui.Button(w.infoUnitScene.descriptionButton3.bounds, w.infoUnitScene.descriptionButton3.text)
+	gui.Button(w.infoUnitScene.descriptionButton4.bounds, w.infoUnitScene.descriptionButton4.text)
 
-	rl.DrawText(w.infoUnitScene.userInfoName,
-		int32(w.infoUnitScene.userInfoBounds.X+padding),
-		int32(w.infoUnitScene.userInfoBounds.Y+30),
-		fontSize,
-		rl.Black)
-
-	rl.DrawText(w.infoUnitScene.userInfoSurname,
-		int32(w.infoUnitScene.userInfoBounds.X+padding),
-		int32(w.infoUnitScene.userInfoBounds.Y+30+30),
-		fontSize,
-		rl.Black)
-
-	rl.DrawText(w.infoUnitScene.userInfoLVL,
-		int32(w.infoUnitScene.userInfoBounds.X+padding),
-		int32(w.infoUnitScene.userInfoBounds.Y+30+30+30),
-		fontSize,
-		rl.Black)
+	gui.Button(w.infoUnitScene.userInfoButton1.bounds, w.infoUnitScene.userInfoButton1.text)
+	gui.Button(w.infoUnitScene.userInfoButton2.bounds, w.infoUnitScene.userInfoButton2.text)
 
 }

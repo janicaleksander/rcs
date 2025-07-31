@@ -75,8 +75,9 @@ func (s *Server) Receive(ctx *actor.Context) {
 
 	case *Proto.GetUserAboveLVL:
 		c := context.Background()
-		users, err := s.storage.GetUsersWithLVL(c, 4)
+		users, err := s.storage.GetUsersWithLVL(c, int(msg.Lvl))
 		if err == nil {
+			fmt.Println(users)
 			ctx.Respond(&Proto.UsersAboveLVL{Users: users})
 		}
 	case *Proto.CreateUnit:
@@ -102,7 +103,24 @@ func (s *Server) Receive(ctx *actor.Context) {
 			fmt.Println(users)
 			ctx.Respond(&Proto.AllUsersInUnit{Users: users})
 		}
-
+	case *Proto.CreateUser:
+		c := context.Background()
+		err := s.storage.InsertUser(c, msg.User)
+		if err != nil {
+			ctx.Respond(&Proto.DenyCreateUser{Info: err.Error()})
+		} else {
+			ctx.Respond(&Proto.AcceptCreateUser{})
+		}
+	case *Proto.IsUserInUnit:
+		c := context.Background()
+		isInUnit, err := s.storage.IsUserInUnit(c, msg.Id)
+		if err != nil {
+			ctx.Respond(&Proto.UserNotInUnit{})
+		} else if isInUnit {
+			ctx.Respond(&Proto.UserInUnit{})
+		} else {
+			ctx.Respond(&Proto.UserNotInUnit{})
+		}
 	default:
 		Logger.Warn("Server got unknown message", reflect.TypeOf(msg).String())
 

@@ -109,7 +109,15 @@ message LoginUnit {
 // ========================
 // USER OPERATIONS
 // ========================
+message CreateUser{
+  User user = 1 ;
 
+}
+message AcceptCreateUser{
+}
+message DenyCreateUser{
+  string info = 1;
+}
 message GetAllUsersInUnit {
   string id = 1; //unit uuid
 }
@@ -119,11 +127,19 @@ message AllUsersInUnit {
 }
 
 message GetUserAboveLVL {
+  int32 lvl = 1;
 }
 
 message UsersAboveLVL{
   repeated User users = 1;
 }
+
+message IsUserInUnit {
+  string id =1;
+}
+message UserInUnit{}
+message UserNotInUnit{}
+
 message AssignUserToUnit {
   // TODO: add fields: userID, unitID, roleID
 }

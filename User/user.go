@@ -1,6 +1,8 @@
 package User
 
 import (
+	"github.com/google/uuid"
+	"github.com/janicaleksander/bcs/Proto"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -14,6 +16,19 @@ type User struct {
 	RuleLevel int
 }
 */
+func NewUser(email string, password string, ruleLVL int32, name, surname string) *Proto.User {
+	id := uuid.New()
+	return &Proto.User{
+		Id:       id.String(),
+		Email:    email,
+		Password: password,
+		RuleLvl:  ruleLVL,
+		Personal: &Proto.Personal{
+			Name:    name,
+			Surname: surname,
+		},
+	}
+}
 func HashPassword(password string) (string, error) {
 	cost := 14
 	b, err := bcrypt.GenerateFromPassword([]byte(password), cost)

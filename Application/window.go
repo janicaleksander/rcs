@@ -23,6 +23,8 @@ const (
 	HCMenuState
 	CreateUnitState
 	InfoUnitState
+	CreateUserState
+	InfoUserState
 )
 
 type Position struct {
@@ -45,6 +47,8 @@ type Window struct {
 	hcMenuSceneData HCMenuScene
 	createUnitScene CreateUnitScene
 	infoUnitScene   InfoUnitScene
+	createUserScene CreateUserScene
+	infoUserScene   InfoUserScene
 
 	Done chan bool
 }
@@ -113,6 +117,11 @@ func (w *Window) update() {
 		w.updateCreateUnitState()
 	case InfoUnitState:
 		w.updateInfoUnitState()
+	case CreateUserState:
+		w.updateCreateUserState()
+	case InfoUserState:
+		w.updateInfoUserState()
+
 	}
 
 }
@@ -128,6 +137,10 @@ func (w *Window) render() {
 		w.renderCreateUnitState()
 	case InfoUnitState:
 		w.renderInfoUnitState()
+	case CreateUserState:
+		w.renderCreateUserState()
+	case InfoUserState:
+		w.renderInfoUserState()
 	}
 	rl.EndDrawing()
 

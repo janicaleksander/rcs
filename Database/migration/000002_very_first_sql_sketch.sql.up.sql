@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS unit
     name VARCHAR(255) NOT NULL UNIQUE,
     is_configured BOOLEAN NOT NULL 
 );
-
+/*
+//TODO add in user lastTimeActive
+*/
 CREATE TABLE IF NOT EXISTS device
 (
     id INT PRIMARY KEY,
