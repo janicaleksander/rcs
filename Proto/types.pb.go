@@ -1466,6 +1466,7 @@ func (x *IsUserInUnit) GetId() string {
 
 type UserInUnit struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	UnitID        string                 `protobuf:"bytes,1,opt,name=unitID,proto3" json:"unitID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1498,6 +1499,13 @@ func (x *UserInUnit) ProtoReflect() protoreflect.Message {
 // Deprecated: Use UserInUnit.ProtoReflect.Descriptor instead.
 func (*UserInUnit) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *UserInUnit) GetUnitID() string {
+	if x != nil {
+		return x.UnitID
+	}
+	return ""
 }
 
 type UserNotInUnit struct {
@@ -1536,8 +1544,11 @@ func (*UserNotInUnit) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{33}
 }
 
+// TODO maybe add some info to all reject type message
 type AssignUserToUnit struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserID        string                 `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty"`
+	UnitID        string                 `protobuf:"bytes,2,opt,name=unitID,proto3" json:"unitID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1570,6 +1581,216 @@ func (x *AssignUserToUnit) ProtoReflect() protoreflect.Message {
 // Deprecated: Use AssignUserToUnit.ProtoReflect.Descriptor instead.
 func (*AssignUserToUnit) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *AssignUserToUnit) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+func (x *AssignUserToUnit) GetUnitID() string {
+	if x != nil {
+		return x.UnitID
+	}
+	return ""
+}
+
+type SuccessOfAssign struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessOfAssign) Reset() {
+	*x = SuccessOfAssign{}
+	mi := &file_types_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessOfAssign) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessOfAssign) ProtoMessage() {}
+
+func (x *SuccessOfAssign) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessOfAssign.ProtoReflect.Descriptor instead.
+func (*SuccessOfAssign) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{35}
+}
+
+type FailureOfAssign struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FailureOfAssign) Reset() {
+	*x = FailureOfAssign{}
+	mi := &file_types_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FailureOfAssign) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FailureOfAssign) ProtoMessage() {}
+
+func (x *FailureOfAssign) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FailureOfAssign.ProtoReflect.Descriptor instead.
+func (*FailureOfAssign) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{36}
+}
+
+type DeleteUserFromUnit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserID        string                 `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty"`
+	UnitID        string                 `protobuf:"bytes,2,opt,name=unitID,proto3" json:"unitID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteUserFromUnit) Reset() {
+	*x = DeleteUserFromUnit{}
+	mi := &file_types_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteUserFromUnit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteUserFromUnit) ProtoMessage() {}
+
+func (x *DeleteUserFromUnit) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteUserFromUnit.ProtoReflect.Descriptor instead.
+func (*DeleteUserFromUnit) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *DeleteUserFromUnit) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+func (x *DeleteUserFromUnit) GetUnitID() string {
+	if x != nil {
+		return x.UnitID
+	}
+	return ""
+}
+
+type SuccessOfDelete struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessOfDelete) Reset() {
+	*x = SuccessOfDelete{}
+	mi := &file_types_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessOfDelete) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessOfDelete) ProtoMessage() {}
+
+func (x *SuccessOfDelete) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessOfDelete.ProtoReflect.Descriptor instead.
+func (*SuccessOfDelete) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{38}
+}
+
+type FailureOfDelete struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FailureOfDelete) Reset() {
+	*x = FailureOfDelete{}
+	mi := &file_types_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FailureOfDelete) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FailureOfDelete) ProtoMessage() {}
+
+func (x *FailureOfDelete) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FailureOfDelete.ProtoReflect.Descriptor instead.
+func (*FailureOfDelete) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{39}
 }
 
 var File_types_proto protoreflect.FileDescriptor
@@ -1653,11 +1874,21 @@ const file_types_proto_rawDesc = "" +
 	"\rUsersAboveLVL\x12!\n" +
 	"\x05users\x18\x01 \x03(\v2\v.types.UserR\x05users\"\x1e\n" +
 	"\fIsUserInUnit\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"\f\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"$\n" +
 	"\n" +
-	"UserInUnit\"\x0f\n" +
-	"\rUserNotInUnit\"\x12\n" +
-	"\x10AssignUserToUnitB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
+	"UserInUnit\x12\x16\n" +
+	"\x06unitID\x18\x01 \x01(\tR\x06unitID\"\x0f\n" +
+	"\rUserNotInUnit\"B\n" +
+	"\x10AssignUserToUnit\x12\x16\n" +
+	"\x06userID\x18\x01 \x01(\tR\x06userID\x12\x16\n" +
+	"\x06unitID\x18\x02 \x01(\tR\x06unitID\"\x11\n" +
+	"\x0fSuccessOfAssign\"\x11\n" +
+	"\x0fFailureOfAssign\"D\n" +
+	"\x12DeleteUserFromUnit\x12\x16\n" +
+	"\x06userID\x18\x01 \x01(\tR\x06userID\x12\x16\n" +
+	"\x06unitID\x18\x02 \x01(\tR\x06unitID\"\x11\n" +
+	"\x0fSuccessOfDelete\"\x11\n" +
+	"\x0fFailureOfDeleteB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -1671,7 +1902,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                      // 0: types.Role
 	(*Personal)(nil),                  // 1: types.Personal
@@ -1708,6 +1939,11 @@ var file_types_proto_goTypes = []any{
 	(*UserInUnit)(nil),                // 32: types.UserInUnit
 	(*UserNotInUnit)(nil),             // 33: types.UserNotInUnit
 	(*AssignUserToUnit)(nil),          // 34: types.AssignUserToUnit
+	(*SuccessOfAssign)(nil),           // 35: types.SuccessOfAssign
+	(*FailureOfAssign)(nil),           // 36: types.FailureOfAssign
+	(*DeleteUserFromUnit)(nil),        // 37: types.DeleteUserFromUnit
+	(*SuccessOfDelete)(nil),           // 38: types.SuccessOfDelete
+	(*FailureOfDelete)(nil),           // 39: types.FailureOfDelete
 }
 var file_types_proto_depIdxs = []int32{
 	1, // 0: types.User.personal:type_name -> types.Personal
@@ -1736,7 +1972,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   35,
+			NumMessages:   40,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

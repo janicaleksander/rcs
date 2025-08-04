@@ -25,4 +25,10 @@ type InputField struct {
 	textSize int
 }
 
+type Modal struct {
+	background rl.Rectangle
+	bgColor    rl.Color
+	core       rl.Rectangle
+}
+
 //TODO add active status to users

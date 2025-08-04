@@ -222,11 +222,62 @@ func (p *Postgres) GetUsersInUnit(ctx context.Context, id string) ([]*Proto.User
 	return users, nil
 }
 
-func (p *Postgres) IsUserInUnit(ctx context.Context, id string) (bool, error) {
+func (p *Postgres) IsUserInUnit(ctx context.Context, id string) (bool, string, error) {
 	var exists bool
-	err := p.conn.QueryRow(`SELECT EXISTS (SELECT 1 FROM user_to_unit WHERE user_id = $1)`, id).Scan(&exists)
-	if err != nil {
-		return false, err
+	var unitID string
+	err := p.conn.QueryRow(`SELECT unit_id FROM user_to_unit WHERE user_id = $1 LIMIT 1`, id).Scan(&unitID)
+	if errors.Is(err, sql.ErrNoRows) || err != nil {
+		exists = false
+	} else {
+		exists = true
 	}
-	return exists, nil
+	return exists, unitID, err
+}
+func (p *Postgres) AssignUserToUnit(ctx context.Context, userID string, unitID string) error {
+	tx, err := p.conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(ctx, `INSERT INTO user_to_unit (user_id, unit_id) VALUES ($1,$2)`, userID, unitID)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+func (p *Postgres) DeleteUserFromUnit(ctx context.Context, userID string, unitID string) error {
+	tx, err := p.conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, `DELETE FROM user_to_unit WHERE (user_id=$1 AND unit_id=$2 )`, userID, unitID)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+func (p *Postgres) GetUsersUnits(ctx context.Context, userID string) ([]string, error) {
+	rows, err := p.conn.Query(`SELECT unit_id FROM user_to_unit WHERE (user_id=$1);`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	unitsID := make([]string, 0, 64)
+	var id string
+	for rows.Next() {
+		if err = rows.Scan(&id); err != nil {
+			//TODO error
+			return nil, err
+		}
+		unitsID = append(unitsID, id)
+	}
+	return unitsID, nil
 }

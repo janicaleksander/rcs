@@ -13,26 +13,43 @@ type InfoUserScene struct {
 	// user list slider
 	usersList       ListSlider
 	users           []*Proto.User
-	userToUnitCache map[string]bool
+	units           []*Proto.Unit
+	userToUnitCache map[string]string // userID->unitID
 	// description area
 	descriptionBounds  rl.Rectangle
 	descriptionName    string
 	descriptionSurname string
 	descriptionLVL     string
-	userIsInUnit       bool
 	currUserID         string
+	isInUnit           bool
 
 	// action button area
 	actionButtonArea rl.Rectangle
 	// add btn
-	addButton        Button
-	inUnitBackground rl.Rectangle
-	// rmv btn
-	removeButton        Button
-	notInUnitBackground rl.Rectangle
-	// inbox btn
-	inboxButton Button
+	addButton                 Button
+	isConfirmAddButtonPressed bool
+	inUnitBackground          rl.Rectangle
 
+	//TODO add errors field to two modals
+	//modal after add btn
+	showAddModal        bool
+	unitsToAssignSlider ListSlider
+	acceptAddButton     Button
+	addModal            Modal
+
+	// rmv btn
+	removeButton                 Button
+	isConfirmRemoveButtonPressed bool
+	notInUnitBackground          rl.Rectangle
+
+	//modal after rmv btn
+	showRemoveModal    bool
+	usersUnitsSlider   ListSlider
+	acceptRemoveButton Button
+	removeModal        Modal
+
+	// inbox btn
+	inboxButton          Button
 	lastProcessedUserIdx int32
 }
 
@@ -41,12 +58,27 @@ func (i *InfoUserScene) Reset() {
 	i.descriptionName = ""
 	i.descriptionSurname = ""
 	i.descriptionLVL = ""
+	i.currUserID = ""
 }
 func (w *Window) InfoUserSceneSetup() {
 	w.infoUserScene.Reset()
-	//TODO get proper lvl
-	resp := w.ctx.Request(w.serverPID, &Proto.GetUserAboveLVL{Lvl: -1}, WaitTime)
+	resp := w.ctx.Request(w.serverPID, &Proto.GetAllUnits{}, WaitTime)
 	val, err := resp.Result()
+	if err != nil {
+		// TODO error
+	}
+	w.infoUserScene.units = make([]*Proto.Unit, 0, 64)
+	if v, ok := val.(*Proto.AllUnits); ok {
+		for _, unit := range v.Units {
+			w.infoUserScene.units = append(w.infoUserScene.units, unit)
+		}
+	} else {
+		// TODO error
+	}
+
+	//TODO get proper lvl
+	resp = w.ctx.Request(w.serverPID, &Proto.GetUserAboveLVL{Lvl: -1}, WaitTime)
+	val, err = resp.Result()
 	if err != nil {
 		// TODO error
 	}
@@ -60,33 +92,29 @@ func (w *Window) InfoUserSceneSetup() {
 	}
 
 	//cache users information
-	w.infoUserScene.userToUnitCache = make(map[string]bool, len(w.infoUserScene.users))
+	w.infoUserScene.userToUnitCache = make(map[string]string, len(w.infoUserScene.users))
 	var waitGroup sync.WaitGroup
 	cacheChan := make(chan struct {
-		id       string
-		isInUnit bool
+		userID string
+		unitID string
 	}, 1024)
-	var isInUnit bool
 	for _, user := range w.infoUserScene.users {
 		waitGroup.Add(1)
-		go func(wg *sync.WaitGroup, id string) {
+		go func(wg *sync.WaitGroup, userID string) {
 			defer wg.Done()
-			resp = w.ctx.Request(w.serverPID, &Proto.IsUserInUnit{Id: id}, WaitTime)
+			resp = w.ctx.Request(w.serverPID, &Proto.IsUserInUnit{Id: userID}, WaitTime)
 			v, err := resp.Result()
 			if err != nil {
 				// TODO
 				fmt.Println("ERROR")
 			}
-			if _, ok := v.(*Proto.UserInUnit); ok {
-				isInUnit = true
+			if payload, ok := v.(*Proto.UserInUnit); ok {
+				cacheChan <- struct {
+					userID string
+					unitID string
+				}{userID: userID, unitID: payload.UnitID}
 			}
-			if _, ok := v.(*Proto.UserNotInUnit); ok {
-				isInUnit = false
-			}
-			cacheChan <- struct {
-				id       string
-				isInUnit bool
-			}{id: id, isInUnit: isInUnit}
+
 		}(&waitGroup, user.Id)
 	}
 	go func() {
@@ -94,7 +122,7 @@ func (w *Window) InfoUserSceneSetup() {
 		close(cacheChan)
 	}()
 	for v := range cacheChan {
-		w.infoUserScene.userToUnitCache[v.id] = v.isInUnit
+		w.infoUserScene.userToUnitCache[v.userID] = v.unitID
 	}
 	w.infoUserScene.usersList = ListSlider{
 		strings: make([]string, 0, 64),
@@ -158,6 +186,63 @@ func (w *Window) InfoUserSceneSetup() {
 		w.infoUserScene.usersList.idxActiveElement = -1
 
 	}
+	//TODO make one rule with ruleLVL when i can add what lvl and what lvl can do sth
+	//e.g lvl5,lvl4 can only add lvl5; lvl4 can only add a lvl 3 2 1
+	//and maybe here not include lvl 3 2 1(soldiers type)
+	//or we cant add 5lvl to units cause their have access everywhere
+	//POPUP after add button (sliders with units)
+
+	w.infoUserScene.addModal = Modal{
+		background: rl.NewRectangle(0, 0, float32(w.width), float32(w.height)),
+		bgColor:    rl.Fade(rl.Gray, 0.3),
+		core:       rl.NewRectangle(float32(w.width/2-150.0), float32(w.height/2-150.0), 300, 300),
+	}
+	w.infoUserScene.unitsToAssignSlider = ListSlider{
+		strings: make([]string, 0, 64),
+		bounds: rl.NewRectangle(
+			w.infoUserScene.addModal.core.X+4,
+			w.infoUserScene.addModal.core.Y+50,
+			(3.9/4.0)*float32(w.infoUserScene.addModal.core.Width),
+			(2.5/4.0)*float32(w.infoUserScene.addModal.core.Height)),
+		idxActiveElement: -1,
+		focus:            0,
+		idxScroll:        0,
+	}
+	w.infoUserScene.acceptAddButton = Button{
+		bounds: rl.NewRectangle(
+			w.infoUserScene.unitsToAssignSlider.bounds.X,
+			w.infoUserScene.unitsToAssignSlider.bounds.Y+200,
+			(3.9/4.0)*float32(w.infoUserScene.addModal.core.Width),
+			30),
+		text: "Add to this unit",
+	}
+
+	//////
+	w.infoUserScene.removeModal = Modal{
+		background: rl.NewRectangle(0, 0, float32(w.width), float32(w.height)),
+		bgColor:    rl.Fade(rl.Gray, 0.3),
+		core:       rl.NewRectangle(float32(w.width/2-150.0), float32(w.height/2-150.0), 300, 300),
+	}
+	w.infoUserScene.usersUnitsSlider = ListSlider{
+		strings: make([]string, 0, 64),
+		bounds: rl.NewRectangle(
+			w.infoUserScene.removeModal.core.X+4,
+			w.infoUserScene.removeModal.core.Y+50,
+			(3.9/4.0)*float32(w.infoUserScene.removeModal.core.Width),
+			(2.5/4.0)*float32(w.infoUserScene.removeModal.core.Height)),
+		idxActiveElement: -1,
+		focus:            0,
+		idxScroll:        0,
+	}
+	w.infoUserScene.acceptRemoveButton = Button{
+		bounds: rl.NewRectangle(
+			w.infoUserScene.usersUnitsSlider.bounds.X,
+			w.infoUserScene.usersUnitsSlider.bounds.Y+200,
+			(3.9/4.0)*float32(w.infoUserScene.removeModal.core.Width),
+			30),
+		text: "Remove from  this unit",
+	}
+
 }
 
 func (w *Window) updateInfoUserState() {
@@ -166,25 +251,57 @@ func (w *Window) updateInfoUserState() {
 		//
 		user := w.infoUserScene.users[w.infoUserScene.usersList.idxActiveElement]
 		w.infoUserScene.currUserID = user.Id
-		w.infoUserScene.userIsInUnit = w.infoUserScene.userToUnitCache[user.Id]
+		//TODO in the v2 version we need to track more than
+		// one unit ID
+		if _, ok := w.infoUserScene.userToUnitCache[user.Id]; ok {
+			w.infoUserScene.isInUnit = true
+		} else {
+			w.infoUserScene.isInUnit = false
+		}
 		//
 		w.infoUserScene.descriptionName = user.Personal.Name
 		w.infoUserScene.descriptionSurname = user.Personal.Surname
 		w.infoUserScene.descriptionLVL = strconv.Itoa(int(user.RuleLvl))
 		w.infoUserScene.lastProcessedUserIdx = currentUserIdx
 	}
-
-	if !w.infoUserScene.userIsInUnit {
+	//TODO in v2 version add ability to have more than one unit by commanders type
+	//and here change layout when he has more than one unit modal shows up with all units
+	//and we have to choose unit to perform chose action
+	if !w.infoUserScene.isInUnit { // shows add to unit
+		//fil userUnits ( TODO in v2 for loop through many units)
 		if gui.Button(w.infoUserScene.addButton.bounds, w.infoUserScene.addButton.text) {
-			//button enable is user is not in unit
-			//get vars
-			// if yes  error
-			// if no success
+			for _, unit := range w.infoUserScene.units {
+				w.infoUserScene.unitsToAssignSlider.strings = append(w.infoUserScene.unitsToAssignSlider.strings, unit.Id)
+				/*
+					cacheUnit := w.infoUserScene.userToUnitCache[w.infoUserScene.currUserID]
+					if cacheUnit == unit.Id {
+						continue
+					}
+					in v2 version. we dont need to show units that we are already enrolled in
+				*/
 
-			//
-			//
-			w.infoUserScene.userToUnitCache[w.infoUserScene.currUserID] = true
-			//db call
+			}
+			w.infoUserScene.showAddModal = true
+
+		}
+		if w.infoUserScene.isConfirmAddButtonPressed {
+			if w.infoUserScene.unitsToAssignSlider.idxActiveElement >= 0 {
+				unit := w.infoUserScene.units[w.infoUserScene.unitsToAssignSlider.idxActiveElement]
+				resp := w.ctx.Request(w.serverPID, &Proto.AssignUserToUnit{
+					UserID: w.infoUserScene.currUserID,
+					UnitID: unit.Id,
+				}, WaitTime)
+				val, err := resp.Result()
+				if _, ok := val.(*Proto.FailureOfAssign); ok || err != nil {
+					// TODO failure
+				}
+				if _, ok := val.(*Proto.SuccessOfAssign); ok {
+					//TODO success
+					w.infoUserScene.userToUnitCache[w.infoUserScene.currUserID] = unit.Id
+					w.infoUserScene.isInUnit = true
+
+				}
+			}
 
 		}
 	} else {
@@ -196,15 +313,33 @@ func (w *Window) updateInfoUserState() {
 		rl.DrawText("User is \n in unit", int32(w.infoUserScene.inUnitBackground.X), int32(w.infoUserScene.inUnitBackground.Y), 16, rl.White)
 
 	}
-	if w.infoUserScene.userIsInUnit {
+	if w.infoUserScene.isInUnit { // shows remove  unit
 		if gui.Button(w.infoUserScene.removeButton.bounds, w.infoUserScene.removeButton.text) {
-			// button enable is user is in unit
+			w.infoUserScene.usersUnitsSlider.strings = append(w.infoUserScene.usersUnitsSlider.strings, w.infoUserScene.userToUnitCache[w.infoUserScene.currUserID])
+			w.infoUserScene.showRemoveModal = true
+		}
+		if w.infoUserScene.isConfirmRemoveButtonPressed {
+			if w.infoUserScene.usersUnitsSlider.idxActiveElement >= 0 {
+				unit := w.infoUserScene.units[w.infoUserScene.usersUnitsSlider.idxActiveElement]
+				resp := w.ctx.Request(w.serverPID, &Proto.DeleteUserFromUnit{
+					UserID: w.infoUserScene.currUserID,
+					UnitID: unit.Id,
+				}, WaitTime)
+				val, err := resp.Result()
+				if _, ok := val.(*Proto.FailureOfDelete); ok || err != nil {
+					// TODO failure
+				}
+				if _, ok := val.(*Proto.SuccessOfDelete); ok {
+					//TODO success
 
-			//
-			//
-			w.infoUserScene.userToUnitCache[w.infoUserScene.currUserID] = false
-			w.infoUserScene.userIsInUnit = false
-			//db call
+					//TODO in v2 map str->[]str and then we have to iterate through
+					// this slice and delete exact unit
+					delete(w.infoUserScene.userToUnitCache, w.infoUserScene.currUserID)
+					w.infoUserScene.isInUnit = false
+
+				}
+			}
+
 		}
 	} else {
 		rl.DrawRectangle(int32(w.infoUserScene.notInUnitBackground.X),
@@ -224,6 +359,13 @@ func (w *Window) renderInfoUserState() {
 		if rl.CheckCollisionPointRec(mousePos, w.infoUserScene.usersList.bounds) {
 			w.infoUserScene.usersList.focus = 1
 		}
+		if rl.CheckCollisionPointRec(mousePos, w.infoUserScene.unitsToAssignSlider.bounds) {
+			w.infoUserScene.usersList.focus = 0
+			w.infoUserScene.unitsToAssignSlider.focus = 1
+		}
+		if w.infoUserScene.showAddModal || w.infoUserScene.showRemoveModal {
+			w.infoUserScene.usersList.focus = 0
+		}
 
 	}
 	gui.ListViewEx(w.infoUserScene.usersList.bounds, w.infoUserScene.usersList.strings, &w.infoUserScene.usersList.idxScroll, &w.infoUserScene.usersList.idxActiveElement, w.infoUserScene.usersList.focus)
@@ -232,4 +374,42 @@ func (w *Window) renderInfoUserState() {
 		w.infoUserScene.descriptionName+"\n"+
 			w.infoUserScene.descriptionSurname+"\n"+
 			w.infoUserScene.descriptionLVL+"\n", int32(w.infoUserScene.descriptionBounds.X), int32(w.infoUserScene.descriptionBounds.Y), 43, rl.Yellow)
+	if w.infoUserScene.showAddModal {
+		rl.DrawRectangle(
+			int32(w.infoUserScene.addModal.background.X),
+			int32(w.infoUserScene.addModal.background.Y),
+			int32(w.infoUserScene.addModal.background.Width),
+			int32(w.infoUserScene.addModal.background.Height),
+			w.infoUserScene.addModal.bgColor)
+		if gui.WindowBox(w.infoUserScene.addModal.core, "TITLE") {
+			w.infoUserScene.showAddModal = false
+			clear(w.infoUserScene.unitsToAssignSlider.strings)
+		}
+		gui.ListViewEx(w.infoUserScene.unitsToAssignSlider.bounds,
+			w.infoUserScene.unitsToAssignSlider.strings,
+			&w.infoUserScene.unitsToAssignSlider.idxScroll,
+			&w.infoUserScene.unitsToAssignSlider.idxActiveElement,
+			w.infoUserScene.unitsToAssignSlider.focus)
+
+		w.infoUserScene.isConfirmAddButtonPressed = gui.Button(w.infoUserScene.acceptAddButton.bounds, w.infoUserScene.acceptAddButton.text)
+	}
+	if w.infoUserScene.showRemoveModal {
+		rl.DrawRectangle(
+			int32(w.infoUserScene.removeModal.background.X),
+			int32(w.infoUserScene.removeModal.background.Y),
+			int32(w.infoUserScene.removeModal.background.Width),
+			int32(w.infoUserScene.removeModal.background.Height),
+			w.infoUserScene.removeModal.bgColor)
+		if gui.WindowBox(w.infoUserScene.removeModal.core, "TITLE") {
+			w.infoUserScene.showRemoveModal = false
+			clear(w.infoUserScene.usersUnitsSlider.strings)
+		}
+		gui.ListViewEx(w.infoUserScene.usersUnitsSlider.bounds,
+			w.infoUserScene.usersUnitsSlider.strings,
+			&w.infoUserScene.usersUnitsSlider.idxScroll,
+			&w.infoUserScene.usersUnitsSlider.idxActiveElement,
+			w.infoUserScene.usersUnitsSlider.focus)
+
+		w.infoUserScene.isConfirmRemoveButtonPressed = gui.Button(w.infoUserScene.acceptRemoveButton.bounds, w.infoUserScene.acceptRemoveButton.text)
+	}
 }

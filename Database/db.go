@@ -14,5 +14,8 @@ type Storage interface {
 	InsertUnit(ctx context.Context, nameUnit string, isConfigured bool, id string) error
 	GetAllUnits(ctx context.Context) ([]*Proto.Unit, error)
 	GetUsersInUnit(ctx context.Context, id string) ([]*Proto.User, error)
-	IsUserInUnit(ctx context.Context, id string) (bool, error)
+	IsUserInUnit(ctx context.Context, id string) (bool, string, error)
+	AssignUserToUnit(ctx context.Context, userID string, unitID string) error
+	DeleteUserFromUnit(ctx context.Context, userID string, unitID string) error
+	GetUsersUnits(ctx context.Context, userID string) ([]string, error)
 }

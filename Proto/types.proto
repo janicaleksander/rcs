@@ -137,9 +137,21 @@ message UsersAboveLVL{
 message IsUserInUnit {
   string id =1;
 }
-message UserInUnit{}
-message UserNotInUnit{}
-
-message AssignUserToUnit {
-  // TODO: add fields: userID, unitID, roleID
+message UserInUnit{
+  string unitID = 1;
 }
+message UserNotInUnit{}
+// TODO maybe add some info to all reject type message
+message AssignUserToUnit {
+  string userID = 1;
+  string unitID =2;
+}
+message SuccessOfAssign{}
+message FailureOfAssign{}
+
+message DeleteUserFromUnit{
+  string userID = 1;
+  string unitID = 2;
+}
+message SuccessOfDelete{}
+message FailureOfDelete{}

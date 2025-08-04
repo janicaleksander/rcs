@@ -113,14 +113,31 @@ func (s *Server) Receive(ctx *actor.Context) {
 		}
 	case *Proto.IsUserInUnit:
 		c := context.Background()
-		isInUnit, err := s.storage.IsUserInUnit(c, msg.Id)
+		isInUnit, unitID, err := s.storage.IsUserInUnit(c, msg.Id)
 		if err != nil {
 			ctx.Respond(&Proto.UserNotInUnit{})
 		} else if isInUnit {
-			ctx.Respond(&Proto.UserInUnit{})
+			ctx.Respond(&Proto.UserInUnit{UnitID: unitID})
 		} else {
 			ctx.Respond(&Proto.UserNotInUnit{})
 		}
+	case *Proto.AssignUserToUnit:
+		c := context.Background()
+		err := s.storage.AssignUserToUnit(c, msg.UserID, msg.UnitID)
+		if err != nil {
+			ctx.Respond(&Proto.FailureOfAssign{})
+		} else {
+			ctx.Respond(&Proto.SuccessOfAssign{})
+		}
+	case *Proto.DeleteUserFromUnit:
+		c := context.Background()
+		err := s.storage.DeleteUserFromUnit(c, msg.UserID, msg.UnitID)
+		if err != nil {
+			ctx.Respond(&Proto.FailureOfDelete{})
+		} else {
+			ctx.Respond(&Proto.SuccessOfDelete{})
+		}
+
 	default:
 		Logger.Warn("Server got unknown message", reflect.TypeOf(msg).String())
 
