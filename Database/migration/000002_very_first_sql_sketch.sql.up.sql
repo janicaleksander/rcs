@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS device
 
 CREATE TABLE IF NOT EXISTS user_to_unit
 (
-    user_id UUID REFERENCES users(id) NOT NULL,
+    user_id UUID REFERENCES users(id) UNIQUE NOT NULL,
     unit_id UUID REFERENCES unit(id) NOT NULL
     );
 
