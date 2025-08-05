@@ -383,7 +383,7 @@ func (w *Window) renderInfoUserState() {
 			w.infoUserScene.addModal.bgColor)
 		if gui.WindowBox(w.infoUserScene.addModal.core, "TITLE") {
 			w.infoUserScene.showAddModal = false
-			clear(w.infoUserScene.unitsToAssignSlider.strings)
+			w.infoUserScene.unitsToAssignSlider.strings = w.infoUserScene.unitsToAssignSlider.strings[:0]
 		}
 		gui.ListViewEx(w.infoUserScene.unitsToAssignSlider.bounds,
 			w.infoUserScene.unitsToAssignSlider.strings,
@@ -402,7 +402,7 @@ func (w *Window) renderInfoUserState() {
 			w.infoUserScene.removeModal.bgColor)
 		if gui.WindowBox(w.infoUserScene.removeModal.core, "TITLE") {
 			w.infoUserScene.showRemoveModal = false
-			clear(w.infoUserScene.usersUnitsSlider.strings)
+			w.infoUserScene.usersUnitsSlider.strings = w.infoUserScene.usersUnitsSlider.strings[:0]
 		}
 		gui.ListViewEx(w.infoUserScene.usersUnitsSlider.bounds,
 			w.infoUserScene.usersUnitsSlider.strings,
