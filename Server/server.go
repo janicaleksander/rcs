@@ -16,7 +16,7 @@ import (
 var Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
 const (
-	PingPingTime = 3 * time.Second
+	PingPongTime = 3 * time.Second
 )
 
 type Server struct {
@@ -150,7 +150,7 @@ func (s *Server) heartbeat(ctx *actor.Context) {
 		time.Sleep(5 * time.Second)
 		for pid := range s.connections {
 			go func(p *actor.PID) {
-				resp := ctx.Request(p, &Proto.Ping{}, PingPingTime)
+				resp := ctx.Request(p, &Proto.Ping{}, PingPongTime)
 				v, err := resp.Result()
 				if _, ok := v.(*Proto.Pong); !ok || err != nil {
 					mutex.Lock()
