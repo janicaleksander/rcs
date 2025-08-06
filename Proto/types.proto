@@ -3,7 +3,7 @@ syntax = "proto3";
 package types;
 
 option go_package = "github.com/janicaleksander/bcs/Proto";
-
+import  "google/protobuf/timestamp.proto";
 // ========================
 // DATA MODELS
 // ========================
@@ -155,3 +155,32 @@ message DeleteUserFromUnit{
 }
 message SuccessOfDelete{}
 message FailureOfDelete{}
+
+// ========================
+// MessageService OPERATIONS
+// ========================
+
+message CreateConversation{
+  string id = 1;
+  string name = 2 ;
+}
+
+message SuccessOfCreateConversation{}
+message FailureOfCreateConversation{}
+
+message AddUserToConversation{
+  string userID = 1;
+  string conversationID = 2;
+  optional string lastSeenMessageID =3; // i have to think about this
+}
+message SuccessOfAddUserToConversation{}
+message FailureOfAddUserToConversation{}
+
+message Message{
+  string id = 1;
+  string senderID = 2;
+  string conversationID =3;
+  string content = 4;
+  google.protobuf.Timestamp sent_at = 5;
+
+}

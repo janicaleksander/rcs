@@ -9,6 +9,7 @@ package Proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -1793,11 +1794,343 @@ func (*FailureOfDelete) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{39}
 }
 
+type CreateConversation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateConversation) Reset() {
+	*x = CreateConversation{}
+	mi := &file_types_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateConversation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateConversation) ProtoMessage() {}
+
+func (x *CreateConversation) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateConversation.ProtoReflect.Descriptor instead.
+func (*CreateConversation) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *CreateConversation) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CreateConversation) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type SuccessOfCreateConversation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessOfCreateConversation) Reset() {
+	*x = SuccessOfCreateConversation{}
+	mi := &file_types_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessOfCreateConversation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessOfCreateConversation) ProtoMessage() {}
+
+func (x *SuccessOfCreateConversation) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessOfCreateConversation.ProtoReflect.Descriptor instead.
+func (*SuccessOfCreateConversation) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{41}
+}
+
+type FailureOfCreateConversation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FailureOfCreateConversation) Reset() {
+	*x = FailureOfCreateConversation{}
+	mi := &file_types_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FailureOfCreateConversation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FailureOfCreateConversation) ProtoMessage() {}
+
+func (x *FailureOfCreateConversation) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FailureOfCreateConversation.ProtoReflect.Descriptor instead.
+func (*FailureOfCreateConversation) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{42}
+}
+
+type AddUserToConversation struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	UserID            string                 `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty"`
+	ConversationID    string                 `protobuf:"bytes,2,opt,name=conversationID,proto3" json:"conversationID,omitempty"`
+	LastSeenMessageID *string                `protobuf:"bytes,3,opt,name=lastSeenMessageID,proto3,oneof" json:"lastSeenMessageID,omitempty"` // i have to think about this
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *AddUserToConversation) Reset() {
+	*x = AddUserToConversation{}
+	mi := &file_types_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddUserToConversation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddUserToConversation) ProtoMessage() {}
+
+func (x *AddUserToConversation) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddUserToConversation.ProtoReflect.Descriptor instead.
+func (*AddUserToConversation) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *AddUserToConversation) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+func (x *AddUserToConversation) GetConversationID() string {
+	if x != nil {
+		return x.ConversationID
+	}
+	return ""
+}
+
+func (x *AddUserToConversation) GetLastSeenMessageID() string {
+	if x != nil && x.LastSeenMessageID != nil {
+		return *x.LastSeenMessageID
+	}
+	return ""
+}
+
+type SuccessOfAddUserToConversation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessOfAddUserToConversation) Reset() {
+	*x = SuccessOfAddUserToConversation{}
+	mi := &file_types_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessOfAddUserToConversation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessOfAddUserToConversation) ProtoMessage() {}
+
+func (x *SuccessOfAddUserToConversation) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessOfAddUserToConversation.ProtoReflect.Descriptor instead.
+func (*SuccessOfAddUserToConversation) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{44}
+}
+
+type FailureOfAddUserToConversation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FailureOfAddUserToConversation) Reset() {
+	*x = FailureOfAddUserToConversation{}
+	mi := &file_types_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FailureOfAddUserToConversation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FailureOfAddUserToConversation) ProtoMessage() {}
+
+func (x *FailureOfAddUserToConversation) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FailureOfAddUserToConversation.ProtoReflect.Descriptor instead.
+func (*FailureOfAddUserToConversation) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{45}
+}
+
+type Message struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	SenderID       string                 `protobuf:"bytes,2,opt,name=senderID,proto3" json:"senderID,omitempty"`
+	ConversationID string                 `protobuf:"bytes,3,opt,name=conversationID,proto3" json:"conversationID,omitempty"`
+	Content        string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	SentAt         *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=sent_at,json=sentAt,proto3" json:"sent_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Message) Reset() {
+	*x = Message{}
+	mi := &file_types_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Message) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Message) ProtoMessage() {}
+
+func (x *Message) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Message.ProtoReflect.Descriptor instead.
+func (*Message) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{46}
+}
+
+func (x *Message) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Message) GetSenderID() string {
+	if x != nil {
+		return x.SenderID
+	}
+	return ""
+}
+
+func (x *Message) GetConversationID() string {
+	if x != nil {
+		return x.ConversationID
+	}
+	return ""
+}
+
+func (x *Message) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *Message) GetSentAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.SentAt
+	}
+	return nil
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
 	"\n" +
-	"\vtypes.proto\x12\x05types\"8\n" +
+	"\vtypes.proto\x12\x05types\x1a\x1fgoogle/protobuf/timestamp.proto\"8\n" +
 	"\x04Role\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\truleLevel\x18\x02 \x01(\x04R\truleLevel\"8\n" +
@@ -1888,7 +2221,25 @@ const file_types_proto_rawDesc = "" +
 	"\x06userID\x18\x01 \x01(\tR\x06userID\x12\x16\n" +
 	"\x06unitID\x18\x02 \x01(\tR\x06unitID\"\x11\n" +
 	"\x0fSuccessOfDelete\"\x11\n" +
-	"\x0fFailureOfDeleteB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
+	"\x0fFailureOfDelete\"8\n" +
+	"\x12CreateConversation\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"\x1d\n" +
+	"\x1bSuccessOfCreateConversation\"\x1d\n" +
+	"\x1bFailureOfCreateConversation\"\xa0\x01\n" +
+	"\x15AddUserToConversation\x12\x16\n" +
+	"\x06userID\x18\x01 \x01(\tR\x06userID\x12&\n" +
+	"\x0econversationID\x18\x02 \x01(\tR\x0econversationID\x121\n" +
+	"\x11lastSeenMessageID\x18\x03 \x01(\tH\x00R\x11lastSeenMessageID\x88\x01\x01B\x14\n" +
+	"\x12_lastSeenMessageID\" \n" +
+	"\x1eSuccessOfAddUserToConversation\" \n" +
+	"\x1eFailureOfAddUserToConversation\"\xac\x01\n" +
+	"\aMessage\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
+	"\bsenderID\x18\x02 \x01(\tR\bsenderID\x12&\n" +
+	"\x0econversationID\x18\x03 \x01(\tR\x0econversationID\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\tR\acontent\x123\n" +
+	"\asent_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x06sentAtB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -1902,63 +2253,72 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 47)
 var file_types_proto_goTypes = []any{
-	(*Role)(nil),                      // 0: types.Role
-	(*Personal)(nil),                  // 1: types.Personal
-	(*User)(nil),                      // 2: types.User
-	(*Unit)(nil),                      // 3: types.Unit
-	(*PID)(nil),                       // 4: types.PID
-	(*IsServerRunning)(nil),           // 5: types.IsServerRunning
-	(*Running)(nil),                   // 6: types.Running
-	(*StartApp)(nil),                  // 7: types.StartApp
-	(*PingServer)(nil),                // 8: types.PingServer
-	(*Disconnect)(nil),                // 9: types.Disconnect
-	(*Ping)(nil),                      // 10: types.Ping
-	(*Pong)(nil),                      // 11: types.Pong
-	(*LoginUser)(nil),                 // 12: types.LoginUser
-	(*AcceptLogin)(nil),               // 13: types.AcceptLogin
-	(*DenyLogin)(nil),                 // 14: types.DenyLogin
-	(*GetLoggedInUUID)(nil),           // 15: types.GetLoggedInUUID
-	(*LoggedInUUID)(nil),              // 16: types.LoggedInUUID
-	(*NeededServerConfiguration)(nil), // 17: types.NeededServerConfiguration
-	(*CreateUnit)(nil),                // 18: types.CreateUnit
-	(*AcceptCreateUnit)(nil),          // 19: types.AcceptCreateUnit
-	(*DenyCreateUnit)(nil),            // 20: types.DenyCreateUnit
-	(*GetAllUnits)(nil),               // 21: types.GetAllUnits
-	(*AllUnits)(nil),                  // 22: types.AllUnits
-	(*LoginUnit)(nil),                 // 23: types.LoginUnit
-	(*CreateUser)(nil),                // 24: types.CreateUser
-	(*AcceptCreateUser)(nil),          // 25: types.AcceptCreateUser
-	(*DenyCreateUser)(nil),            // 26: types.DenyCreateUser
-	(*GetAllUsersInUnit)(nil),         // 27: types.GetAllUsersInUnit
-	(*AllUsersInUnit)(nil),            // 28: types.AllUsersInUnit
-	(*GetUserAboveLVL)(nil),           // 29: types.GetUserAboveLVL
-	(*UsersAboveLVL)(nil),             // 30: types.UsersAboveLVL
-	(*IsUserInUnit)(nil),              // 31: types.IsUserInUnit
-	(*UserInUnit)(nil),                // 32: types.UserInUnit
-	(*UserNotInUnit)(nil),             // 33: types.UserNotInUnit
-	(*AssignUserToUnit)(nil),          // 34: types.AssignUserToUnit
-	(*SuccessOfAssign)(nil),           // 35: types.SuccessOfAssign
-	(*FailureOfAssign)(nil),           // 36: types.FailureOfAssign
-	(*DeleteUserFromUnit)(nil),        // 37: types.DeleteUserFromUnit
-	(*SuccessOfDelete)(nil),           // 38: types.SuccessOfDelete
-	(*FailureOfDelete)(nil),           // 39: types.FailureOfDelete
+	(*Role)(nil),                           // 0: types.Role
+	(*Personal)(nil),                       // 1: types.Personal
+	(*User)(nil),                           // 2: types.User
+	(*Unit)(nil),                           // 3: types.Unit
+	(*PID)(nil),                            // 4: types.PID
+	(*IsServerRunning)(nil),                // 5: types.IsServerRunning
+	(*Running)(nil),                        // 6: types.Running
+	(*StartApp)(nil),                       // 7: types.StartApp
+	(*PingServer)(nil),                     // 8: types.PingServer
+	(*Disconnect)(nil),                     // 9: types.Disconnect
+	(*Ping)(nil),                           // 10: types.Ping
+	(*Pong)(nil),                           // 11: types.Pong
+	(*LoginUser)(nil),                      // 12: types.LoginUser
+	(*AcceptLogin)(nil),                    // 13: types.AcceptLogin
+	(*DenyLogin)(nil),                      // 14: types.DenyLogin
+	(*GetLoggedInUUID)(nil),                // 15: types.GetLoggedInUUID
+	(*LoggedInUUID)(nil),                   // 16: types.LoggedInUUID
+	(*NeededServerConfiguration)(nil),      // 17: types.NeededServerConfiguration
+	(*CreateUnit)(nil),                     // 18: types.CreateUnit
+	(*AcceptCreateUnit)(nil),               // 19: types.AcceptCreateUnit
+	(*DenyCreateUnit)(nil),                 // 20: types.DenyCreateUnit
+	(*GetAllUnits)(nil),                    // 21: types.GetAllUnits
+	(*AllUnits)(nil),                       // 22: types.AllUnits
+	(*LoginUnit)(nil),                      // 23: types.LoginUnit
+	(*CreateUser)(nil),                     // 24: types.CreateUser
+	(*AcceptCreateUser)(nil),               // 25: types.AcceptCreateUser
+	(*DenyCreateUser)(nil),                 // 26: types.DenyCreateUser
+	(*GetAllUsersInUnit)(nil),              // 27: types.GetAllUsersInUnit
+	(*AllUsersInUnit)(nil),                 // 28: types.AllUsersInUnit
+	(*GetUserAboveLVL)(nil),                // 29: types.GetUserAboveLVL
+	(*UsersAboveLVL)(nil),                  // 30: types.UsersAboveLVL
+	(*IsUserInUnit)(nil),                   // 31: types.IsUserInUnit
+	(*UserInUnit)(nil),                     // 32: types.UserInUnit
+	(*UserNotInUnit)(nil),                  // 33: types.UserNotInUnit
+	(*AssignUserToUnit)(nil),               // 34: types.AssignUserToUnit
+	(*SuccessOfAssign)(nil),                // 35: types.SuccessOfAssign
+	(*FailureOfAssign)(nil),                // 36: types.FailureOfAssign
+	(*DeleteUserFromUnit)(nil),             // 37: types.DeleteUserFromUnit
+	(*SuccessOfDelete)(nil),                // 38: types.SuccessOfDelete
+	(*FailureOfDelete)(nil),                // 39: types.FailureOfDelete
+	(*CreateConversation)(nil),             // 40: types.CreateConversation
+	(*SuccessOfCreateConversation)(nil),    // 41: types.SuccessOfCreateConversation
+	(*FailureOfCreateConversation)(nil),    // 42: types.FailureOfCreateConversation
+	(*AddUserToConversation)(nil),          // 43: types.AddUserToConversation
+	(*SuccessOfAddUserToConversation)(nil), // 44: types.SuccessOfAddUserToConversation
+	(*FailureOfAddUserToConversation)(nil), // 45: types.FailureOfAddUserToConversation
+	(*Message)(nil),                        // 46: types.Message
+	(*timestamppb.Timestamp)(nil),          // 47: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
-	1, // 0: types.User.personal:type_name -> types.Personal
-	4, // 1: types.LoginUser.pid:type_name -> types.PID
-	4, // 2: types.GetLoggedInUUID.pid:type_name -> types.PID
-	4, // 3: types.NeededServerConfiguration.serverPID:type_name -> types.PID
-	3, // 4: types.AllUnits.units:type_name -> types.Unit
-	2, // 5: types.CreateUser.user:type_name -> types.User
-	2, // 6: types.AllUsersInUnit.users:type_name -> types.User
-	2, // 7: types.UsersAboveLVL.users:type_name -> types.User
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	1,  // 0: types.User.personal:type_name -> types.Personal
+	4,  // 1: types.LoginUser.pid:type_name -> types.PID
+	4,  // 2: types.GetLoggedInUUID.pid:type_name -> types.PID
+	4,  // 3: types.NeededServerConfiguration.serverPID:type_name -> types.PID
+	3,  // 4: types.AllUnits.units:type_name -> types.Unit
+	2,  // 5: types.CreateUser.user:type_name -> types.User
+	2,  // 6: types.AllUsersInUnit.users:type_name -> types.User
+	2,  // 7: types.UsersAboveLVL.users:type_name -> types.User
+	47, // 8: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }
@@ -1966,13 +2326,14 @@ func file_types_proto_init() {
 	if File_types_proto != nil {
 		return
 	}
+	file_types_proto_msgTypes[43].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   40,
+			NumMessages:   47,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

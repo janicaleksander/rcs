@@ -49,13 +49,11 @@ CREATE TABLE IF NOT EXISTS message
     user_id UUID REFERENCES users(id) NOT NULL,
     conversation_id UUID REFERENCES conversation(id)  NOT NULL,
     content TEXT NOT NULL,
-    sent_at TIMESTAMP NOT NULL,
-    seen_at TIMESTAMP
+    sent_at TIMESTAMP NOT NULL
 
 );
 CREATE TABLE IF NOT EXISTS user_conversation
 (
-    id UUID PRIMARY KEY ,
     user_id UUID REFERENCES users(id) NOT NULL,
     conversation_id UUID REFERENCES conversation(id)  NOT NULL,
     last_seen_message_id UUID REFERENCES message(id),
