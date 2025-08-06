@@ -1,13 +1,14 @@
 package Application
 
 import (
+	"reflect"
+	"runtime"
+	"time"
+
 	"github.com/anthdm/hollywood/actor"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/Server"
-	"reflect"
-	"runtime"
-	"time"
 )
 
 type GameState int

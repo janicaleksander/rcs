@@ -45,7 +45,9 @@ message IsServerRunning {}
 message Running {}
 message StartApp {}
 message PingServer {}
-message Disconnect {}
+message Disconnect {
+  optional PID pid =1;
+}
 message Ping{}
 message Pong{}
 // ========================
@@ -184,3 +186,8 @@ message Message{
   google.protobuf.Timestamp sent_at = 5;
 
 }
+
+message LoadConversation{}
+
+
+

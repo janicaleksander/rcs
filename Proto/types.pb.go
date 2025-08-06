@@ -460,6 +460,7 @@ func (*PingServer) Descriptor() ([]byte, []int) {
 
 type Disconnect struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pid           *PID                   `protobuf:"bytes,1,opt,name=pid,proto3,oneof" json:"pid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -492,6 +493,13 @@ func (x *Disconnect) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Disconnect.ProtoReflect.Descriptor instead.
 func (*Disconnect) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *Disconnect) GetPid() *PID {
+	if x != nil {
+		return x.Pid
+	}
+	return nil
 }
 
 type Ping struct {
@@ -2126,6 +2134,42 @@ func (x *Message) GetSentAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type LoadConversation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoadConversation) Reset() {
+	*x = LoadConversation{}
+	mi := &file_types_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoadConversation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoadConversation) ProtoMessage() {}
+
+func (x *LoadConversation) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoadConversation.ProtoReflect.Descriptor instead.
+func (*LoadConversation) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{47}
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
@@ -2155,9 +2199,12 @@ const file_types_proto_rawDesc = "" +
 	"\n" +
 	"\bStartApp\"\f\n" +
 	"\n" +
-	"PingServer\"\f\n" +
+	"PingServer\"7\n" +
 	"\n" +
-	"Disconnect\"\x06\n" +
+	"Disconnect\x12!\n" +
+	"\x03pid\x18\x01 \x01(\v2\n" +
+	".types.PIDH\x00R\x03pid\x88\x01\x01B\x06\n" +
+	"\x04_pid\"\x06\n" +
 	"\x04Ping\"\x06\n" +
 	"\x04Pong\"[\n" +
 	"\tLoginUser\x12\x1c\n" +
@@ -2239,7 +2286,8 @@ const file_types_proto_rawDesc = "" +
 	"\bsenderID\x18\x02 \x01(\tR\bsenderID\x12&\n" +
 	"\x0econversationID\x18\x03 \x01(\tR\x0econversationID\x12\x18\n" +
 	"\acontent\x18\x04 \x01(\tR\acontent\x123\n" +
-	"\asent_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x06sentAtB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
+	"\asent_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x06sentAt\"\x12\n" +
+	"\x10LoadConversationB&Z$github.com/janicaleksander/bcs/Protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -2253,7 +2301,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 47)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 48)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                           // 0: types.Role
 	(*Personal)(nil),                       // 1: types.Personal
@@ -2302,23 +2350,25 @@ var file_types_proto_goTypes = []any{
 	(*SuccessOfAddUserToConversation)(nil), // 44: types.SuccessOfAddUserToConversation
 	(*FailureOfAddUserToConversation)(nil), // 45: types.FailureOfAddUserToConversation
 	(*Message)(nil),                        // 46: types.Message
-	(*timestamppb.Timestamp)(nil),          // 47: google.protobuf.Timestamp
+	(*LoadConversation)(nil),               // 47: types.LoadConversation
+	(*timestamppb.Timestamp)(nil),          // 48: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
 	1,  // 0: types.User.personal:type_name -> types.Personal
-	4,  // 1: types.LoginUser.pid:type_name -> types.PID
-	4,  // 2: types.GetLoggedInUUID.pid:type_name -> types.PID
-	4,  // 3: types.NeededServerConfiguration.serverPID:type_name -> types.PID
-	3,  // 4: types.AllUnits.units:type_name -> types.Unit
-	2,  // 5: types.CreateUser.user:type_name -> types.User
-	2,  // 6: types.AllUsersInUnit.users:type_name -> types.User
-	2,  // 7: types.UsersAboveLVL.users:type_name -> types.User
-	47, // 8: types.Message.sent_at:type_name -> google.protobuf.Timestamp
-	9,  // [9:9] is the sub-list for method output_type
-	9,  // [9:9] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	4,  // 1: types.Disconnect.pid:type_name -> types.PID
+	4,  // 2: types.LoginUser.pid:type_name -> types.PID
+	4,  // 3: types.GetLoggedInUUID.pid:type_name -> types.PID
+	4,  // 4: types.NeededServerConfiguration.serverPID:type_name -> types.PID
+	3,  // 5: types.AllUnits.units:type_name -> types.Unit
+	2,  // 6: types.CreateUser.user:type_name -> types.User
+	2,  // 7: types.AllUsersInUnit.users:type_name -> types.User
+	2,  // 8: types.UsersAboveLVL.users:type_name -> types.User
+	48, // 9: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }
@@ -2326,6 +2376,7 @@ func file_types_proto_init() {
 	if File_types_proto != nil {
 		return
 	}
+	file_types_proto_msgTypes[9].OneofWrappers = []any{}
 	file_types_proto_msgTypes[43].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2333,7 +2384,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   47,
+			NumMessages:   48,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

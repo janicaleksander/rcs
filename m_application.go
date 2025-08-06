@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
 	"github.com/janicaleksander/bcs/Application"
@@ -16,8 +17,14 @@ func main() {
 		Server.Logger.Error("Error with loading .env file")
 		return
 	}
+	appAddrFlag := flag.String("address", "", "Type here IP address of application")
+	flag.Parse()
+	if len(*appAddrFlag) <= 0 {
+		Server.Logger.Error("Type value of flag")
+		return
+	}
 	//Setup remote access
-	r := remote.New(os.Getenv("APP_ADDR"), remote.NewConfig())
+	r := remote.New(*appAddrFlag, remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
 		Server.Logger.Error(err.Error())

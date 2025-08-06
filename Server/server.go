@@ -3,14 +3,14 @@ package Server
 import (
 	"context"
 	"fmt"
-	"github.com/anthdm/hollywood/actor"
-	db "github.com/janicaleksander/bcs/Database"
-	"github.com/janicaleksander/bcs/Proto"
 	"log/slog"
 	"os"
 	"reflect"
-	"sync"
 	"time"
+
+	"github.com/anthdm/hollywood/actor"
+	db "github.com/janicaleksander/bcs/Database"
+	"github.com/janicaleksander/bcs/Proto"
 )
 
 var Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
@@ -19,10 +19,19 @@ const (
 	PingPongTime = 3 * time.Second
 )
 
+// TODO make a two maybe maps one for connected by app commander lvl person
+// and second to 0 1 2 users/soldiers connected by device->unit->server
+// this is problem e.g. in sending message from 5lvl from app to 0lvl to device in unit
+// but this 5 see this 0 in his lists of person in system (maybe)
 type Server struct {
 	storage     db.Storage
-	listenAddr  string                // IP of (one) main server
-	connections map[*actor.PID]string // PID  to uuid
+	listenAddr  string            // IP of (one) main server
+	connections map[string]string // PID  to uuid
+	active      map[string]bool   //uuid->bool
+	activeChan  chan struct {
+		uuid string
+		PID  *actor.PID
+	}
 }
 
 func NewServer(listenAddr string, storage db.Storage) actor.Producer {
@@ -30,7 +39,12 @@ func NewServer(listenAddr string, storage db.Storage) actor.Producer {
 		return &Server{
 			storage:     storage,
 			listenAddr:  listenAddr,
-			connections: make(map[*actor.PID]string),
+			connections: make(map[string]string),
+			active:      make(map[string]bool),
+			activeChan: make(chan struct {
+				uuid string
+				PID  *actor.PID
+			}, 1024),
 		}
 	}
 }
@@ -41,18 +55,28 @@ func (s *Server) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
 		Logger.Info("Server initialized")
+
 	case actor.Started:
 		Logger.Info("Server has started")
-		go s.heartbeat(ctx)
+		go s.betterHeartbeat(ctx)
 	case actor.Stopped:
+		close(s.activeChan)
 		Logger.Info("Server has stopped")
 	case *Proto.IsServerRunning:
 		ctx.Respond(&Proto.Running{})
 	case *Proto.Disconnect: // after this switch state to loginScene
-		_, ok := s.connections[ctx.Sender()]
-		if ok {
-			delete(s.connections, ctx.Sender())
+		var pidToDelete *actor.PID
+		if msg.Pid != nil {
+			pidToDelete = actor.NewPID(msg.Pid.Address, msg.Pid.Id)
+		} else {
+			pidToDelete = ctx.Sender()
 		}
+		id, ok := s.connections[pidToDelete.String()]
+		if ok {
+			delete(s.active, id)
+			delete(s.connections, pidToDelete.String())
+		}
+
 	case *Proto.LoginUnit:
 		//update use map
 		//id, err := s.loginUnit(ctx, msg.Email, msg.Password)
@@ -65,14 +89,19 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&Proto.DenyLogin{Info: err.Error()})
 		} else {
 			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
-			s.connections[pid] = id                          //pid to uuid
+			s.connections[pid.String()] = id                 //pid to uuid
+			s.activeChan <- struct {
+				uuid string
+				PID  *actor.PID
+			}{uuid: id, PID: pid}
 			ctx.Respond(&Proto.AcceptLogin{Info: "Login successful! ", RuleLevel: int64(role)})
 		}
-	case *Proto.GetLoggedInUUID: //returning an uuid of current logged-in user/unit
-		pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
-		id := s.connections[pid]
-		ctx.Respond(&Proto.LoggedInUUID{Id: id})
+		//TODO idk if this getlogged works
 
+	case *Proto.GetLoggedInUUID: //returning an uuid of current logged-in user
+		pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
+		id := s.connections[pid.String()]
+		ctx.Respond(&Proto.LoggedInUUID{Id: id})
 	case *Proto.GetUserAboveLVL:
 		c := context.Background()
 		users, err := s.storage.GetUsersWithLVL(c, int(msg.Lvl))
@@ -137,30 +166,35 @@ func (s *Server) Receive(ctx *actor.Context) {
 		} else {
 			ctx.Respond(&Proto.SuccessOfDelete{})
 		}
+	case *actor.PID:
+		fmt.Println("dostalem", msg)
 
 	default:
 		Logger.Warn("Server got unknown message", reflect.TypeOf(msg).String())
 
 	}
 }
-func (s *Server) heartbeat(ctx *actor.Context) {
-	var mutex sync.RWMutex
 
-	for {
-		time.Sleep(5 * time.Second)
-		for pid := range s.connections {
-			go func(p *actor.PID) {
-				resp := ctx.Request(p, &Proto.Ping{}, PingPongTime)
-				v, err := resp.Result()
-				if _, ok := v.(*Proto.Pong); !ok || err != nil {
-					mutex.Lock()
-					if _, exists := s.connections[p]; exists {
-						delete(s.connections, p)
-					}
-					mutex.Unlock()
+// if sth is not in active map => not active
+func (s *Server) betterHeartbeat(ctx *actor.Context) {
+	for value := range s.activeChan {
+		//value is uuid or PID
+		s.active[value.uuid] = true
+		go func(pid *actor.PID) {
+			for {
+				resp := ctx.Request(pid, &Proto.Ping{}, PingPongTime)
+				res, err := resp.Result()
+				_, ok := res.(*Proto.Pong)
+				if !ok || err != nil {
+					ctx.Send(ctx.PID(), &Proto.Disconnect{Pid: &Proto.PID{
+						Address: value.PID.Address,
+						Id:      value.PID.ID,
+					}})
+					// delete somehow from active and also from connection
+					break
 				}
-			}(pid)
-		}
+			}
+		}(value.PID)
 	}
 }
 
