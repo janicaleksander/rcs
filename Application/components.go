@@ -1,10 +1,15 @@
 package Application
 
-import "C"
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
+type Circle struct {
+	x      int32
+	y      int32
+	radius float32
+	color  rl.Color
+}
 type Button struct {
 	bounds rl.Rectangle
 	text   string
