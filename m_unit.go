@@ -8,6 +8,7 @@ import (
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/Server"
 	"github.com/janicaleksander/bcs/Unit"
+	"github.com/janicaleksander/bcs/Utils"
 	"github.com/joho/godotenv"
 	"os"
 )
@@ -30,7 +31,7 @@ func main() {
 	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
 
 	//ping server
-	resp := e.Request(serverPID, &Proto.IsServerRunning{}, Application.WaitTime)
+	resp := e.Request(serverPID, &Proto.IsServerRunning{}, Utils.WaitTime)
 	_, err = resp.Result()
 	if err != nil {
 		Server.Logger.Error("Servers is not running", "err: ", err)

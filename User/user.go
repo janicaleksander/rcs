@@ -18,10 +18,15 @@ type User struct {
 */
 func NewUser(email string, password string, ruleLVL int32, name, surname string) *Proto.User {
 	id := uuid.New()
+	pwd, err := HashPassword(password)
+	if err != nil {
+		//TODO
+		//return err
+	}
 	return &Proto.User{
 		Id:       id.String(),
 		Email:    email,
-		Password: password,
+		Password: pwd,
 		RuleLvl:  ruleLVL,
 		Personal: &Proto.Personal{
 			Name:    name,
@@ -30,7 +35,7 @@ func NewUser(email string, password string, ruleLVL int32, name, surname string)
 	}
 }
 func HashPassword(password string) (string, error) {
-	cost := 14
+	cost := 12
 	b, err := bcrypt.GenerateFromPassword([]byte(password), cost)
 	if err != nil {
 		return "", err

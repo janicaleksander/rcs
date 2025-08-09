@@ -4,6 +4,7 @@ import (
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/Proto"
+	"github.com/janicaleksander/bcs/Utils"
 )
 
 // TODO add better description to components in GUI
@@ -40,7 +41,7 @@ func (w *Window) createUnitSceneSetup() {
 
 	//get user slice from DB
 	//TODO get proper lvl value
-	resp := w.ctx.Request(w.serverPID, &Proto.GetUserAboveLVL{Lvl: -1}, WaitTime)
+	resp := w.ctx.Request(w.serverPID, &Proto.GetUserAboveLVL{Lvl: -1}, Utils.WaitTime)
 
 	val, err := resp.Result()
 	if err != nil {
@@ -119,7 +120,7 @@ func (w *Window) updateCreateUnitState() {
 				Name:         name,
 				IsConfigured: false,
 				UserID:       w.createUnitScene.usersDropdown.strings[user],
-			}, WaitTime)
+			}, Utils.WaitTime)
 			val, err := resp.Result()
 			if err != nil {
 				w.createUnitScene.isCreateError = true

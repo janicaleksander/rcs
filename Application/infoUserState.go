@@ -2,11 +2,15 @@ package Application
 
 import (
 	"fmt"
-	gui "github.com/gen2brain/raylib-go/raygui"
-	rl "github.com/gen2brain/raylib-go/raylib"
-	"github.com/janicaleksander/bcs/Proto"
 	"strconv"
 	"sync"
+
+	gui "github.com/gen2brain/raylib-go/raygui"
+	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/google/uuid"
+	"github.com/janicaleksander/bcs/Proto"
+	"github.com/janicaleksander/bcs/Utils"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type InfoUserScene struct {
@@ -20,7 +24,7 @@ type InfoUserScene struct {
 	descriptionName    string
 	descriptionSurname string
 	descriptionLVL     string
-	currUserID         string
+	currSelectedUserID string
 	isInUnit           bool
 
 	// action button area
@@ -49,7 +53,15 @@ type InfoUserScene struct {
 	removeModal        Modal
 
 	// inbox btn
-	inboxButton          Button
+	inboxButton                Button
+	showInboxModal             bool
+	inboxModal                 Modal
+	inboxInput                 InputField
+	sendMessage                Button
+	activeUserCircle           Circle
+	isSendMessageButtonPressed bool
+
+	//idxs
 	lastProcessedUserIdx int32
 }
 
@@ -58,11 +70,12 @@ func (i *InfoUserScene) Reset() {
 	i.descriptionName = ""
 	i.descriptionSurname = ""
 	i.descriptionLVL = ""
-	i.currUserID = ""
+	i.currSelectedUserID = ""
+
 }
 func (w *Window) InfoUserSceneSetup() {
 	w.infoUserScene.Reset()
-	resp := w.ctx.Request(w.serverPID, &Proto.GetAllUnits{}, WaitTime)
+	resp := w.ctx.Request(w.serverPID, &Proto.GetAllUnits{}, Utils.WaitTime)
 	val, err := resp.Result()
 	if err != nil {
 		// TODO error
@@ -77,7 +90,7 @@ func (w *Window) InfoUserSceneSetup() {
 	}
 
 	//TODO get proper lvl
-	resp = w.ctx.Request(w.serverPID, &Proto.GetUserAboveLVL{Lvl: -1}, WaitTime)
+	resp = w.ctx.Request(w.serverPID, &Proto.GetUserAboveLVL{Lvl: -1}, Utils.WaitTime)
 	val, err = resp.Result()
 	if err != nil {
 		// TODO error
@@ -102,7 +115,7 @@ func (w *Window) InfoUserSceneSetup() {
 		waitGroup.Add(1)
 		go func(wg *sync.WaitGroup, userID string) {
 			defer wg.Done()
-			resp = w.ctx.Request(w.serverPID, &Proto.IsUserInUnit{Id: userID}, WaitTime)
+			resp = w.ctx.Request(w.serverPID, &Proto.IsUserInUnit{Id: userID}, Utils.WaitTime)
 			v, err := resp.Result()
 			if err != nil {
 				// TODO
@@ -180,6 +193,15 @@ func (w *Window) InfoUserSceneSetup() {
 		w.infoUserScene.removeButton.bounds.Width,
 		w.infoUserScene.removeButton.bounds.Height)
 
+	w.infoUserScene.inboxButton = Button{
+		bounds: rl.NewRectangle(
+			w.infoUserScene.removeButton.bounds.X+padding,
+			w.infoUserScene.removeButton.bounds.Y,
+			w.infoUserScene.removeButton.bounds.Width,
+			w.infoUserScene.removeButton.bounds.Height),
+		text: "Send \n message",
+	}
+
 	if len(w.infoUserScene.users) > 0 {
 		w.infoUserScene.usersList.idxActiveElement = 0
 	} else {
@@ -242,6 +264,33 @@ func (w *Window) InfoUserSceneSetup() {
 			30),
 		text: "Remove from  this unit",
 	}
+	w.infoUserScene.inboxModal = Modal{
+		background: rl.NewRectangle(0, 0, float32(w.width), float32(w.height)),
+		bgColor:    rl.Fade(rl.Gray, 0.3),
+		core:       rl.NewRectangle(float32(w.width/2-150.0), float32(w.height/2-150.0), 400, 200),
+	}
+
+	w.infoUserScene.inboxInput = InputField{
+		bounds: rl.NewRectangle(
+			w.infoUserScene.inboxModal.core.X+10,
+			w.infoUserScene.inboxModal.core.Y+100,
+			300, 40),
+		text:     "",
+		focus:    false,
+		textSize: 128,
+	}
+	w.infoUserScene.sendMessage = Button{
+		bounds: rl.NewRectangle(w.infoUserScene.inboxInput.bounds.X+w.infoUserScene.inboxInput.bounds.Width+10,
+			w.infoUserScene.inboxInput.bounds.Y,
+			50, 50),
+		text: "Send!",
+	}
+
+	w.infoUserScene.activeUserCircle = Circle{
+		x:      int32(w.infoUserScene.inboxModal.core.X + 10),
+		y:      int32(w.infoUserScene.inboxModal.core.Y),
+		radius: 10,
+	}
 
 }
 
@@ -250,7 +299,7 @@ func (w *Window) updateInfoUserState() {
 	if currentUserIdx != -1 && currentUserIdx != w.infoUserScene.lastProcessedUserIdx {
 		//
 		user := w.infoUserScene.users[w.infoUserScene.usersList.idxActiveElement]
-		w.infoUserScene.currUserID = user.Id
+		w.infoUserScene.currSelectedUserID = user.Id
 		//TODO in the v2 version we need to track more than
 		// one unit ID
 		if _, ok := w.infoUserScene.userToUnitCache[user.Id]; ok {
@@ -273,7 +322,7 @@ func (w *Window) updateInfoUserState() {
 			for _, unit := range w.infoUserScene.units {
 				w.infoUserScene.unitsToAssignSlider.strings = append(w.infoUserScene.unitsToAssignSlider.strings, unit.Id)
 				/*
-					cacheUnit := w.infoUserScene.userToUnitCache[w.infoUserScene.currUserID]
+					cacheUnit := w.infoUserScene.userToUnitCache[w.infoUserScene.currSelectedUserID]
 					if cacheUnit == unit.Id {
 						continue
 					}
@@ -288,16 +337,16 @@ func (w *Window) updateInfoUserState() {
 			if w.infoUserScene.unitsToAssignSlider.idxActiveElement >= 0 {
 				unit := w.infoUserScene.units[w.infoUserScene.unitsToAssignSlider.idxActiveElement]
 				resp := w.ctx.Request(w.serverPID, &Proto.AssignUserToUnit{
-					UserID: w.infoUserScene.currUserID,
+					UserID: w.infoUserScene.currSelectedUserID,
 					UnitID: unit.Id,
-				}, WaitTime)
+				}, Utils.WaitTime)
 				val, err := resp.Result()
 				if _, ok := val.(*Proto.FailureOfAssign); ok || err != nil {
 					// TODO failure
 				}
 				if _, ok := val.(*Proto.SuccessOfAssign); ok {
 					//TODO success
-					w.infoUserScene.userToUnitCache[w.infoUserScene.currUserID] = unit.Id
+					w.infoUserScene.userToUnitCache[w.infoUserScene.currSelectedUserID] = unit.Id
 					w.infoUserScene.isInUnit = true
 
 				}
@@ -315,16 +364,16 @@ func (w *Window) updateInfoUserState() {
 	}
 	if w.infoUserScene.isInUnit { // shows remove  unit
 		if gui.Button(w.infoUserScene.removeButton.bounds, w.infoUserScene.removeButton.text) {
-			w.infoUserScene.usersUnitsSlider.strings = append(w.infoUserScene.usersUnitsSlider.strings, w.infoUserScene.userToUnitCache[w.infoUserScene.currUserID])
+			w.infoUserScene.usersUnitsSlider.strings = append(w.infoUserScene.usersUnitsSlider.strings, w.infoUserScene.userToUnitCache[w.infoUserScene.currSelectedUserID])
 			w.infoUserScene.showRemoveModal = true
 		}
 		if w.infoUserScene.isConfirmRemoveButtonPressed {
 			if w.infoUserScene.usersUnitsSlider.idxActiveElement >= 0 {
 				unit := w.infoUserScene.units[w.infoUserScene.usersUnitsSlider.idxActiveElement]
 				resp := w.ctx.Request(w.serverPID, &Proto.DeleteUserFromUnit{
-					UserID: w.infoUserScene.currUserID,
+					UserID: w.infoUserScene.currSelectedUserID,
 					UnitID: unit.Id,
-				}, WaitTime)
+				}, Utils.WaitTime)
 				val, err := resp.Result()
 				if _, ok := val.(*Proto.FailureOfDelete); ok || err != nil {
 					// TODO failure
@@ -334,7 +383,7 @@ func (w *Window) updateInfoUserState() {
 
 					//TODO in v2 map str->[]str and then we have to iterate through
 					// this slice and delete exact unit
-					delete(w.infoUserScene.userToUnitCache, w.infoUserScene.currUserID)
+					delete(w.infoUserScene.userToUnitCache, w.infoUserScene.currSelectedUserID)
 					w.infoUserScene.isInUnit = false
 
 				}
@@ -351,6 +400,52 @@ func (w *Window) updateInfoUserState() {
 
 	}
 
+	if gui.Button(w.infoUserScene.inboxButton.bounds, w.infoUserScene.inboxButton.text) {
+		resp := w.ctx.Request(w.serverPID, &Proto.IsOnline{Uuid: w.infoUserScene.currSelectedUserID}, Utils.WaitTime)
+		res, err := resp.Result()
+		_, ok := res.(*Proto.Online)
+		if !ok || err != nil {
+			w.infoUserScene.activeUserCircle.color = rl.Red
+		} else {
+			w.infoUserScene.activeUserCircle.color = rl.Green
+		}
+		w.infoUserScene.showInboxModal = true
+	}
+	if w.infoUserScene.isSendMessageButtonPressed {
+		message := w.infoUserScene.inboxInput.text
+		resp := w.ctx.Request(w.serverPID,
+			&Proto.GetLoggedInUUID{
+				Pid: &Proto.PID{
+					Address: w.ctx.PID().Address,
+					Id:      w.ctx.PID().ID}},
+			Utils.WaitTime)
+		res, err := resp.Result()
+		v, ok := res.(*Proto.LoggedInUUID)
+		if !ok || err != nil {
+			//TODO error
+		}
+
+		sender := v.Id
+		// layer up is configure a conversation ID based of if it exists or no etc
+		resp = w.ctx.Request(w.messageServicePID, &Proto.SendMessage{
+			Receiver: w.infoUserScene.currSelectedUserID,
+			Message: &Proto.Message{
+				Id:             uuid.New().String(),
+				SenderID:       sender,
+				ConversationID: "", //?
+				Content:        message,
+				SentAt:         timestamppb.Now(),
+			}}, Utils.WaitTime)
+		_, err = resp.Result()
+		//TOOD finish the err handling sth like messenger type of send error some maybe red circle idk
+		if err != nil {
+			panic(err.Error())
+		}
+		//reset
+
+		w.infoUserScene.inboxInput.text = ""
+	}
+
 }
 
 func (w *Window) renderInfoUserState() {
@@ -363,7 +458,12 @@ func (w *Window) renderInfoUserState() {
 			w.infoUserScene.usersList.focus = 0
 			w.infoUserScene.unitsToAssignSlider.focus = 1
 		}
-		if w.infoUserScene.showAddModal || w.infoUserScene.showRemoveModal {
+		if rl.CheckCollisionPointRec(mousePos, w.infoUserScene.inboxInput.bounds) {
+			w.infoUserScene.inboxInput.focus = true
+		} else {
+			w.infoUserScene.inboxInput.focus = false
+		}
+		if w.infoUserScene.showAddModal || w.infoUserScene.showRemoveModal || w.infoUserScene.showInboxModal {
 			w.infoUserScene.usersList.focus = 0
 		}
 
@@ -412,4 +512,26 @@ func (w *Window) renderInfoUserState() {
 
 		w.infoUserScene.isConfirmRemoveButtonPressed = gui.Button(w.infoUserScene.acceptRemoveButton.bounds, w.infoUserScene.acceptRemoveButton.text)
 	}
+
+	if w.infoUserScene.showInboxModal {
+		if gui.WindowBox(w.infoUserScene.inboxModal.core, "TITLE") {
+			w.infoUserScene.showInboxModal = false
+		}
+		rl.DrawCircle(
+			w.infoUserScene.activeUserCircle.x,
+			w.infoUserScene.activeUserCircle.y,
+			w.infoUserScene.activeUserCircle.radius,
+			w.infoUserScene.activeUserCircle.color)
+		gui.TextBox(
+			w.infoUserScene.inboxInput.bounds,
+			&w.infoUserScene.inboxInput.text,
+			w.infoUserScene.inboxInput.textSize,
+			w.infoUserScene.inboxInput.focus)
+		w.infoUserScene.isSendMessageButtonPressed = gui.Button(w.infoUserScene.sendMessage.bounds, w.infoUserScene.sendMessage.text)
+
+	}
+
 }
+
+//BIG TODO: remove a currently logged in user from e.g user info (cant send to myself message)
+// and from other places

@@ -43,8 +43,6 @@ message PID {
 
 message IsServerRunning {}
 message Running {}
-message StartApp {}
-message PingServer {}
 message Disconnect {
   optional PID pid =1;
 }
@@ -161,33 +159,92 @@ message FailureOfDelete{}
 // ========================
 // MessageService OPERATIONS
 // ========================
-
-message CreateConversation{
+message RegisterClient{
+  string id =1;
+  PID pid =2;
+}
+message SuccessRegisterClient{}
+message FailureRegisterClient{}
+message CreateConversationAndAssign{
   string id = 1;
-  string name = 2 ;
+  string senderID =3;
+  string receiverID =4;
 }
 
 message SuccessOfCreateConversation{}
 message FailureOfCreateConversation{}
 
-message AddUserToConversation{
-  string userID = 1;
-  string conversationID = 2;
-  optional string lastSeenMessageID =3; // i have to think about this
+message ConversationSummary {
+  string conversation_id = 1;
+  string withID = 2;
+  optional Message last_message = 3;
 }
-message SuccessOfAddUserToConversation{}
-message FailureOfAddUserToConversation{}
 
+
+message GetUserConversation{
+  string id = 1;
+}
+message SuccessGetUserConversation{
+  repeated ConversationSummary  convSummary = 1;
+}
+message FailureGetUserConversation{}
 message Message{
   string id = 1;
   string senderID = 2;
   string conversationID =3;
   string content = 4;
   google.protobuf.Timestamp sent_at = 5;
-
 }
-
+message SendMessage{
+  string receiver = 1;
+  Message message =2;
+}
+message SuccessSend{}
+message FailureSend{}
+message StoreMessage{
+  Message message =2;
+}
+message SuccessStoreMessage{}
+message FailureStoreMessage{}
 message LoadConversation{}
 
+message IsOnline{
+  string uuid = 1;
+}
+message Online{}
+message Offline{}
 
 
+
+message PresencePlace {
+  oneof place {
+    Outbox outbox = 1;
+    Inbox inbox = 2;
+    InChat in_chat = 3;
+  }
+}
+
+message Outbox {
+}
+
+message Inbox {
+}
+
+message InChat {
+  string conversation_id = 1;
+}
+
+message UpdatePresence{
+  PID pid = 1;
+  PresencePlace presencePlace =2;
+}
+
+message FillConversationID{
+  string senderID =1;
+  string receiverID =2;
+}
+message SuccessOfFillConversationID{
+  string id =1;
+}
+message FailureOfFillConversationID{
+}

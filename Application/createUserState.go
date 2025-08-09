@@ -5,6 +5,8 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/User"
+	"github.com/janicaleksander/bcs/Utils"
+
 	"strconv"
 )
 
@@ -117,7 +119,7 @@ func (w *Window) updateCreateUserState() {
 		name := w.createUserScene.nameInput.text
 		surname := w.createUserScene.surnameInput.text
 
-		//check input
+		//check inboxInput
 		if len(email) <= 0 || len(password) <= 0 ||
 			len(rePassword) <= 0 || len(ruleLevel) <= 0 ||
 			len(name) <= 0 || len(surname) <= 0 {
@@ -129,11 +131,11 @@ func (w *Window) updateCreateUserState() {
 		// TODO curr max lvl
 		if lvl > 5 || err != nil {
 			w.createUserScene.isError = true
-			w.createUserScene.errorMessage = "Bad ruleLVL input"
+			w.createUserScene.errorMessage = "Bad ruleLVL inboxInput"
 			return
 		}
 		newUser := User.NewUser(email, password, int32(lvl), name, surname)
-		resp := w.ctx.Request(w.serverPID, &Proto.CreateUser{User: newUser}, WaitTime)
+		resp := w.ctx.Request(w.serverPID, &Proto.CreateUser{User: newUser}, Utils.WaitTime)
 		val, err := resp.Result()
 		if err != nil {
 

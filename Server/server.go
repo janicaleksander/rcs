@@ -9,10 +9,12 @@ import (
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
+	"github.com/google/uuid"
 	db "github.com/janicaleksander/bcs/Database"
 	"github.com/janicaleksander/bcs/Proto"
 )
 
+// GENERAL TODO check why in some places when i have messageservcie down loading is too long
 var Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
 const (
@@ -76,7 +78,12 @@ func (s *Server) Receive(ctx *actor.Context) {
 			delete(s.active, id)
 			delete(s.connections, pidToDelete.String())
 		}
-
+	case *Proto.IsOnline:
+		if s.active[msg.Uuid] {
+			ctx.Respond(&Proto.Online{})
+		} else {
+			ctx.Respond(&Proto.Offline{})
+		}
 	case *Proto.LoginUnit:
 		//update use map
 		//id, err := s.loginUnit(ctx, msg.Email, msg.Password)
@@ -90,11 +97,13 @@ func (s *Server) Receive(ctx *actor.Context) {
 		} else {
 			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
 			s.connections[pid.String()] = id                 //pid to uuid
+			fmt.Println(s.connections)
 			s.activeChan <- struct {
 				uuid string
 				PID  *actor.PID
 			}{uuid: id, PID: pid}
 			ctx.Respond(&Proto.AcceptLogin{Info: "Login successful! ", RuleLevel: int64(role)})
+
 		}
 		//TODO idk if this getlogged works
 
@@ -166,9 +175,43 @@ func (s *Server) Receive(ctx *actor.Context) {
 		} else {
 			ctx.Respond(&Proto.SuccessOfDelete{})
 		}
-	case *actor.PID:
-		fmt.Println("dostalem", msg)
+	case *Proto.FillConversationID:
+		c := context.Background()
+		ok, id, err := s.storage.IsConversationExists(c, msg.SenderID, msg.ReceiverID)
+		if err != nil || !ok {
+			cnv := &Proto.CreateConversationAndAssign{
+				Id:         uuid.New().String(),
+				SenderID:   msg.SenderID,
+				ReceiverID: msg.ReceiverID,
+			}
+			err = s.storage.CreateAndAssignConversation(c, cnv)
+			if err != nil {
+				//TODO ERROR
+			} else {
+				ctx.Respond(&Proto.SuccessOfFillConversationID{Id: cnv.Id})
+			}
 
+		} else {
+			ctx.Respond(&Proto.SuccessOfFillConversationID{Id: id})
+		}
+	case *Proto.StoreMessage:
+		c := context.Background()
+		err := s.storage.InsertMessage(c, msg.Message)
+		if err != nil {
+			ctx.Respond(&Proto.FailureStoreMessage{})
+		} else {
+			ctx.Respond(&Proto.SuccessStoreMessage{})
+		}
+	case *Proto.GetUserConversation:
+		c := context.Background()
+		conversations, err := s.storage.GetUserConversations(c, msg.Id)
+		if err != nil {
+			ctx.Respond(&Proto.FailureGetUserConversation{})
+			fmt.Println(err)
+			//TODO
+		} else {
+			ctx.Respond(&Proto.SuccessGetUserConversation{ConvSummary: conversations})
+		}
 	default:
 		Logger.Warn("Server got unknown message", reflect.TypeOf(msg).String())
 
@@ -190,7 +233,6 @@ func (s *Server) betterHeartbeat(ctx *actor.Context) {
 						Address: value.PID.Address,
 						Id:      value.PID.ID,
 					}})
-					// delete somehow from active and also from connection
 					break
 				}
 			}

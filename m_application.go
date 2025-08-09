@@ -2,13 +2,15 @@ package main
 
 import (
 	"flag"
+	"os"
+
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
 	"github.com/janicaleksander/bcs/Application"
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/Server"
+	"github.com/janicaleksander/bcs/Utils"
 	"github.com/joho/godotenv"
-	"os"
 )
 
 func main() {
@@ -32,16 +34,17 @@ func main() {
 	}
 
 	Server.Logger.Info("Application is running on:", "Addr:", os.Getenv("APP_ADDR"))
+	messageServicePID := actor.NewPID(os.Getenv("MESSAGE_SERVICE_ADDR"), "messageService/primary")
 	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
 	//ping server
-	resp := e.Request(serverPID, &Proto.IsServerRunning{}, Application.WaitTime)
+	resp := e.Request(serverPID, &Proto.IsServerRunning{}, Utils.WaitTime)
 	_, err = resp.Result()
 	if err != nil {
 		Server.Logger.Error("Server is not running", "err: ", err)
 		return
 	}
 	window := Application.NewWindow()
-	app := Application.NewWindowActor(window, serverPID)
+	app := Application.NewWindowActor(window, serverPID, messageServicePID)
 	e.Spawn(app, "app") //this is creating new app
 
 	//window
