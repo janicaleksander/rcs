@@ -1,12 +1,13 @@
 package main
 
 import (
+	"os"
+
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
 	db "github.com/janicaleksander/bcs/database"
 	s "github.com/janicaleksander/bcs/server"
 	"github.com/joho/godotenv"
-	"os"
 )
 
 func main() {
@@ -16,21 +17,17 @@ func main() {
 		s.Logger.Error("Error with loading .env file")
 		return
 	}
-
-	dbase, err := db.NewPostgres(
-		os.Getenv("DBNAME"),
-		os.Getenv("USER"),
-		os.Getenv("PASSWORD"),
-		os.Getenv("HOST"), os.Getenv("PORT"), os.Getenv("SSLMODE"),
-		db.WithConnectionTimeout(10))
-	// in the future witt full two-side-ssl verification
-
+	dbManager, err := db.GetDBManager(db.WithConnectionTimeout(10))
 	if err != nil {
-		s.Logger.Error(err.Error())
+		s.Logger.Error("Error with loading .env file")
 		return
 	}
+	dbase := dbManager.GetDB()
+	pg := &db.Postgres{Conn: dbase}
 
-	server := s.NewServer(os.Getenv("SERVER_ADDR"), dbase)
+	// in the future witt full two-side-ssl verification
+
+	server := s.NewServer(os.Getenv("SERVER_ADDR"), pg)
 	r := remote.New(os.Getenv("SERVER_ADDR"), remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {

@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,69 +16,14 @@ import (
 // Struct that is made to implement Storage interface
 // It holds connection to make queries to PostgreSQL.
 type Postgres struct {
-	conn *sql.DB
-}
-
-// Constructor of  new PostgreSQL. It can be modified by optional options.
-// It has to be filled up with database credentials to perform connection.
-// If no errors occur it returns pointer to struct
-func NewPostgres(
-	dbname string,
-	user string,
-	password string,
-	host string,
-	port string,
-	sslmode string,
-	options ...func(*string)) (*Postgres, error) {
-
-	// default connection string, to which we can add some extras
-	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v&", user, password, host, port, dbname, sslmode)
-	for _, o := range options {
-		o(&connStr)
-	}
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
-	}
-	if err = db.Ping(); err != nil {
-		return nil, err
-	}
-	return &Postgres{conn: db}, nil
-}
-
-// database setting: Timeout in seconds
-func WithConnectionTimeout(timeout uint) func(*string) {
-	return func(s *string) {
-		*s += "connect_timeout=" + strconv.Itoa(int(timeout)) + "&"
-	}
-}
-
-// database setting
-func WithSSLCert(cert string) func(*string) {
-	return func(s *string) {
-		*s += "sslcert=" + cert + "&"
-	}
-}
-
-// database setting
-func WithSSLKey(key string) func(*string) {
-	return func(s *string) {
-		*s += "sslkey=" + key + "&"
-	}
-}
-
-// database setting
-func WithSSLRootCert(sslRootCert string) func(*string) {
-	return func(s *string) {
-		*s += "sslrootcert=" + sslRootCert + "&"
-	}
+	Conn *sql.DB
 }
 
 // Implemented function from Storage interface.
 // It takes context (e.g. to set max time for query), User and if no errors insert into database.
 // If error occurs -> return it, and rollback transaction.
 func (p *Postgres) InsertUser(ctx context.Context, user *proto.User) error {
-	tx, err := p.conn.BeginTx(ctx, nil)
+	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -100,7 +43,7 @@ func (p *Postgres) InsertUser(ctx context.Context, user *proto.User) error {
 }
 
 func (p *Postgres) LoginUser(ctx context.Context, email, password string) (string, int, error) {
-	rows, err := p.conn.Query(`SELECT id, password,rule_level FROM users WHERE (email=$1)`, email)
+	rows, err := p.Conn.Query(`SELECT id, password,rule_level FROM users WHERE (email=$1)`, email)
 	if err != nil {
 		return "", -1, err
 	}
@@ -121,7 +64,7 @@ func (p *Postgres) LoginUser(ctx context.Context, email, password string) (strin
 }
 
 func (p *Postgres) GetUsersWithLVL(ctx context.Context, lvl int) ([]*proto.User, error) {
-	rows, err := p.conn.Query(
+	rows, err := p.Conn.Query(
 		`SELECT users.id,users.email,users.rule_level,name,surname 
 				FROM users
 				INNER JOIN personal p on users.id = p.user_id
@@ -145,7 +88,7 @@ func (p *Postgres) GetUsersWithLVL(ctx context.Context, lvl int) ([]*proto.User,
 func (p *Postgres) InsertUnit(ctx context.Context, nameUnit string, isConfigured bool, userID string) error {
 	// TODO user can be in the same time in one unit
 
-	tx, err := p.conn.BeginTx(ctx, nil)
+	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -180,7 +123,7 @@ func (p *Postgres) InsertUnit(ctx context.Context, nameUnit string, isConfigured
 }
 
 func (p *Postgres) GetAllUnits(ctx context.Context) ([]*proto.Unit, error) {
-	rows, err := p.conn.Query(`SELECT id,name,is_configured FROM unit`)
+	rows, err := p.Conn.Query(`SELECT id,name,is_configured FROM unit`)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +143,7 @@ func (p *Postgres) GetAllUnits(ctx context.Context) ([]*proto.Unit, error) {
 
 // TODO maybe add more personal infos
 func (p *Postgres) GetUsersInUnit(ctx context.Context, id string) ([]*proto.User, error) {
-	rows, err := p.conn.Query(
+	rows, err := p.Conn.Query(
 		`
 	SELECT u.id, u.email, u.rule_level, personal.name, personal.surname  
 	FROM personal
@@ -228,7 +171,7 @@ func (p *Postgres) GetUsersInUnit(ctx context.Context, id string) ([]*proto.User
 func (p *Postgres) IsUserInUnit(ctx context.Context, id string) (bool, string, error) {
 	var exists bool
 	var unitID string
-	err := p.conn.QueryRow(`SELECT unit_id FROM user_to_unit WHERE user_id = $1 LIMIT 1`, id).Scan(&unitID)
+	err := p.Conn.QueryRow(`SELECT unit_id FROM user_to_unit WHERE user_id = $1 LIMIT 1`, id).Scan(&unitID)
 	if errors.Is(err, sql.ErrNoRows) || err != nil {
 		exists = false
 	} else {
@@ -237,7 +180,7 @@ func (p *Postgres) IsUserInUnit(ctx context.Context, id string) (bool, string, e
 	return exists, unitID, err
 }
 func (p *Postgres) AssignUserToUnit(ctx context.Context, userID string, unitID string) error {
-	tx, err := p.conn.BeginTx(ctx, nil)
+	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -253,7 +196,7 @@ func (p *Postgres) AssignUserToUnit(ctx context.Context, userID string, unitID s
 	return nil
 }
 func (p *Postgres) DeleteUserFromUnit(ctx context.Context, userID string, unitID string) error {
-	tx, err := p.conn.BeginTx(ctx, nil)
+	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -275,7 +218,7 @@ func (p *Postgres) DeleteUserFromUnit(ctx context.Context, userID string, unitID
 // - error
 func (p *Postgres) IsConversationExists(ctx context.Context, sender, receiver string) (bool, string, error) {
 	var conversationID string
-	err := p.conn.QueryRow(`
+	err := p.Conn.QueryRow(`
     SELECT uc1.conversation_id
     FROM user_conversation uc1
     JOIN user_conversation uc2 
@@ -292,7 +235,7 @@ func (p *Postgres) IsConversationExists(ctx context.Context, sender, receiver st
 }
 
 func (p *Postgres) CreateAndAssignConversation(ctx context.Context, cnv *proto.CreateConversationAndAssign) error {
-	tx, err := p.conn.BeginTx(ctx, nil)
+	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -317,7 +260,7 @@ func (p *Postgres) CreateAndAssignConversation(ctx context.Context, cnv *proto.C
 }
 
 func (p *Postgres) InsertMessage(ctx context.Context, msg *proto.Message) error {
-	tx, err := p.conn.BeginTx(ctx, nil)
+	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -338,7 +281,7 @@ func (p *Postgres) InsertMessage(ctx context.Context, msg *proto.Message) error 
 //every ID i setting in backend, to do this we have to give to fb funcs a proto structs (full with everything during creating)
 
 func (p *Postgres) GetUserConversations(ctx context.Context, id string) ([]*proto.ConversationSummary, error) {
-	rows, err := p.conn.QueryContext(ctx,
+	rows, err := p.Conn.QueryContext(ctx,
 		`SELECT
 					uc.conversation_id,
 					m.id as message_id,
