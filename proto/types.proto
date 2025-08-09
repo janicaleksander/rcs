@@ -1,0 +1,250 @@
+syntax = "proto3";
+
+package types;
+
+option go_package = "github.com/janicaleksander/bcs/proto";
+import  "google/protobuf/timestamp.proto";
+// ========================
+// DATA MODELS
+// ========================
+
+message Role {
+  string name = 1;
+  uint64 ruleLevel = 2;
+}
+
+message Personal {
+  string name = 1;
+  string surname = 2;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string password = 3;
+  int32 rule_lvl = 4;
+  Personal personal = 5;
+}
+
+message Unit {
+  string id = 1;
+  string name = 2;
+  bool isConfigured = 3;
+}
+
+message PID {
+  string address = 1;
+  string id = 2;
+}
+
+// ========================
+// SYSTEM & STATUS MESSAGES
+// ========================
+
+message IsServerRunning {}
+message Running {}
+message Disconnect {
+  optional PID pid =1;
+}
+message Ping{}
+message Pong{}
+// ========================
+// AUTHENTICATION & LOGIN
+// ========================
+
+message LoginUser {
+  PID pid = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message AcceptLogin {
+  string info = 1;
+  int64 rule_level = 2;
+}
+
+message DenyLogin {
+  string info = 1;
+}
+
+message GetLoggedInUUID {
+  PID pid = 1;
+}
+message LoggedInUUID {
+  string id = 1;
+}
+
+// ========================
+// SERVER CONFIGURATION
+// ========================
+
+message NeededServerConfiguration {
+  PID serverPID = 1;
+}
+
+// ========================
+// UNIT OPERATIONS
+// ========================
+
+message CreateUnit {
+  string name = 1;
+  bool isConfigured = 2;
+  string userID = 3;
+}
+
+message AcceptCreateUnit {}
+message DenyCreateUnit {
+  string info = 1;
+}
+
+message GetAllUnits {}
+message AllUnits {
+  repeated Unit units = 1;
+}
+
+message LoginUnit {
+  string id = 2;
+}
+
+// ========================
+// USER OPERATIONS
+// ========================
+message CreateUser{
+  User user = 1 ;
+
+}
+message AcceptCreateUser{
+}
+message DenyCreateUser{
+  string info = 1;
+}
+message GetAllUsersInUnit {
+  string id = 1; //unit uuid
+}
+
+message AllUsersInUnit {
+  repeated User users = 1;
+}
+
+message GetUserAboveLVL {
+  int32 lvl = 1;
+}
+
+message UsersAboveLVL{
+  repeated User users = 1;
+}
+
+message IsUserInUnit {
+  string id =1;
+}
+message UserInUnit{
+  string unitID = 1;
+}
+message UserNotInUnit{}
+// TODO maybe add some info to all reject type message
+message AssignUserToUnit {
+  string userID = 1;
+  string unitID =2;
+}
+message SuccessOfAssign{}
+message FailureOfAssign{}
+
+message DeleteUserFromUnit{
+  string userID = 1;
+  string unitID = 2;
+}
+message SuccessOfDelete{}
+message FailureOfDelete{}
+
+// ========================
+// MessageService OPERATIONS
+// ========================
+message RegisterClient{
+  string id =1;
+  PID pid =2;
+}
+message SuccessRegisterClient{}
+message FailureRegisterClient{}
+message CreateConversationAndAssign{
+  string id = 1;
+  string senderID =3;
+  string receiverID =4;
+}
+
+message SuccessOfCreateConversation{}
+message FailureOfCreateConversation{}
+
+message ConversationSummary {
+  string conversation_id = 1;
+  string withID = 2;
+  optional Message last_message = 3;
+}
+
+
+message GetUserConversation{
+  string id = 1;
+}
+message SuccessGetUserConversation{
+  repeated ConversationSummary  convSummary = 1;
+}
+message FailureGetUserConversation{}
+message Message{
+  string id = 1;
+  string senderID = 2;
+  string conversationID =3;
+  string content = 4;
+  google.protobuf.Timestamp sent_at = 5;
+}
+message SendMessage{
+  string receiver = 1;
+  Message message =2;
+}
+message SuccessSend{}
+message FailureSend{}
+message StoreMessage{
+  Message message =2;
+}
+message SuccessStoreMessage{}
+message FailureStoreMessage{}
+message LoadConversation{}
+
+message IsOnline{
+  string uuid = 1;
+}
+message Online{}
+message Offline{}
+
+
+
+message PresencePlace {
+  oneof place {
+    Outbox outbox = 1;
+    Inbox inbox = 2;
+    InChat in_chat = 3;
+  }
+}
+
+message Outbox {
+}
+
+message Inbox {
+}
+
+message InChat {
+  string conversation_id = 1;
+}
+
+message UpdatePresence{
+  PID pid = 1;
+  PresencePlace presencePlace =2;
+}
+
+message FillConversationID{
+  string senderID =1;
+  string receiverID =2;
+}
+message SuccessOfFillConversationID{
+  string id =1;
+}
+message FailureOfFillConversationID{
+}

@@ -6,45 +6,45 @@ import (
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
-	"github.com/janicaleksander/bcs/Application"
-	"github.com/janicaleksander/bcs/Proto"
-	"github.com/janicaleksander/bcs/Server"
-	"github.com/janicaleksander/bcs/Utils"
+	"github.com/janicaleksander/bcs/application"
+	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/server"
+	"github.com/janicaleksander/bcs/utils"
 	"github.com/joho/godotenv"
 )
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		Server.Logger.Error("Error with loading .env file")
+		server.Logger.Error("Error with loading .env file")
 		return
 	}
 	appAddrFlag := flag.String("address", "", "Type here IP address of application")
 	flag.Parse()
 	if len(*appAddrFlag) <= 0 {
-		Server.Logger.Error("Type value of flag")
+		server.Logger.Error("Type value of flag")
 		return
 	}
 	//Setup remote access
 	r := remote.New(*appAddrFlag, remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
-		Server.Logger.Error(err.Error())
+		server.Logger.Error(err.Error())
 		return
 	}
 
-	Server.Logger.Info("Application is running on:", "Addr:", os.Getenv("APP_ADDR"))
+	server.Logger.Info("application is running on:", "Addr:", os.Getenv("APP_ADDR"))
 	messageServicePID := actor.NewPID(os.Getenv("MESSAGE_SERVICE_ADDR"), "messageService/primary")
 	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
 	//ping server
-	resp := e.Request(serverPID, &Proto.IsServerRunning{}, Utils.WaitTime)
+	resp := e.Request(serverPID, &proto.IsServerRunning{}, utils.WaitTime)
 	_, err = resp.Result()
 	if err != nil {
-		Server.Logger.Error("Server is not running", "err: ", err)
+		server.Logger.Error("server is not running", "err: ", err)
 		return
 	}
-	window := Application.NewWindow()
-	app := Application.NewWindowActor(window, serverPID, messageServicePID)
+	window := application.NewWindow()
+	app := application.NewWindowActor(window, serverPID, messageServicePID)
 	e.Spawn(app, "app") //this is creating new app
 
 	//window

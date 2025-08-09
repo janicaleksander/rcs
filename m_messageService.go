@@ -5,37 +5,37 @@ import (
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
-	"github.com/janicaleksander/bcs/MessageService"
-	"github.com/janicaleksander/bcs/Proto"
-	"github.com/janicaleksander/bcs/Server"
-	"github.com/janicaleksander/bcs/Utils"
+	"github.com/janicaleksander/bcs/messageservice"
+	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/server"
+	"github.com/janicaleksander/bcs/utils"
 	"github.com/joho/godotenv"
 )
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		Server.Logger.Error("Can't load .env file")
+		server.Logger.Error("Can't load .env file")
 		return
 	}
 
 	r := remote.New(os.Getenv("MESSAGE_SERVICE_ADDR"), remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
-		Server.Logger.Error("Error with engine configuration")
+		server.Logger.Error("Error with engine configuration")
 		return
 	}
 
 	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
 	//ping server
-	resp := e.Request(serverPID, &Proto.IsServerRunning{}, Utils.WaitTime)
+	resp := e.Request(serverPID, &proto.IsServerRunning{}, utils.WaitTime)
 	_, err = resp.Result()
 	if err != nil {
-		Server.Logger.Error("Server is not running", "err: ", err)
+		server.Logger.Error("server is not running", "err: ", err)
 		return
 	}
-	Server.Logger.Info("MessageService is running on: ", "Address: ", os.Getenv("MESSAGE_SERVICE_ADDR"))
-	messageService := MessageService.NewMessageService(serverPID)
+	server.Logger.Info("messageservice is running on: ", "Address: ", os.Getenv("MESSAGE_SERVICE_ADDR"))
+	messageService := messageservice.NewMessageService(serverPID)
 	e.Spawn(messageService, "messageService", actor.WithID("primary")) //this is creating new app
 
 	//we need a block because actor is non-blocking,
