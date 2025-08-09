@@ -5,11 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/janicaleksander/bcs/Proto"
 	"github.com/janicaleksander/bcs/User"
 	_ "github.com/lib/pq"
-	"strconv"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Struct that is made to implement Storage interface
@@ -264,20 +267,120 @@ func (p *Postgres) DeleteUserFromUnit(ctx context.Context, userID string, unitID
 	}
 	return nil
 }
-func (p *Postgres) GetUsersUnits(ctx context.Context, userID string) ([]string, error) {
-	rows, err := p.conn.Query(`SELECT unit_id FROM user_to_unit WHERE (user_id=$1);`, userID)
+
+// MESSAGE SERVICE SQL
+// Return:
+// - true if exists false otherwise
+// - string id of conversation between two user
+// - error
+func (p *Postgres) IsConversationExists(ctx context.Context, sender, receiver string) (bool, string, error) {
+	var conversationID string
+	err := p.conn.QueryRow(`
+    SELECT uc1.conversation_id
+    FROM user_conversation uc1
+    JOIN user_conversation uc2 
+        ON uc1.conversation_id = uc2.conversation_id
+    WHERE uc1.user_id = $1 
+      AND uc2.user_id = $2
+    LIMIT 1
+`, sender, receiver).Scan(&conversationID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, "", err
+	}
+
+	return true, conversationID, nil
+}
+
+func (p *Postgres) CreateAndAssignConversation(ctx context.Context, cnv *Proto.CreateConversationAndAssign) error {
+	tx, err := p.conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, `INSERT INTO conversation (id) VALUES ($1)`, cnv.Id)
+	if err != nil {
+		return err
+	}
+	_, err = tx.ExecContext(ctx,
+		`INSERT INTO user_conversation (user_id, conversation_id, last_seen_message_id) 
+         VALUES ($1, $2, $3), ($4, $2, $3)`,
+		cnv.SenderID, cnv.Id, -1,
+		cnv.ReceiverID,
+	)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Postgres) InsertMessage(ctx context.Context, msg *Proto.Message) error {
+	tx, err := p.conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx,
+		`INSERT INTO message (id, user_id, conversation_id, content, sent_at) 
+				VALUES ($1,$2,$3,$4,$5)`, msg.Id, msg.SenderID, msg.ConversationID, msg.Content, msg.SentAt.AsTime())
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+//TODO make a one place where i set a uuid of sth e.g message or conversation and other
+//every ID i setting in backend, to do this we have to give to fb funcs a proto structs (full with everything during creating)
+
+func (p *Postgres) GetUserConversations(ctx context.Context, id string) ([]*Proto.ConversationSummary, error) {
+	rows, err := p.conn.QueryContext(ctx,
+		`SELECT
+					uc.conversation_id,
+					m.id as message_id,
+					m.user_id,
+					m.content,
+					m.sent_at,
+					other_uc.user_id as other_user_id
+				FROM user_conversation uc
+				LEFT JOIN user_conversation other_uc ON other_uc.conversation_id = uc.conversation_id AND other_uc.user_id != uc.user_id
+				LEFT JOIN message m ON m.id = (
+					SELECT id FROM message
+					WHERE conversation_id = uc.conversation_id
+					ORDER BY sent_at DESC
+					LIMIT 1
+					)
+WHERE (uc.user_id = $1 AND other_uc IS NOT NULL)
+ORDER BY m.sent_at DESC;`, id)
+
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	unitsID := make([]string, 0, 64)
-	var id string
+	conversationsSummary := make([]*Proto.ConversationSummary, 0, 64)
 	for rows.Next() {
-		if err = rows.Scan(&id); err != nil {
-			//TODO error
-			return nil, err
+		cs := &Proto.ConversationSummary{
+			ConversationId: "",
+			WithID:         "",
+			LastMessage: &Proto.Message{
+				Id:             "",
+				SenderID:       "",
+				ConversationID: "",
+				Content:        "",
+				SentAt:         nil,
+			},
 		}
-		unitsID = append(unitsID, id)
+		var timestamp time.Time
+		err = rows.Scan(&cs.ConversationId, &cs.LastMessage.Id, &cs.LastMessage.SenderID, &cs.LastMessage.Content, &timestamp, &cs.WithID)
+		if err != nil {
+			//TODO
+		}
+		cs.LastMessage.SentAt = timestamppb.New(timestamp)
+		conversationsSummary = append(conversationsSummary, cs)
 	}
-	return unitsID, nil
+	return conversationsSummary, nil
+
 }

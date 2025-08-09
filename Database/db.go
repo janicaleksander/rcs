@@ -2,6 +2,7 @@ package Database
 
 import (
 	"context"
+
 	"github.com/janicaleksander/bcs/Proto"
 )
 
@@ -17,5 +18,9 @@ type Storage interface {
 	IsUserInUnit(ctx context.Context, id string) (bool, string, error)
 	AssignUserToUnit(ctx context.Context, userID string, unitID string) error
 	DeleteUserFromUnit(ctx context.Context, userID string, unitID string) error
-	GetUsersUnits(ctx context.Context, userID string) ([]string, error)
+	//MESSAGE SERVICE SQL
+	IsConversationExists(ctx context.Context, sender, receiver string) (bool, string, error)
+	CreateAndAssignConversation(ctx context.Context, cnv *Proto.CreateConversationAndAssign) error
+	InsertMessage(ctx context.Context, msg *Proto.Message) error
+	GetUserConversations(ctx context.Context, id string) ([]*Proto.ConversationSummary, error)
 }
