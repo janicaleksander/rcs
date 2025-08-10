@@ -6,6 +6,7 @@ import (
 )
 
 type ConversationManager struct {
+	conversations map[string]*actor.PID // conversationID -> conversationPID
 }
 
 func NewConversationManager() actor.Producer {
