@@ -6,6 +6,8 @@ import (
 )
 
 type Conversation struct {
+	id        string
+	receivers []string
 }
 
 func NewConversation() actor.Producer {

@@ -36,4 +36,19 @@ type Modal struct {
 	core       rl.Rectangle
 }
 
+type ConversationTab struct {
+	bounds  rl.Rectangle
+	nametag string
+	//lastMessage       string TODO now we only have 2 states one outside conversation and one in conversation
+	enterConversation Button
+	isClicked         bool
+	conversationID    string // to remove in the future, when i made own scrollbar i will use tab[currIDX]
+	withID            string // to remove in the future, when i made own scrollbar i will use tab[currIDX]
+}
+
+type Message struct {
+	bounds  rl.Rectangle
+	content string
+}
+
 //TODO add active status to users

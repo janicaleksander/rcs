@@ -207,7 +207,8 @@ message StoreMessage{
 }
 message SuccessStoreMessage{}
 message FailureStoreMessage{}
-message LoadConversation{}
+
+
 
 message IsOnline{
   string uuid = 1;
@@ -249,4 +250,20 @@ message UpdatePresence{
   PresenceType presence = 2;
 }
 
+message OpenAndLoadConversation{
+  string userID =1;
+  string conversationID = 2;
+}
+message SuccessOpenAndLoadConversation{
+  repeated Message messages =1;
+}
+message FailureOpenAndLoadConversation{
+}
+message LoadConversation{
+  string conversationID  = 1;
+}
+message SuccessLoadConversation{
+  repeated  Message messages =1;
+}
+message FailureLoadConversation{}
 /* rm from server fill conv id maybe*/

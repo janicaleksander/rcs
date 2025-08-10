@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/janicaleksander/bcs/User"
 	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/utils"
 	_ "github.com/lib/pq"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -333,4 +334,32 @@ ORDER BY m.sent_at DESC;`, id)
 	}
 	return conversationsSummary, nil
 
+}
+
+func (p *Postgres) LoadConversation(ctx context.Context, id string) ([]*proto.Message, error) {
+	rows, err := p.Conn.Query(
+		`SELECT id,user_id,conversation_id,content,sent_at 
+				FROM message 
+				WHERE conversation_id=$1 ORDER BY sent_at`, id)
+	if err != nil {
+		return nil, err
+	}
+	messages := make([]*proto.Message, 0, 64)
+	for rows.Next() {
+		m := &proto.Message{
+			Id:             "",
+			SenderID:       "",
+			ConversationID: "",
+			Content:        "",
+			SentAt:         nil,
+		}
+		var timestamp time.Time
+		err = rows.Scan(&m.Id, &m.SenderID, &m.ConversationID, &m.Content, &timestamp)
+		m.SentAt = timestamppb.New(timestamp)
+		if err != nil {
+			utils.Logger.Error(err.Error())
+		}
+		messages = append(messages, m)
+	}
+	return messages, nil
 }

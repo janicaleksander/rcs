@@ -34,7 +34,7 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 	case actor.Started:
 		utils.Logger.Info("messageservice is running on:")
 		ms.presenceManger = ctx.SpawnChild(NewPresenceManager(), "presence_manager")
-		ms.conversationManger = ctx.SpawnChild(NewConversationManager(), "conversation_manager")
+		ms.conversationManger = ctx.SpawnChild(NewConversationManager(ms.storage), "conversation_manager")
 	case actor.Stopped:
 		utils.Logger.Info("messageservice is stopped")
 	case *proto.Ping:
@@ -42,11 +42,22 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 	case *proto.RegisterClient:
 		ms.connections[msg.Id] = actor.NewPID(msg.Pid.Address, msg.Pid.Id)
 		ctx.Send(ms.presenceManger, &proto.UpdatePresence{
+			Id: msg.Id,
 			Presence: &proto.PresenceType{
 				Type: &proto.PresenceType_Outbox{
 					Outbox: &proto.Outbox{}},
 			},
 		})
+	case *proto.UpdatePresence:
+		ctx.Forward(ms.presenceManger)
+	case *proto.OpenAndLoadConversation:
+		go func() {
+			resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
+			res, _ := resp.Result()
+			if conversation, ok := res.(*proto.SuccessOpenAndLoadConversation); ok {
+				ctx.Respond(conversation)
+			}
+		}()
 	default:
 		_ = msg
 	}

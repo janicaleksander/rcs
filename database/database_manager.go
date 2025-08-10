@@ -4,11 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/janicaleksander/bcs/proto"
-	"github.com/joho/godotenv"
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/janicaleksander/bcs/proto"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -111,4 +112,5 @@ type Storage interface {
 	CreateAndAssignConversation(ctx context.Context, cnv *proto.CreateConversationAndAssign) error
 	InsertMessage(ctx context.Context, msg *proto.Message) error
 	GetUserConversations(ctx context.Context, id string) ([]*proto.ConversationSummary, error)
+	LoadConversation(ctx context.Context, id string) ([]*proto.Message, error)
 }
