@@ -1,14 +1,13 @@
 package application
 
 import (
-	"fmt"
 	"reflect"
 	"runtime"
 
 	"github.com/anthdm/hollywood/actor"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/proto"
-	"github.com/janicaleksander/bcs/server"
+	"github.com/janicaleksander/bcs/utils"
 )
 
 type GameState int
@@ -71,16 +70,15 @@ func (w *Window) Receive(ctx *actor.Context) {
 	w.ctx = ctx
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		server.Logger.Info("Actor initialized")
+		utils.Logger.Info("Actor initialized")
 	case actor.Started:
-		server.Logger.Info("Window actor started")
+		utils.Logger.Info("Window actor started")
 	case actor.Stopped:
-		server.Logger.Info("Actor stopped")
+		utils.Logger.Info("Actor stopped")
 	case *proto.Ping:
-		fmt.Println("ODEBRALEM")
 		ctx.Respond(&proto.Pong{})
 	default:
-		server.Logger.Warn("server got unknown errorMessage", reflect.TypeOf(msg).String())
+		utils.Logger.Warn("server got unknown errorMessage", reflect.TypeOf(msg).String())
 	}
 }
 func init() {

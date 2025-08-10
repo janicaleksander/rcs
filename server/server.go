@@ -3,8 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"log/slog"
-	"os"
 	"reflect"
 	"time"
 
@@ -12,41 +10,36 @@ import (
 	"github.com/google/uuid"
 	db "github.com/janicaleksander/bcs/database"
 	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/utils"
 )
-
-// GENERAL TODO check why in some places when i have messageservcie down loading is too long
-var Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
 const (
 	PingPongTime = 3 * time.Second
 )
+
+type Session struct {
+	userID string
+	//presenceplace?
+}
 
 // TODO make a two maybe maps one for connected by app commander lvl person
 // and second to 0 1 2 users/soldiers connected by device->unit->server
 // this is problem e.g. in sending message from 5lvl from app to 0lvl to device in unit
 // but this 5 see this 0 in his lists of person in system (maybe)
 type Server struct {
-	storage     db.Storage
-	listenAddr  string            // IP of (one) main server
-	connections map[string]string // PID  to uuid
-	active      map[string]bool   //uuid->bool
-	activeChan  chan struct {
-		uuid string
-		PID  *actor.PID
-	}
+	storage            db.Storage
+	listenAddr         string                // IP of (one) main server
+	connections        map[string]*actor.PID // uuid to PID
+	reverseConnections map[string]string     //PIDstring to -> uuid
 }
 
 func NewServer(listenAddr string, storage db.Storage) actor.Producer {
 	return func() actor.Receiver {
 		return &Server{
-			storage:     storage,
-			listenAddr:  listenAddr,
-			connections: make(map[string]string),
-			active:      make(map[string]bool),
-			activeChan: make(chan struct {
-				uuid string
-				PID  *actor.PID
-			}, 1024),
+			storage:            storage,
+			listenAddr:         listenAddr,
+			connections:        make(map[string]*actor.PID),
+			reverseConnections: make(map[string]string),
 		}
 	}
 }
@@ -56,30 +49,26 @@ func NewServer(listenAddr string, storage db.Storage) actor.Producer {
 func (s *Server) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		Logger.Info("server initialized")
+		utils.Logger.Info("server initialized")
 
 	case actor.Started:
-		Logger.Info("server has started")
-		go s.betterHeartbeat(ctx)
+		utils.Logger.Info("server has started")
+		ctx.SendRepeat(ctx.PID(), &proto.HeartbeatTick{}, 10*time.Second)
 	case actor.Stopped:
-		close(s.activeChan)
-		Logger.Info("server has stopped")
+		utils.Logger.Info("server has stopped")
+	case *proto.HeartbeatTick:
+		s.startHeartbeat(ctx)
 	case *proto.IsServerRunning:
 		ctx.Respond(&proto.Running{})
 	case *proto.Disconnect: // after this switch state to loginScene
-		var pidToDelete *actor.PID
-		if msg.Pid != nil {
-			pidToDelete = actor.NewPID(msg.Pid.Address, msg.Pid.Id)
-		} else {
-			pidToDelete = ctx.Sender()
-		}
-		id, ok := s.connections[pidToDelete.String()]
+		pid, ok := s.connections[msg.Id]
 		if ok {
-			delete(s.active, id)
-			delete(s.connections, pidToDelete.String())
+			delete(s.connections, msg.Id)
+			delete(s.reverseConnections, pid.String())
 		}
+
 	case *proto.IsOnline:
-		if s.active[msg.Uuid] {
+		if _, ok := s.connections[msg.Uuid]; ok {
 			ctx.Respond(&proto.Online{})
 		} else {
 			ctx.Respond(&proto.Offline{})
@@ -96,12 +85,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.DenyLogin{Info: err.Error()})
 		} else {
 			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
-			s.connections[pid.String()] = id                 //pid to uuid
+			s.connections[id] = pid                          //pid to uuid
 			fmt.Println(s.connections)
-			s.activeChan <- struct {
-				uuid string
-				PID  *actor.PID
-			}{uuid: id, PID: pid}
 			ctx.Respond(&proto.AcceptLogin{Info: "Login successful! ", RuleLevel: int64(role)})
 
 		}
@@ -109,7 +94,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 
 	case *proto.GetLoggedInUUID: //returning an uuid of current logged-in user
 		pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
-		id := s.connections[pid.String()]
+		id := s.reverseConnections[pid.String()]
 		ctx.Respond(&proto.LoggedInUUID{Id: id})
 	case *proto.GetUserAboveLVL:
 		c := context.Background()
@@ -213,31 +198,22 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.SuccessGetUserConversation{ConvSummary: conversations})
 		}
 	default:
-		Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())
+		utils.Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())
 
 	}
 }
 
-// if sth is not in active map => not active
-func (s *Server) betterHeartbeat(ctx *actor.Context) {
-	for value := range s.activeChan {
-		//value is uuid or PID
-		s.active[value.uuid] = true
-		go func(pid *actor.PID) {
-			for {
-				time.Sleep(time.Second * 10)
-				resp := ctx.Request(pid, &proto.Ping{}, PingPongTime)
-				res, err := resp.Result()
-				_, ok := res.(*proto.Pong)
-				if !ok || err != nil {
-					ctx.Send(ctx.PID(), &proto.Disconnect{Pid: &proto.PID{
-						Address: value.PID.Address,
-						Id:      value.PID.ID,
-					}})
-					break
-				}
+func (s *Server) startHeartbeat(ctx *actor.Context) {
+	for ID, PID := range s.connections {
+		go func(pid *actor.PID, id string) {
+			resp := ctx.Request(pid, &proto.Ping{}, utils.WaitTime)
+			res, err := resp.Result()
+			_, ok := res.(*proto.Pong)
+			if !ok || err != nil {
+				utils.Logger.Error("User is not responding for some time:", id, ctx.PID().String())
+				ctx.Send(ctx.PID(), &proto.Disconnect{Id: id})
 			}
-		}(value.PID)
+		}(PID, ID)
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/anthdm/hollywood/remote"
 	db "github.com/janicaleksander/bcs/database"
 	s "github.com/janicaleksander/bcs/server"
+	"github.com/janicaleksander/bcs/utils"
 	"github.com/joho/godotenv"
 )
 
@@ -14,12 +15,12 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		s.Logger.Error("Error with loading .env file")
+		utils.Logger.Error("Error with loading .env file")
 		return
 	}
 	dbManager, err := db.GetDBManager(db.WithConnectionTimeout(10))
 	if err != nil {
-		s.Logger.Error("Error with loading .env file")
+		utils.Logger.Error("Error with loading .env file")
 		return
 	}
 	dbase := dbManager.GetDB()
@@ -31,11 +32,11 @@ func main() {
 	r := remote.New(os.Getenv("SERVER_ADDR"), remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
-		s.Logger.Error(err.Error())
+		utils.Logger.Error(err.Error())
 		return
 	}
 
-	s.Logger.Info("server is running on: ", "Addr: ", os.Getenv("SERVER_ADDR"))
+	utils.Logger.Info("server is running on: ", "Addr: ", os.Getenv("SERVER_ADDR"))
 	e.Spawn(server, "server", actor.WithID("primary"))
 
 	select {}

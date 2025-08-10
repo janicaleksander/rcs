@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/anthdm/hollywood/actor"
+	"github.com/janicaleksander/bcs/database"
 	"github.com/janicaleksander/bcs/proto"
-	"github.com/janicaleksander/bcs/server"
 	"github.com/janicaleksander/bcs/utils"
 )
 
@@ -14,14 +14,16 @@ import (
 // if we don't have uuid of user in map  == 2 point
 
 type MessageService struct {
+	storage     database.Storage
 	serverPID   *actor.PID
 	connections map[string]string               // userUUID -> appPID
 	presence    map[string]*proto.PresencePlace // PID-> presence
 }
 
-func NewMessageService(serverPID *actor.PID) actor.Producer {
+func NewMessageService(serverPID *actor.PID, db database.Storage) actor.Producer {
 	return func() actor.Receiver {
 		return &MessageService{
+			storage:     db,
 			serverPID:   serverPID,
 			connections: make(map[string]string),
 			presence:    make(map[string]*proto.PresencePlace),
@@ -33,11 +35,11 @@ func NewMessageService(serverPID *actor.PID) actor.Producer {
 func (ms *MessageService) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
-		server.Logger.Info("messageservice is initialized")
+		utils.Logger.Info("messageservice is initialized")
 	case actor.Started:
-		server.Logger.Info("messageservice is running on:")
+		utils.Logger.Info("messageservice is running on:")
 	case actor.Stopped:
-		server.Logger.Info("messageservice is stopped")
+		utils.Logger.Info("messageservice is stopped")
 	case *proto.Ping:
 		ctx.Respond(&proto.Pong{})
 	case *proto.RegisterClient:

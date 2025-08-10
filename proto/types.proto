@@ -44,7 +44,7 @@ message PID {
 message IsServerRunning {}
 message Running {}
 message Disconnect {
-  optional PID pid =1;
+  string id =1;
 }
 message Ping{}
 message Pong{}
@@ -247,4 +247,8 @@ message SuccessOfFillConversationID{
   string id =1;
 }
 message FailureOfFillConversationID{
+}
+
+message HeartbeatTick{
+
 }

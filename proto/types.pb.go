@@ -388,7 +388,7 @@ func (*Running) Descriptor() ([]byte, []int) {
 
 type Disconnect struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Pid           *PID                   `protobuf:"bytes,1,opt,name=pid,proto3,oneof" json:"pid,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -423,11 +423,11 @@ func (*Disconnect) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *Disconnect) GetPid() *PID {
+func (x *Disconnect) GetId() string {
 	if x != nil {
-		return x.Pid
+		return x.Id
 	}
-	return nil
+	return ""
 }
 
 type Ping struct {
@@ -3039,6 +3039,42 @@ func (*FailureOfFillConversationID) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{66}
 }
 
+type HeartbeatTick struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HeartbeatTick) Reset() {
+	*x = HeartbeatTick{}
+	mi := &file_types_proto_msgTypes[67]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HeartbeatTick) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HeartbeatTick) ProtoMessage() {}
+
+func (x *HeartbeatTick) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[67]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HeartbeatTick.ProtoReflect.Descriptor instead.
+func (*HeartbeatTick) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{67}
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
@@ -3064,12 +3100,10 @@ const file_types_proto_rawDesc = "" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\"\x11\n" +
 	"\x0fIsServerRunning\"\t\n" +
-	"\aRunning\"7\n" +
+	"\aRunning\"\x1c\n" +
 	"\n" +
-	"Disconnect\x12!\n" +
-	"\x03pid\x18\x01 \x01(\v2\n" +
-	".types.PIDH\x00R\x03pid\x88\x01\x01B\x06\n" +
-	"\x04_pid\"\x06\n" +
+	"Disconnect\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\x06\n" +
 	"\x04Ping\"\x06\n" +
 	"\x04Pong\"[\n" +
 	"\tLoginUser\x12\x1c\n" +
@@ -3198,7 +3232,8 @@ const file_types_proto_rawDesc = "" +
 	"receiverID\"-\n" +
 	"\x1bSuccessOfFillConversationID\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1d\n" +
-	"\x1bFailureOfFillConversationIDB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
+	"\x1bFailureOfFillConversationID\"\x0f\n" +
+	"\rHeartbeatTickB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -3212,7 +3247,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 67)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 68)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                        // 0: types.Role
 	(*Personal)(nil),                    // 1: types.Personal
@@ -3281,34 +3316,34 @@ var file_types_proto_goTypes = []any{
 	(*FillConversationID)(nil),          // 64: types.FillConversationID
 	(*SuccessOfFillConversationID)(nil), // 65: types.SuccessOfFillConversationID
 	(*FailureOfFillConversationID)(nil), // 66: types.FailureOfFillConversationID
-	(*timestamppb.Timestamp)(nil),       // 67: google.protobuf.Timestamp
+	(*HeartbeatTick)(nil),               // 67: types.HeartbeatTick
+	(*timestamppb.Timestamp)(nil),       // 68: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
 	1,  // 0: types.User.personal:type_name -> types.Personal
-	4,  // 1: types.Disconnect.pid:type_name -> types.PID
-	4,  // 2: types.LoginUser.pid:type_name -> types.PID
-	4,  // 3: types.GetLoggedInUUID.pid:type_name -> types.PID
-	4,  // 4: types.NeededServerConfiguration.serverPID:type_name -> types.PID
-	3,  // 5: types.AllUnits.units:type_name -> types.Unit
-	2,  // 6: types.CreateUser.user:type_name -> types.User
-	2,  // 7: types.AllUsersInUnit.users:type_name -> types.User
-	2,  // 8: types.UsersAboveLVL.users:type_name -> types.User
-	4,  // 9: types.RegisterClient.pid:type_name -> types.PID
-	48, // 10: types.ConversationSummary.last_message:type_name -> types.Message
-	44, // 11: types.SuccessGetUserConversation.convSummary:type_name -> types.ConversationSummary
-	67, // 12: types.Message.sent_at:type_name -> google.protobuf.Timestamp
-	48, // 13: types.SendMessage.message:type_name -> types.Message
-	48, // 14: types.StoreMessage.message:type_name -> types.Message
-	60, // 15: types.PresencePlace.outbox:type_name -> types.Outbox
-	61, // 16: types.PresencePlace.inbox:type_name -> types.Inbox
-	62, // 17: types.PresencePlace.in_chat:type_name -> types.InChat
-	4,  // 18: types.UpdatePresence.pid:type_name -> types.PID
-	59, // 19: types.UpdatePresence.presencePlace:type_name -> types.PresencePlace
-	20, // [20:20] is the sub-list for method output_type
-	20, // [20:20] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	4,  // 1: types.LoginUser.pid:type_name -> types.PID
+	4,  // 2: types.GetLoggedInUUID.pid:type_name -> types.PID
+	4,  // 3: types.NeededServerConfiguration.serverPID:type_name -> types.PID
+	3,  // 4: types.AllUnits.units:type_name -> types.Unit
+	2,  // 5: types.CreateUser.user:type_name -> types.User
+	2,  // 6: types.AllUsersInUnit.users:type_name -> types.User
+	2,  // 7: types.UsersAboveLVL.users:type_name -> types.User
+	4,  // 8: types.RegisterClient.pid:type_name -> types.PID
+	48, // 9: types.ConversationSummary.last_message:type_name -> types.Message
+	44, // 10: types.SuccessGetUserConversation.convSummary:type_name -> types.ConversationSummary
+	68, // 11: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	48, // 12: types.SendMessage.message:type_name -> types.Message
+	48, // 13: types.StoreMessage.message:type_name -> types.Message
+	60, // 14: types.PresencePlace.outbox:type_name -> types.Outbox
+	61, // 15: types.PresencePlace.inbox:type_name -> types.Inbox
+	62, // 16: types.PresencePlace.in_chat:type_name -> types.InChat
+	4,  // 17: types.UpdatePresence.pid:type_name -> types.PID
+	59, // 18: types.UpdatePresence.presencePlace:type_name -> types.PresencePlace
+	19, // [19:19] is the sub-list for method output_type
+	19, // [19:19] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }
@@ -3316,7 +3351,6 @@ func file_types_proto_init() {
 	if File_types_proto != nil {
 		return
 	}
-	file_types_proto_msgTypes[7].OneofWrappers = []any{}
 	file_types_proto_msgTypes[44].OneofWrappers = []any{}
 	file_types_proto_msgTypes[59].OneofWrappers = []any{
 		(*PresencePlace_Outbox)(nil),
@@ -3329,7 +3363,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   67,
+			NumMessages:   68,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
