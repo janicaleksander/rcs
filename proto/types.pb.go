@@ -1993,7 +1993,8 @@ type ConversationSummary struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ConversationId string                 `protobuf:"bytes,1,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"`
 	WithID         string                 `protobuf:"bytes,2,opt,name=withID,proto3" json:"withID,omitempty"`
-	LastMessage    *Message               `protobuf:"bytes,3,opt,name=last_message,json=lastMessage,proto3,oneof" json:"last_message,omitempty"`
+	Nametag        string                 `protobuf:"bytes,3,opt,name=nametag,proto3" json:"nametag,omitempty"`
+	LastMessage    *Message               `protobuf:"bytes,4,opt,name=last_message,json=lastMessage,proto3,oneof" json:"last_message,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -2038,6 +2039,13 @@ func (x *ConversationSummary) GetConversationId() string {
 func (x *ConversationSummary) GetWithID() string {
 	if x != nil {
 		return x.WithID
+	}
+	return ""
+}
+
+func (x *ConversationSummary) GetNametag() string {
+	if x != nil {
+		return x.Nametag
 	}
 	return ""
 }
@@ -3217,11 +3225,12 @@ const file_types_proto_rawDesc = "" +
 	"receiverID\x18\x04 \x01(\tR\n" +
 	"receiverID\"\x1d\n" +
 	"\x1bSuccessOfCreateConversation\"\x1d\n" +
-	"\x1bFailureOfCreateConversation\"\x9f\x01\n" +
+	"\x1bFailureOfCreateConversation\"\xb9\x01\n" +
 	"\x13ConversationSummary\x12'\n" +
 	"\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\x12\x16\n" +
-	"\x06withID\x18\x02 \x01(\tR\x06withID\x126\n" +
-	"\flast_message\x18\x03 \x01(\v2\x0e.types.MessageH\x00R\vlastMessage\x88\x01\x01B\x0f\n" +
+	"\x06withID\x18\x02 \x01(\tR\x06withID\x12\x18\n" +
+	"\anametag\x18\x03 \x01(\tR\anametag\x126\n" +
+	"\flast_message\x18\x04 \x01(\v2\x0e.types.MessageH\x00R\vlastMessage\x88\x01\x01B\x0f\n" +
 	"\r_last_message\"%\n" +
 	"\x13GetUserConversation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"Z\n" +
