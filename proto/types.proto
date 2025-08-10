@@ -177,7 +177,8 @@ message FailureOfCreateConversation{}
 message ConversationSummary {
   string conversation_id = 1;
   string withID = 2;
-  optional Message last_message = 3;
+  string nametag = 3;
+  optional Message last_message = 4;
 }
 
 

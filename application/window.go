@@ -175,14 +175,3 @@ type Position struct {
 	x int32
 	y int32
 }
-
-// TODO FINISH
-func (w *Window) updatePresence(pid *actor.PID, presence *proto.PresencePlace) {
-	w.ctx.Send(w.messageServicePID,
-		&proto.UpdatePresence{
-			Pid: &proto.PID{
-				Address: pid.Address,
-				Id:      pid.ID,
-			},
-			PresencePlace: presence})
-}

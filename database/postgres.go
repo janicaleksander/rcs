@@ -288,10 +288,13 @@ func (p *Postgres) GetUserConversations(ctx context.Context, id string) ([]*prot
 					m.user_id,
 					m.content,
 					m.sent_at,
-					other_uc.user_id as other_user_id
+					other_uc.user_id as other_user_id,
+					pc.name,
+					pc.surname
 				FROM user_conversation uc
 				LEFT JOIN user_conversation other_uc ON other_uc.conversation_id = uc.conversation_id AND other_uc.user_id != uc.user_id
-				LEFT JOIN message m ON m.id = (
+				LEFT JOIN personal pc ON pc.user_id = other_uc.user_id
+				    LEFT JOIN message m ON m.id = (
 					SELECT id FROM message
 					WHERE conversation_id = uc.conversation_id
 					ORDER BY sent_at DESC
@@ -308,6 +311,7 @@ ORDER BY m.sent_at DESC;`, id)
 		cs := &proto.ConversationSummary{
 			ConversationId: "",
 			WithID:         "",
+			Nametag:        "",
 			LastMessage: &proto.Message{
 				Id:             "",
 				SenderID:       "",
@@ -317,11 +321,14 @@ ORDER BY m.sent_at DESC;`, id)
 			},
 		}
 		var timestamp time.Time
-		err = rows.Scan(&cs.ConversationId, &cs.LastMessage.Id, &cs.LastMessage.SenderID, &cs.LastMessage.Content, &timestamp, &cs.WithID)
+		var name string
+		var surname string
+		err = rows.Scan(&cs.ConversationId, &cs.LastMessage.Id, &cs.LastMessage.SenderID, &cs.LastMessage.Content, &timestamp, &cs.WithID, &name, &surname)
 		if err != nil {
 			//TODO
 		}
 		cs.LastMessage.SentAt = timestamppb.New(timestamp)
+		cs.Nametag = name + " " + surname
 		conversationsSummary = append(conversationsSummary, cs)
 	}
 	return conversationsSummary, nil

@@ -86,7 +86,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 		} else {
 			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
 			s.connections[id] = pid                          //pid to uuid
-			fmt.Println(s.connections)
+			s.reverseConnections[pid.String()] = id
 			ctx.Respond(&proto.AcceptLogin{Info: "Login successful! ", RuleLevel: int64(role)})
 
 		}
@@ -100,7 +100,6 @@ func (s *Server) Receive(ctx *actor.Context) {
 		c := context.Background()
 		users, err := s.storage.GetUsersWithLVL(c, int(msg.Lvl))
 		if err == nil {
-			fmt.Println(users)
 			ctx.Respond(&proto.UsersAboveLVL{Users: users})
 		}
 	case *proto.CreateUnit:
