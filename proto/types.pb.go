@@ -2641,272 +2641,6 @@ func (*Offline) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{58}
 }
 
-type PresencePlace struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Types that are valid to be assigned to Place:
-	//
-	//	*PresencePlace_Outbox
-	//	*PresencePlace_Inbox
-	//	*PresencePlace_InChat
-	Place         isPresencePlace_Place `protobuf_oneof:"place"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *PresencePlace) Reset() {
-	*x = PresencePlace{}
-	mi := &file_types_proto_msgTypes[59]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *PresencePlace) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*PresencePlace) ProtoMessage() {}
-
-func (x *PresencePlace) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[59]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use PresencePlace.ProtoReflect.Descriptor instead.
-func (*PresencePlace) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{59}
-}
-
-func (x *PresencePlace) GetPlace() isPresencePlace_Place {
-	if x != nil {
-		return x.Place
-	}
-	return nil
-}
-
-func (x *PresencePlace) GetOutbox() *Outbox {
-	if x != nil {
-		if x, ok := x.Place.(*PresencePlace_Outbox); ok {
-			return x.Outbox
-		}
-	}
-	return nil
-}
-
-func (x *PresencePlace) GetInbox() *Inbox {
-	if x != nil {
-		if x, ok := x.Place.(*PresencePlace_Inbox); ok {
-			return x.Inbox
-		}
-	}
-	return nil
-}
-
-func (x *PresencePlace) GetInChat() *InChat {
-	if x != nil {
-		if x, ok := x.Place.(*PresencePlace_InChat); ok {
-			return x.InChat
-		}
-	}
-	return nil
-}
-
-type isPresencePlace_Place interface {
-	isPresencePlace_Place()
-}
-
-type PresencePlace_Outbox struct {
-	Outbox *Outbox `protobuf:"bytes,1,opt,name=outbox,proto3,oneof"`
-}
-
-type PresencePlace_Inbox struct {
-	Inbox *Inbox `protobuf:"bytes,2,opt,name=inbox,proto3,oneof"`
-}
-
-type PresencePlace_InChat struct {
-	InChat *InChat `protobuf:"bytes,3,opt,name=in_chat,json=inChat,proto3,oneof"`
-}
-
-func (*PresencePlace_Outbox) isPresencePlace_Place() {}
-
-func (*PresencePlace_Inbox) isPresencePlace_Place() {}
-
-func (*PresencePlace_InChat) isPresencePlace_Place() {}
-
-type Outbox struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Outbox) Reset() {
-	*x = Outbox{}
-	mi := &file_types_proto_msgTypes[60]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Outbox) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Outbox) ProtoMessage() {}
-
-func (x *Outbox) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[60]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Outbox.ProtoReflect.Descriptor instead.
-func (*Outbox) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{60}
-}
-
-type Inbox struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Inbox) Reset() {
-	*x = Inbox{}
-	mi := &file_types_proto_msgTypes[61]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Inbox) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Inbox) ProtoMessage() {}
-
-func (x *Inbox) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[61]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Inbox.ProtoReflect.Descriptor instead.
-func (*Inbox) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{61}
-}
-
-type InChat struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	ConversationId string                 `protobuf:"bytes,1,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
-}
-
-func (x *InChat) Reset() {
-	*x = InChat{}
-	mi := &file_types_proto_msgTypes[62]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *InChat) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*InChat) ProtoMessage() {}
-
-func (x *InChat) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[62]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use InChat.ProtoReflect.Descriptor instead.
-func (*InChat) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{62}
-}
-
-func (x *InChat) GetConversationId() string {
-	if x != nil {
-		return x.ConversationId
-	}
-	return ""
-}
-
-type UpdatePresence struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Pid           *PID                   `protobuf:"bytes,1,opt,name=pid,proto3" json:"pid,omitempty"`
-	PresencePlace *PresencePlace         `protobuf:"bytes,2,opt,name=presencePlace,proto3" json:"presencePlace,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdatePresence) Reset() {
-	*x = UpdatePresence{}
-	mi := &file_types_proto_msgTypes[63]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdatePresence) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdatePresence) ProtoMessage() {}
-
-func (x *UpdatePresence) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[63]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdatePresence.ProtoReflect.Descriptor instead.
-func (*UpdatePresence) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{63}
-}
-
-func (x *UpdatePresence) GetPid() *PID {
-	if x != nil {
-		return x.Pid
-	}
-	return nil
-}
-
-func (x *UpdatePresence) GetPresencePlace() *PresencePlace {
-	if x != nil {
-		return x.PresencePlace
-	}
-	return nil
-}
-
 type FillConversationID struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SenderID      string                 `protobuf:"bytes,1,opt,name=senderID,proto3" json:"senderID,omitempty"`
@@ -2917,7 +2651,7 @@ type FillConversationID struct {
 
 func (x *FillConversationID) Reset() {
 	*x = FillConversationID{}
-	mi := &file_types_proto_msgTypes[64]
+	mi := &file_types_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2929,7 +2663,7 @@ func (x *FillConversationID) String() string {
 func (*FillConversationID) ProtoMessage() {}
 
 func (x *FillConversationID) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[64]
+	mi := &file_types_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2942,7 +2676,7 @@ func (x *FillConversationID) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FillConversationID.ProtoReflect.Descriptor instead.
 func (*FillConversationID) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{64}
+	return file_types_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *FillConversationID) GetSenderID() string {
@@ -2968,7 +2702,7 @@ type SuccessOfFillConversationID struct {
 
 func (x *SuccessOfFillConversationID) Reset() {
 	*x = SuccessOfFillConversationID{}
-	mi := &file_types_proto_msgTypes[65]
+	mi := &file_types_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2980,7 +2714,7 @@ func (x *SuccessOfFillConversationID) String() string {
 func (*SuccessOfFillConversationID) ProtoMessage() {}
 
 func (x *SuccessOfFillConversationID) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[65]
+	mi := &file_types_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2993,7 +2727,7 @@ func (x *SuccessOfFillConversationID) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessOfFillConversationID.ProtoReflect.Descriptor instead.
 func (*SuccessOfFillConversationID) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{65}
+	return file_types_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *SuccessOfFillConversationID) GetId() string {
@@ -3011,7 +2745,7 @@ type FailureOfFillConversationID struct {
 
 func (x *FailureOfFillConversationID) Reset() {
 	*x = FailureOfFillConversationID{}
-	mi := &file_types_proto_msgTypes[66]
+	mi := &file_types_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3023,7 +2757,7 @@ func (x *FailureOfFillConversationID) String() string {
 func (*FailureOfFillConversationID) ProtoMessage() {}
 
 func (x *FailureOfFillConversationID) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[66]
+	mi := &file_types_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3036,7 +2770,7 @@ func (x *FailureOfFillConversationID) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FailureOfFillConversationID.ProtoReflect.Descriptor instead.
 func (*FailureOfFillConversationID) Descriptor() ([]byte, []int) {
-	return file_types_proto_rawDescGZIP(), []int{66}
+	return file_types_proto_rawDescGZIP(), []int{61}
 }
 
 type HeartbeatTick struct {
@@ -3047,7 +2781,7 @@ type HeartbeatTick struct {
 
 func (x *HeartbeatTick) Reset() {
 	*x = HeartbeatTick{}
-	mi := &file_types_proto_msgTypes[67]
+	mi := &file_types_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3059,7 +2793,7 @@ func (x *HeartbeatTick) String() string {
 func (*HeartbeatTick) ProtoMessage() {}
 
 func (x *HeartbeatTick) ProtoReflect() protoreflect.Message {
-	mi := &file_types_proto_msgTypes[67]
+	mi := &file_types_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3072,7 +2806,309 @@ func (x *HeartbeatTick) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatTick.ProtoReflect.Descriptor instead.
 func (*HeartbeatTick) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{62}
+}
+
+type Outbox struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Outbox) Reset() {
+	*x = Outbox{}
+	mi := &file_types_proto_msgTypes[63]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Outbox) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Outbox) ProtoMessage() {}
+
+func (x *Outbox) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[63]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Outbox.ProtoReflect.Descriptor instead.
+func (*Outbox) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{63}
+}
+
+type Inbox struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WithID        string                 `protobuf:"bytes,1,opt,name=withID,proto3" json:"withID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Inbox) Reset() {
+	*x = Inbox{}
+	mi := &file_types_proto_msgTypes[64]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Inbox) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Inbox) ProtoMessage() {}
+
+func (x *Inbox) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[64]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Inbox.ProtoReflect.Descriptor instead.
+func (*Inbox) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{64}
+}
+
+func (x *Inbox) GetWithID() string {
+	if x != nil {
+		return x.WithID
+	}
+	return ""
+}
+
+type PresenceType struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Type:
+	//
+	//	*PresenceType_Outbox
+	//	*PresenceType_Inbox
+	Type          isPresenceType_Type `protobuf_oneof:"Type"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PresenceType) Reset() {
+	*x = PresenceType{}
+	mi := &file_types_proto_msgTypes[65]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PresenceType) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PresenceType) ProtoMessage() {}
+
+func (x *PresenceType) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[65]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PresenceType.ProtoReflect.Descriptor instead.
+func (*PresenceType) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{65}
+}
+
+func (x *PresenceType) GetType() isPresenceType_Type {
+	if x != nil {
+		return x.Type
+	}
+	return nil
+}
+
+func (x *PresenceType) GetOutbox() *Outbox {
+	if x != nil {
+		if x, ok := x.Type.(*PresenceType_Outbox); ok {
+			return x.Outbox
+		}
+	}
+	return nil
+}
+
+func (x *PresenceType) GetInbox() *Inbox {
+	if x != nil {
+		if x, ok := x.Type.(*PresenceType_Inbox); ok {
+			return x.Inbox
+		}
+	}
+	return nil
+}
+
+type isPresenceType_Type interface {
+	isPresenceType_Type()
+}
+
+type PresenceType_Outbox struct {
+	Outbox *Outbox `protobuf:"bytes,1,opt,name=outbox,proto3,oneof"`
+}
+
+type PresenceType_Inbox struct {
+	Inbox *Inbox `protobuf:"bytes,2,opt,name=inbox,proto3,oneof"`
+}
+
+func (*PresenceType_Outbox) isPresenceType_Type() {}
+
+func (*PresenceType_Inbox) isPresenceType_Type() {}
+
+type GetPresence struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetPresence) Reset() {
+	*x = GetPresence{}
+	mi := &file_types_proto_msgTypes[66]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetPresence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPresence) ProtoMessage() {}
+
+func (x *GetPresence) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[66]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPresence.ProtoReflect.Descriptor instead.
+func (*GetPresence) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{66}
+}
+
+func (x *GetPresence) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type Presence struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Presence      *PresenceType          `protobuf:"bytes,1,opt,name=presence,proto3" json:"presence,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Presence) Reset() {
+	*x = Presence{}
+	mi := &file_types_proto_msgTypes[67]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Presence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Presence) ProtoMessage() {}
+
+func (x *Presence) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[67]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Presence.ProtoReflect.Descriptor instead.
+func (*Presence) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{67}
+}
+
+func (x *Presence) GetPresence() *PresenceType {
+	if x != nil {
+		return x.Presence
+	}
+	return nil
+}
+
+type UpdatePresence struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Presence      *PresenceType          `protobuf:"bytes,2,opt,name=presence,proto3" json:"presence,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdatePresence) Reset() {
+	*x = UpdatePresence{}
+	mi := &file_types_proto_msgTypes[68]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdatePresence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePresence) ProtoMessage() {}
+
+func (x *UpdatePresence) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[68]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePresence.ProtoReflect.Descriptor instead.
+func (*UpdatePresence) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{68}
+}
+
+func (x *UpdatePresence) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdatePresence) GetPresence() *PresenceType {
+	if x != nil {
+		return x.Presence
+	}
+	return nil
 }
 
 var File_types_proto protoreflect.FileDescriptor
@@ -3211,20 +3247,7 @@ const file_types_proto_rawDesc = "" +
 	"\bIsOnline\x12\x12\n" +
 	"\x04uuid\x18\x01 \x01(\tR\x04uuid\"\b\n" +
 	"\x06Online\"\t\n" +
-	"\aOffline\"\x91\x01\n" +
-	"\rPresencePlace\x12'\n" +
-	"\x06outbox\x18\x01 \x01(\v2\r.types.OutboxH\x00R\x06outbox\x12$\n" +
-	"\x05inbox\x18\x02 \x01(\v2\f.types.InboxH\x00R\x05inbox\x12(\n" +
-	"\ain_chat\x18\x03 \x01(\v2\r.types.InChatH\x00R\x06inChatB\a\n" +
-	"\x05place\"\b\n" +
-	"\x06Outbox\"\a\n" +
-	"\x05Inbox\"1\n" +
-	"\x06InChat\x12'\n" +
-	"\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\"j\n" +
-	"\x0eUpdatePresence\x12\x1c\n" +
-	"\x03pid\x18\x01 \x01(\v2\n" +
-	".types.PIDR\x03pid\x12:\n" +
-	"\rpresencePlace\x18\x02 \x01(\v2\x14.types.PresencePlaceR\rpresencePlace\"P\n" +
+	"\aOffline\"P\n" +
 	"\x12FillConversationID\x12\x1a\n" +
 	"\bsenderID\x18\x01 \x01(\tR\bsenderID\x12\x1e\n" +
 	"\n" +
@@ -3233,7 +3256,21 @@ const file_types_proto_rawDesc = "" +
 	"\x1bSuccessOfFillConversationID\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1d\n" +
 	"\x1bFailureOfFillConversationID\"\x0f\n" +
-	"\rHeartbeatTickB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
+	"\rHeartbeatTick\"\b\n" +
+	"\x06Outbox\"\x1f\n" +
+	"\x05Inbox\x12\x16\n" +
+	"\x06withID\x18\x01 \x01(\tR\x06withID\"e\n" +
+	"\fPresenceType\x12'\n" +
+	"\x06outbox\x18\x01 \x01(\v2\r.types.OutboxH\x00R\x06outbox\x12$\n" +
+	"\x05inbox\x18\x02 \x01(\v2\f.types.InboxH\x00R\x05inboxB\x06\n" +
+	"\x04Type\"\x1d\n" +
+	"\vGetPresence\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\";\n" +
+	"\bPresence\x12/\n" +
+	"\bpresence\x18\x01 \x01(\v2\x13.types.PresenceTypeR\bpresence\"Q\n" +
+	"\x0eUpdatePresence\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12/\n" +
+	"\bpresence\x18\x02 \x01(\v2\x13.types.PresenceTypeR\bpresenceB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -3247,7 +3284,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 68)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 69)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                        // 0: types.Role
 	(*Personal)(nil),                    // 1: types.Personal
@@ -3308,16 +3345,17 @@ var file_types_proto_goTypes = []any{
 	(*IsOnline)(nil),                    // 56: types.IsOnline
 	(*Online)(nil),                      // 57: types.Online
 	(*Offline)(nil),                     // 58: types.Offline
-	(*PresencePlace)(nil),               // 59: types.PresencePlace
-	(*Outbox)(nil),                      // 60: types.Outbox
-	(*Inbox)(nil),                       // 61: types.Inbox
-	(*InChat)(nil),                      // 62: types.InChat
-	(*UpdatePresence)(nil),              // 63: types.UpdatePresence
-	(*FillConversationID)(nil),          // 64: types.FillConversationID
-	(*SuccessOfFillConversationID)(nil), // 65: types.SuccessOfFillConversationID
-	(*FailureOfFillConversationID)(nil), // 66: types.FailureOfFillConversationID
-	(*HeartbeatTick)(nil),               // 67: types.HeartbeatTick
-	(*timestamppb.Timestamp)(nil),       // 68: google.protobuf.Timestamp
+	(*FillConversationID)(nil),          // 59: types.FillConversationID
+	(*SuccessOfFillConversationID)(nil), // 60: types.SuccessOfFillConversationID
+	(*FailureOfFillConversationID)(nil), // 61: types.FailureOfFillConversationID
+	(*HeartbeatTick)(nil),               // 62: types.HeartbeatTick
+	(*Outbox)(nil),                      // 63: types.Outbox
+	(*Inbox)(nil),                       // 64: types.Inbox
+	(*PresenceType)(nil),                // 65: types.PresenceType
+	(*GetPresence)(nil),                 // 66: types.GetPresence
+	(*Presence)(nil),                    // 67: types.Presence
+	(*UpdatePresence)(nil),              // 68: types.UpdatePresence
+	(*timestamppb.Timestamp)(nil),       // 69: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
 	1,  // 0: types.User.personal:type_name -> types.Personal
@@ -3331,19 +3369,18 @@ var file_types_proto_depIdxs = []int32{
 	4,  // 8: types.RegisterClient.pid:type_name -> types.PID
 	48, // 9: types.ConversationSummary.last_message:type_name -> types.Message
 	44, // 10: types.SuccessGetUserConversation.convSummary:type_name -> types.ConversationSummary
-	68, // 11: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	69, // 11: types.Message.sent_at:type_name -> google.protobuf.Timestamp
 	48, // 12: types.SendMessage.message:type_name -> types.Message
 	48, // 13: types.StoreMessage.message:type_name -> types.Message
-	60, // 14: types.PresencePlace.outbox:type_name -> types.Outbox
-	61, // 15: types.PresencePlace.inbox:type_name -> types.Inbox
-	62, // 16: types.PresencePlace.in_chat:type_name -> types.InChat
-	4,  // 17: types.UpdatePresence.pid:type_name -> types.PID
-	59, // 18: types.UpdatePresence.presencePlace:type_name -> types.PresencePlace
-	19, // [19:19] is the sub-list for method output_type
-	19, // [19:19] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	63, // 14: types.PresenceType.outbox:type_name -> types.Outbox
+	64, // 15: types.PresenceType.inbox:type_name -> types.Inbox
+	65, // 16: types.Presence.presence:type_name -> types.PresenceType
+	65, // 17: types.UpdatePresence.presence:type_name -> types.PresenceType
+	18, // [18:18] is the sub-list for method output_type
+	18, // [18:18] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }
@@ -3352,10 +3389,9 @@ func file_types_proto_init() {
 		return
 	}
 	file_types_proto_msgTypes[44].OneofWrappers = []any{}
-	file_types_proto_msgTypes[59].OneofWrappers = []any{
-		(*PresencePlace_Outbox)(nil),
-		(*PresencePlace_Inbox)(nil),
-		(*PresencePlace_InChat)(nil),
+	file_types_proto_msgTypes[65].OneofWrappers = []any{
+		(*PresenceType_Outbox)(nil),
+		(*PresenceType_Inbox)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3363,7 +3399,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   68,
+			NumMessages:   69,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

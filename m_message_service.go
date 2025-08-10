@@ -18,7 +18,6 @@ func main() {
 		utils.Logger.Error("Can't load .env file")
 		return
 	}
-
 	r := remote.New(os.Getenv("MESSAGE_SERVICE_ADDR"), remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
@@ -32,7 +31,7 @@ func main() {
 	}
 	dbase := dbManager.GetDB()
 	pg := &db.Postgres{Conn: dbase}
-
+	//TODO I don't know if i need a connection between MSSVC and server
 	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
 	//ping server
 	resp := e.Request(serverPID, &proto.IsServerRunning{}, utils.WaitTime)

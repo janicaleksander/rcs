@@ -214,31 +214,6 @@ message IsOnline{
 message Online{}
 message Offline{}
 
-
-
-message PresencePlace {
-  oneof place {
-    Outbox outbox = 1;
-    Inbox inbox = 2;
-    InChat in_chat = 3;
-  }
-}
-
-message Outbox {
-}
-
-message Inbox {
-}
-
-message InChat {
-  string conversation_id = 1;
-}
-
-message UpdatePresence{
-  PID pid = 1;
-  PresencePlace presencePlace =2;
-}
-
 message FillConversationID{
   string senderID =1;
   string receiverID =2;
@@ -250,5 +225,27 @@ message FailureOfFillConversationID{
 }
 
 message HeartbeatTick{
-
 }
+message Outbox{}
+message Inbox {
+  string withID =1;
+}
+
+message PresenceType {
+  oneof Type {
+    Outbox outbox = 1;
+    Inbox inbox = 2;
+  }
+}
+message GetPresence{
+  string id = 1;
+}
+message Presence {
+PresenceType  presence= 1;
+}
+message UpdatePresence{
+  string id = 1;
+  PresenceType presence = 2;
+}
+
+/* rm from server fill conv id maybe*/

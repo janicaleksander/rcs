@@ -48,30 +48,27 @@ func (w *Window) loginSceneSetup() {
 	}
 }
 
-// TODO
-// repair when i first clicked login i get this in app and error context exceeded
-// 2025/08/09 14:22:28 ERROR net.Dial err="dial tcp 127.0.0.1:2002: connectex: No connection could be made because the target machine actively refused it." remote=127.0.0.1:2002 retry=0 max=3 delay=0s
-// 2025/08/09 14:22:28 ERROR net.Dial err="dial tcp 127.0.0.1:2002: connectex: No connection could be made because the target machine actively refused it." remote=127.0.0.1:2002 retry=1 max=3 delay=1s
-// 2025/08/09 14:22:29 ERROR net.Dial err="dial tcp 127.0.0.1:2002: connectex: No connection could be made because the target machine actively refused it." remote=127.0.0.1:2002 retry=2 max=3 delay=2s
-//when i comment part with MSSVC its works normally
 //maybe move this to setup?
 
 func (w *Window) updateLoginState() {
 	if gui.Button(w.loginSceneScene.loginButton.bounds, w.loginSceneScene.loginButton.text) {
 		/*
-			var waitGroup sync.WaitGroup
-			waitGroup.Add(1)
-			go func(wg *sync.WaitGroup) {
-				defer wg.Done()
-				resp := w.ctx.Request(w.messageServicePID, &proto.Ping{}, utils.WaitTime)
-				res, err := resp.Result()
-				_, ok := res.(*proto.Pong)
-				if !ok || err != nil {
-					w.messageServiceError = true
-					//TODO do sth
-				}
+					var waitGroup sync.WaitGroup
+					waitGroup.Add(1)
+					go func(wg *sync.WaitGroup) {
+						defer wg.Done()
+						resp := w.ctx.Request(w.messageServicePID, &proto.Ping{}, utils.WaitTime)
+						res, err := resp.Result()
+						_, ok := res.(*proto.Pong)
+						if !ok || err != nil {
+							w.messageServiceError = true
+				and maybe use this to not make other request we have to wait if goruitne change this var to false and then???
+				//thiis is to set own presence to cut all messsage service from app
+							//TODO do sth
+						}
 
-			}(&waitGroup)
+			maybe not use witgroup, only if go routine finish succes if will change a var to true and the some render detect it and show
+					}(&waitGroup)
 
 		*/
 		email := w.loginSceneScene.emailInput.text
