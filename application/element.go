@@ -23,13 +23,6 @@ type ListSlider struct {
 	idxScroll        int32
 }
 
-type InputField struct {
-	bounds   rl.Rectangle
-	text     string
-	focus    bool
-	textSize int
-}
-
 type Modal struct {
 	background rl.Rectangle
 	bgColor    rl.Color

@@ -3,6 +3,7 @@ package application
 import (
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
@@ -10,8 +11,8 @@ import (
 // LOGIN STATE
 type LoginScene struct {
 	loginButton   Button
-	emailInput    InputField
-	passwordInput InputField
+	emailInput    component.InputBox
+	passwordInput component.InputBox
 
 	isLoginError      bool
 	loginErrorMessage string
@@ -23,6 +24,7 @@ func (l *LoginScene) Reset() {
 	l.loginErrorMessage = ""
 }
 func (w *Window) loginSceneSetup() {
+
 	w.loginSceneScene.Reset()
 	w.loginSceneScene.loginButton = Button{
 		bounds: rl.NewRectangle(
@@ -32,16 +34,18 @@ func (w *Window) loginSceneSetup() {
 		),
 		text: "Login",
 	}
-	w.loginSceneScene.emailInput.bounds = rl.NewRectangle(
+	w.loginSceneScene.emailInput = *component.NewInputBox(component.NewConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-140),
 		200, 30,
-	)
-	w.loginSceneScene.passwordInput.bounds = rl.NewRectangle(
+	), false)
+
+	w.loginSceneScene.passwordInput = *component.NewInputBox(component.NewConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-80),
 		200, 30,
-	)
+	), false)
+
 	w.loginSceneScene.errorPosition = Position{
 		x: int32(rl.GetScreenWidth()/2 - 100),
 		y: int32(rl.GetScreenHeight()/2 + 40),
@@ -51,14 +55,17 @@ func (w *Window) loginSceneSetup() {
 //maybe move this to setup?
 
 func (w *Window) updateLoginState() {
+	w.loginSceneScene.emailInput.Update()
+	w.loginSceneScene.passwordInput.Update()
+
 	if gui.Button(w.loginSceneScene.loginButton.bounds, w.loginSceneScene.loginButton.text) {
 		//i have to do check services and then mark this somehow to show that user can use it
 
 		//and maybe use this to not make other request we have to wait if goruitne change this var to false and then???
 		//thiis is to set own presence to cut all messsage service from app
 
-		email := w.loginSceneScene.emailInput.text
-		pwd := w.loginSceneScene.passwordInput.text
+		email := w.loginSceneScene.emailInput.GetText()
+		pwd := w.loginSceneScene.passwordInput.GetText()
 		if len(email) <= 0 || len(pwd) <= 0 {
 			w.loginSceneScene.isLoginError = true
 			w.loginSceneScene.loginErrorMessage = "Zero length inboxInput"
@@ -130,20 +137,20 @@ func (w *Window) renderLoginState() {
 
 	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
 		mousePos := rl.GetMousePosition()
-		if rl.CheckCollisionPointRec(mousePos, w.loginSceneScene.emailInput.bounds) {
-			w.loginSceneScene.emailInput.focus = true
-			w.loginSceneScene.passwordInput.focus = false
-		} else if rl.CheckCollisionPointRec(mousePos, w.loginSceneScene.passwordInput.bounds) {
-			w.loginSceneScene.emailInput.focus = false
-			w.loginSceneScene.passwordInput.focus = true
+		if rl.CheckCollisionPointRec(mousePos, w.loginSceneScene.emailInput.Bounds) {
+			w.loginSceneScene.emailInput.Active()
+			w.loginSceneScene.passwordInput.Deactivate()
+		} else if rl.CheckCollisionPointRec(mousePos, w.loginSceneScene.passwordInput.Bounds) {
+			w.loginSceneScene.emailInput.Deactivate()
+			w.loginSceneScene.passwordInput.Active()
 		} else {
-			w.loginSceneScene.emailInput.focus = false
-			w.loginSceneScene.passwordInput.focus = false
+			w.loginSceneScene.emailInput.Deactivate()
+			w.loginSceneScene.passwordInput.Deactivate()
 		}
 	}
-	gui.TextBox(w.loginSceneScene.emailInput.bounds, &w.loginSceneScene.emailInput.text, 64, w.loginSceneScene.emailInput.focus)
 
 	//TODO: secret password inboxInput box
-	gui.TextBox(w.loginSceneScene.passwordInput.bounds, &w.loginSceneScene.passwordInput.text, 64, w.loginSceneScene.passwordInput.focus)
+	w.loginSceneScene.emailInput.Render()
+	w.loginSceneScene.passwordInput.Render()
 
 }

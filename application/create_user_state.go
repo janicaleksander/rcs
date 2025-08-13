@@ -4,6 +4,7 @@ import (
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/User"
+	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/proto"
 	"github.com/janicaleksander/bcs/utils"
 
@@ -11,12 +12,12 @@ import (
 )
 
 type CreateUserScene struct {
-	emailInput      InputField
-	passwordInput   InputField
-	rePasswordInput InputField
-	ruleLevelInput  InputField
-	nameInput       InputField
-	surnameInput    InputField
+	emailInput      component.InputBox
+	passwordInput   component.InputBox
+	rePasswordInput component.InputBox
+	ruleLevelInput  component.InputBox
+	nameInput       component.InputBox
+	surnameInput    component.InputBox
 	isError         bool
 	errorMessage    string
 	acceptButton    Button
@@ -36,69 +37,58 @@ func (s *CreateUserScene) Reset() {
 
 func (w *Window) createUserSceneSetup() {
 	w.createUserScene.Reset()
-	w.createUserScene.emailInput = InputField{
-		bounds: rl.NewRectangle(
+	//set constse.g maxLength
+	w.createUserScene.emailInput = *component.NewInputBox(
+		component.NewConfig(),
+		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2-300),
 			200,
 			60,
-		),
-		text:     "",
-		focus:    false,
-		textSize: 64,
-	}
-	w.createUserScene.passwordInput = InputField{
-		bounds: rl.NewRectangle(
+		), false)
+
+	w.createUserScene.passwordInput = *component.NewInputBox(
+		component.NewConfig(),
+		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)-200,
 			200,
-			60),
-		text:     "",
-		focus:    false,
-		textSize: 64,
-	}
-	w.createUserScene.rePasswordInput = InputField{
-		bounds: rl.NewRectangle(
+			60), false)
+
+	w.createUserScene.rePasswordInput = *component.NewInputBox(
+		component.NewConfig(),
+		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)-100,
 			200,
-			60),
-		text:     "",
-		focus:    false,
-		textSize: 64,
-	}
-	w.createUserScene.ruleLevelInput = InputField{
-		bounds: rl.NewRectangle(
+			60), false)
+
+	w.createUserScene.ruleLevelInput = *component.NewInputBox(
+		component.NewConfig(),
+		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2),
 			200,
 			60,
-		),
-		text:     "",
-		focus:    false,
-		textSize: 64,
-	}
-	w.createUserScene.nameInput = InputField{
-		bounds: rl.NewRectangle(
+		), false)
+
+	w.createUserScene.nameInput = *component.NewInputBox(
+		component.NewConfig(),
+		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)+100,
 			200,
-			60),
-		text:     "",
-		focus:    false,
-		textSize: 64,
-	}
-	w.createUserScene.surnameInput = InputField{
-		bounds: rl.NewRectangle(
+			60), false)
+
+	w.createUserScene.surnameInput = *component.NewInputBox(
+		component.NewConfig(),
+		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)+200,
 			200,
 			60,
-		),
-		text:     "",
-		focus:    false,
-		textSize: 64,
-	}
+		), false)
+
 	w.createUserScene.acceptButton = Button{
 		bounds: rl.NewRectangle(
 			float32(w.width/2)-100,
@@ -110,14 +100,20 @@ func (w *Window) createUserSceneSetup() {
 }
 
 func (w *Window) updateCreateUserState() {
+	w.createUserScene.emailInput.Update()
+	w.createUserScene.passwordInput.Update()
+	w.createUserScene.rePasswordInput.Update()
+	w.createUserScene.ruleLevelInput.Update()
+	w.createUserScene.nameInput.Update()
+	w.createUserScene.surnameInput.Update()
 	if gui.Button(w.createUserScene.acceptButton.bounds, w.createUserScene.acceptButton.text) {
 		w.createUserScene.Reset()
-		email := w.createUserScene.emailInput.text
-		password := w.createUserScene.passwordInput.text
-		rePassword := w.createUserScene.rePasswordInput.text
-		ruleLevel := w.createUserScene.ruleLevelInput.text
-		name := w.createUserScene.nameInput.text
-		surname := w.createUserScene.surnameInput.text
+		email := w.createUserScene.emailInput.GetText()
+		password := w.createUserScene.passwordInput.GetText()
+		rePassword := w.createUserScene.rePasswordInput.GetText()
+		ruleLevel := w.createUserScene.ruleLevelInput.GetText()
+		name := w.createUserScene.nameInput.GetText()
+		surname := w.createUserScene.surnameInput.GetText()
 
 		//check inboxInput
 		if len(email) <= 0 || len(password) <= 0 ||
@@ -145,12 +141,12 @@ func (w *Window) updateCreateUserState() {
 		if _, ok := val.(*proto.AcceptCreateUser); ok {
 			w.createUserScene.isAccept = true
 			w.createUserScene.acceptMessage = "Created successfully"
-			w.createUserScene.emailInput.text = ""
-			w.createUserScene.passwordInput.text = ""
-			w.createUserScene.rePasswordInput.text = ""
-			w.createUserScene.ruleLevelInput.text = ""
-			w.createUserScene.nameInput.text = ""
-			w.createUserScene.surnameInput.text = ""
+			w.createUserScene.emailInput.Clear()
+			w.createUserScene.passwordInput.Clear()
+			w.createUserScene.rePasswordInput.Clear()
+			w.createUserScene.ruleLevelInput.Clear()
+			w.createUserScene.nameInput.Clear()
+			w.createUserScene.surnameInput.Clear()
 		}
 		if _, ok := val.(*proto.DenyCreateUser); ok {
 			w.createUserScene.isError = true
@@ -172,41 +168,40 @@ func (w *Window) renderCreateUserState() {
 
 	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
 		mousePos := rl.GetMousePosition()
-		w.createUserScene.emailInput.focus = false
-		w.createUserScene.passwordInput.focus = false
-		w.createUserScene.rePasswordInput.focus = false
-		w.createUserScene.ruleLevelInput.focus = false
-		w.createUserScene.nameInput.focus = false
-		w.createUserScene.surnameInput.focus = false
+		w.createUserScene.emailInput.Deactivate()
+		w.createUserScene.passwordInput.Deactivate()
+		w.createUserScene.rePasswordInput.Deactivate()
+		w.createUserScene.ruleLevelInput.Deactivate()
+		w.createUserScene.nameInput.Deactivate()
+		w.createUserScene.surnameInput.Deactivate()
 
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.emailInput.bounds) {
-			w.createUserScene.emailInput.focus = true
+		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.emailInput.Bounds) {
+			w.createUserScene.emailInput.Active()
 		}
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.passwordInput.bounds) {
-			w.createUserScene.passwordInput.focus = true
-
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.rePasswordInput.bounds) {
-			w.createUserScene.rePasswordInput.focus = true
+		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.passwordInput.Bounds) {
+			w.createUserScene.passwordInput.Active()
 
 		}
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.ruleLevelInput.bounds) {
-			w.createUserScene.ruleLevelInput.focus = true
+		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.rePasswordInput.Bounds) {
+			w.createUserScene.rePasswordInput.Active()
 
 		}
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.nameInput.bounds) {
-			w.createUserScene.nameInput.focus = true
+		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.ruleLevelInput.Bounds) {
+			w.createUserScene.ruleLevelInput.Active()
 
 		}
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.surnameInput.bounds) {
-			w.createUserScene.surnameInput.focus = true
+		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.nameInput.Bounds) {
+			w.createUserScene.nameInput.Active()
+
+		}
+		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.surnameInput.Bounds) {
+			w.createUserScene.surnameInput.Active()
 		}
 	}
-	gui.TextBox(w.createUserScene.emailInput.bounds, &w.createUserScene.emailInput.text, w.createUserScene.emailInput.textSize, w.createUserScene.emailInput.focus)
-	gui.TextBox(w.createUserScene.passwordInput.bounds, &w.createUserScene.passwordInput.text, w.createUserScene.passwordInput.textSize, w.createUserScene.passwordInput.focus)
-	gui.TextBox(w.createUserScene.rePasswordInput.bounds, &w.createUserScene.rePasswordInput.text, w.createUserScene.rePasswordInput.textSize, w.createUserScene.rePasswordInput.focus)
-	gui.TextBox(w.createUserScene.ruleLevelInput.bounds, &w.createUserScene.ruleLevelInput.text, w.createUserScene.ruleLevelInput.textSize, w.createUserScene.ruleLevelInput.focus)
-	gui.TextBox(w.createUserScene.nameInput.bounds, &w.createUserScene.nameInput.text, w.createUserScene.nameInput.textSize, w.createUserScene.nameInput.focus)
-	gui.TextBox(w.createUserScene.surnameInput.bounds, &w.createUserScene.surnameInput.text, w.createUserScene.surnameInput.textSize, w.createUserScene.surnameInput.focus)
-
+	w.createUserScene.emailInput.Render()
+	w.createUserScene.passwordInput.Render()
+	w.createUserScene.rePasswordInput.Render()
+	w.createUserScene.ruleLevelInput.Render()
+	w.createUserScene.nameInput.Render()
+	w.createUserScene.surnameInput.Render()
 }

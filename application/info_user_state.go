@@ -9,6 +9,7 @@ import (
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/google/uuid"
+	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/proto"
 	"github.com/janicaleksander/bcs/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -57,7 +58,7 @@ type InfoUserScene struct {
 	inboxButton                Button
 	showInboxModal             bool
 	inboxModal                 Modal
-	inboxInput                 InputField
+	inboxInput                 component.InputBox
 	sendMessage                Button
 	activeUserCircle           Circle
 	isSendMessageButtonPressed bool
@@ -271,18 +272,18 @@ func (w *Window) InfoUserSceneSetup() {
 		core:       rl.NewRectangle(float32(w.width/2-150.0), float32(w.height/2-150.0), 400, 200),
 	}
 
-	w.infoUserScene.inboxInput = InputField{
-		bounds: rl.NewRectangle(
+	w.infoUserScene.inboxInput = *component.NewInputBox(
+		component.NewConfig(),
+		rl.NewRectangle(
 			w.infoUserScene.inboxModal.core.X+10,
 			w.infoUserScene.inboxModal.core.Y+100,
-			300, 40),
-		text:     "",
-		focus:    false,
-		textSize: 128,
-	}
+			300,
+			40),
+		false)
+
 	w.infoUserScene.sendMessage = Button{
-		bounds: rl.NewRectangle(w.infoUserScene.inboxInput.bounds.X+w.infoUserScene.inboxInput.bounds.Width+10,
-			w.infoUserScene.inboxInput.bounds.Y,
+		bounds: rl.NewRectangle(w.infoUserScene.inboxInput.Bounds.X+w.infoUserScene.inboxInput.Bounds.Width+10,
+			w.infoUserScene.inboxInput.Bounds.Y,
 			50, 50),
 		text: "Send!",
 	}
@@ -296,6 +297,8 @@ func (w *Window) InfoUserSceneSetup() {
 }
 
 func (w *Window) updateInfoUserState() {
+	w.infoUserScene.inboxInput.Update()
+
 	currentUserIdx := w.infoUserScene.usersList.idxActiveElement
 	if currentUserIdx != -1 && currentUserIdx != w.infoUserScene.lastProcessedUserIdx {
 		//
@@ -413,7 +416,7 @@ func (w *Window) updateInfoUserState() {
 		w.infoUserScene.showInboxModal = true
 	}
 	if w.infoUserScene.isSendMessageButtonPressed {
-		message := w.infoUserScene.inboxInput.text
+		message := w.infoUserScene.inboxInput.GetText()
 		resp := w.ctx.Request(w.serverPID,
 			&proto.GetLoggedInUUID{
 				Pid: &proto.PID{
@@ -461,7 +464,7 @@ func (w *Window) updateInfoUserState() {
 		}
 		//reset
 		fmt.Println("CZAS SENDINGu", time.Since(n))
-		w.infoUserScene.inboxInput.text = ""
+		w.infoUserScene.inboxInput.Clear()
 	}
 
 }
@@ -476,10 +479,10 @@ func (w *Window) renderInfoUserState() {
 			w.infoUserScene.usersList.focus = 0
 			w.infoUserScene.unitsToAssignSlider.focus = 1
 		}
-		if rl.CheckCollisionPointRec(mousePos, w.infoUserScene.inboxInput.bounds) {
-			w.infoUserScene.inboxInput.focus = true
+		if rl.CheckCollisionPointRec(mousePos, w.infoUserScene.inboxInput.Bounds) {
+			w.infoUserScene.inboxInput.Active()
 		} else {
-			w.infoUserScene.inboxInput.focus = false
+			w.infoUserScene.inboxInput.Deactivate()
 		}
 		if w.infoUserScene.showAddModal || w.infoUserScene.showRemoveModal || w.infoUserScene.showInboxModal {
 			w.infoUserScene.usersList.focus = 0
@@ -540,11 +543,7 @@ func (w *Window) renderInfoUserState() {
 			w.infoUserScene.activeUserCircle.y,
 			w.infoUserScene.activeUserCircle.radius,
 			w.infoUserScene.activeUserCircle.color)
-		gui.TextBox(
-			w.infoUserScene.inboxInput.bounds,
-			&w.infoUserScene.inboxInput.text,
-			w.infoUserScene.inboxInput.textSize,
-			w.infoUserScene.inboxInput.focus)
+		w.infoUserScene.inboxInput.Render()
 		w.infoUserScene.isSendMessageButtonPressed = gui.Button(w.infoUserScene.sendMessage.bounds, w.infoUserScene.sendMessage.text)
 
 	}

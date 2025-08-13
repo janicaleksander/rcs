@@ -3,11 +3,12 @@ package application
 import (
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
 
-// TODO add better description to components in GUI
+// TODO add better description to component in GUI
 type CreateUnitScene struct {
 	isSetupError  bool
 	isCreateError bool
@@ -22,7 +23,7 @@ type CreateUnitScene struct {
 	acceptButton Button
 
 	//name of new unit
-	nameInput InputField
+	nameInput component.InputBox
 
 	//user choose dropdown
 	usersDropdown ListSlider
@@ -87,11 +88,11 @@ func (w *Window) createUnitSceneSetup() {
 	}
 
 	//name of unit
-	w.createUnitScene.nameInput.bounds = rl.NewRectangle(
+	w.createUnitScene.nameInput = *component.NewInputBox(component.NewConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-100),
 		200, 40,
-	)
+	), false)
 
 	//dropdown with users
 	w.createUnitScene.usersDropdown.idxScroll = 0
@@ -104,12 +105,13 @@ func (w *Window) createUnitSceneSetup() {
 }
 
 func (w *Window) updateCreateUnitState() {
+	w.createUnitScene.nameInput.Update()
 	if w.createUnitScene.isSetupError {
 		w.createUnitScene.errorMessage = "Setup error, can't do this now!"
 	}
 	if !w.createUnitScene.isSetupError && gui.Button(w.createUnitScene.acceptButton.bounds, w.createUnitScene.acceptButton.text) {
 		w.createUnitScene.Reset()
-		name := w.createUnitScene.nameInput.text
+		name := w.createUnitScene.nameInput.GetText()
 		user := w.createUnitScene.usersDropdown.idxActiveElement
 		if len(name) <= 0 || user <= 0 {
 			w.createUnitScene.isCreateError = true
@@ -159,18 +161,19 @@ func (w *Window) renderCreateUnitState() {
 	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
 		mousePos := rl.GetMousePosition()
 		if rl.CheckCollisionPointRec(mousePos, w.createUnitScene.usersDropdown.bounds) {
-			w.createUnitScene.nameInput.focus = true
+			w.createUnitScene.nameInput.Active()
 			w.createUnitScene.usersDropdown.focus = 0
 		} else if rl.CheckCollisionPointRec(mousePos, w.createUnitScene.usersDropdown.bounds) {
-			w.createUnitScene.nameInput.focus = false
+			w.createUnitScene.nameInput.Deactivate()
 			w.createUnitScene.usersDropdown.focus = 1
 		} else {
-			w.createUnitScene.nameInput.focus = false
+			w.createUnitScene.nameInput.Deactivate()
 			w.createUnitScene.usersDropdown.focus = 0
 		}
 	}
 	//rl.DrawText("Name of unit")
-	gui.TextBox(w.createUnitScene.nameInput.bounds, &w.createUnitScene.nameInput.text, 64, w.createUnitScene.nameInput.focus)
+
+	w.createUnitScene.nameInput.Render()
 
 	//rl.DrawText("Dropdown with users")
 	gui.ListViewEx(w.createUnitScene.usersDropdown.bounds, w.createUnitScene.usersDropdown.strings, &w.createUnitScene.usersDropdown.idxScroll, &w.createUnitScene.usersDropdown.idxActiveElement, w.createUnitScene.usersDropdown.focus)
