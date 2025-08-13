@@ -10,6 +10,11 @@ import (
 	"github.com/janicaleksander/bcs/utils"
 )
 
+// TODO respond is a sugar on the top of send
+// when you have another request between sth and respond
+// u have to memorize first the orgPID sender from ctx.Sender()
+// then make a request for other actor
+// and if want to still respond to orgReceiver use orgPID
 type MessageService struct {
 	storage     database.Storage
 	serverPID   *actor.PID            //TODO maybe rmv this? //

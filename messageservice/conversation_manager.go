@@ -112,6 +112,8 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			if err != nil {
 				panic(err.Error() + "cnv manager")
 			}
+			//here actor receive another message form this resp and change a orignal ctx of messageservicePID so cause of that
+			//we had to memorize orgSender
 			if message, ok := res.(*proto.SuccessSend); ok {
 				ctx.Send(orgSender, message)
 			} else {

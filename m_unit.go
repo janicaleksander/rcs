@@ -5,9 +5,9 @@ import (
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
-	"github.com/janicaleksander/bcs/Unit"
 	"github.com/janicaleksander/bcs/external"
 	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/unit"
 	"github.com/janicaleksander/bcs/utils"
 	"github.com/joho/godotenv"
 )
