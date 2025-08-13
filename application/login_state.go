@@ -34,13 +34,13 @@ func (w *Window) loginSceneSetup() {
 		),
 		text: "Login",
 	}
-	w.loginSceneScene.emailInput = *component.NewInputBox(component.NewConfig(), rl.NewRectangle(
+	w.loginSceneScene.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-140),
 		200, 30,
 	), false)
 
-	w.loginSceneScene.passwordInput = *component.NewInputBox(component.NewConfig(), rl.NewRectangle(
+	w.loginSceneScene.passwordInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-80),
 		200, 30,

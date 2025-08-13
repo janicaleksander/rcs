@@ -21,7 +21,7 @@ type InputBoxConfig struct {
 	textColor  rl.Color
 }
 
-func defaultConfig() *InputBoxConfig {
+func defaultInputBoxConfig() *InputBoxConfig {
 	return &InputBoxConfig{
 		maxLength:  128,
 		fontsize:   10,
@@ -31,30 +31,30 @@ func defaultConfig() *InputBoxConfig {
 		textColor:  rl.Black,
 	}
 }
-func NewConfig(opts ...func(box *InputBoxConfig)) *InputBoxConfig {
-	cfg := defaultConfig()
+func NewInputBoxConfig(opts ...func(box *InputBoxConfig)) *InputBoxConfig {
+	cfg := defaultInputBoxConfig()
 	for _, opt := range opts {
 		opt(cfg)
 	}
 	return cfg
 }
-func WithFontSize(size int32) func(config *InputBoxConfig) {
+func IBWithFontSize(size int32) func(config *InputBoxConfig) {
 	return func(config *InputBoxConfig) {
 		config.fontsize = size
 	}
 }
-func WithMaxLength(length int32) func(config *InputBoxConfig) {
+func IBWithMaxLength(length int32) func(config *InputBoxConfig) {
 	return func(config *InputBoxConfig) {
 		config.maxLength = length
 	}
 }
 
-func WithLineColor(color rl.Color) func(config *InputBoxConfig) {
+func IBWithLineColor(color rl.Color) func(config *InputBoxConfig) {
 	return func(config *InputBoxConfig) {
 		config.lineColor = color
 	}
 }
-func WithTextColor(color rl.Color) func(config *InputBoxConfig) {
+func IBWithTextColor(color rl.Color) func(config *InputBoxConfig) {
 	return func(config *InputBoxConfig) {
 		config.textColor = color
 	}

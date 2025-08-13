@@ -88,7 +88,7 @@ func (w *Window) createUnitSceneSetup() {
 	}
 
 	//name of unit
-	w.createUnitScene.nameInput = *component.NewInputBox(component.NewConfig(), rl.NewRectangle(
+	w.createUnitScene.nameInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-100),
 		200, 40,

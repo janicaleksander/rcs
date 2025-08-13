@@ -36,3 +36,4 @@ Taskfile.yml
 tmp
 m_app.exe
 Unit/conf
+static

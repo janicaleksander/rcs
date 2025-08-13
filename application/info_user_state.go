@@ -273,7 +273,7 @@ func (w *Window) InfoUserSceneSetup() {
 	}
 
 	w.infoUserScene.inboxInput = *component.NewInputBox(
-		component.NewConfig(),
+		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			w.infoUserScene.inboxModal.core.X+10,
 			w.infoUserScene.inboxModal.core.Y+100,

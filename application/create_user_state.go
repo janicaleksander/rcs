@@ -39,7 +39,7 @@ func (w *Window) createUserSceneSetup() {
 	w.createUserScene.Reset()
 	//set constse.g maxLength
 	w.createUserScene.emailInput = *component.NewInputBox(
-		component.NewConfig(),
+		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2-300),
@@ -48,7 +48,7 @@ func (w *Window) createUserSceneSetup() {
 		), false)
 
 	w.createUserScene.passwordInput = *component.NewInputBox(
-		component.NewConfig(),
+		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)-200,
@@ -56,7 +56,7 @@ func (w *Window) createUserSceneSetup() {
 			60), false)
 
 	w.createUserScene.rePasswordInput = *component.NewInputBox(
-		component.NewConfig(),
+		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)-100,
@@ -64,7 +64,7 @@ func (w *Window) createUserSceneSetup() {
 			60), false)
 
 	w.createUserScene.ruleLevelInput = *component.NewInputBox(
-		component.NewConfig(),
+		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2),
@@ -73,7 +73,7 @@ func (w *Window) createUserSceneSetup() {
 		), false)
 
 	w.createUserScene.nameInput = *component.NewInputBox(
-		component.NewConfig(),
+		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)+100,
@@ -81,7 +81,7 @@ func (w *Window) createUserSceneSetup() {
 			60), false)
 
 	w.createUserScene.surnameInput = *component.NewInputBox(
-		component.NewConfig(),
+		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)+200,
