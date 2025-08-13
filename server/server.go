@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
-	"github.com/google/uuid"
 	db "github.com/janicaleksander/bcs/database"
 	"github.com/janicaleksander/bcs/proto"
 	"github.com/janicaleksander/bcs/utils"
@@ -87,7 +86,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
 			s.connections[id] = pid                          //pid to uuid
 			s.reverseConnections[pid.String()] = id
-			ctx.Respond(&proto.AcceptLogin{Info: "Login successful! ", RuleLevel: int64(role)})
+			ctx.Respond(&proto.AcceptLogin{Id: id, RuleLevel: int64(role)})
 
 		}
 		//TODO idk if this getlogged works
@@ -159,43 +158,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 		} else {
 			ctx.Respond(&proto.SuccessOfDelete{})
 		}
-	case *proto.FillConversationID:
-		c := context.Background()
-		ok, id, err := s.storage.IsConversationExists(c, msg.SenderID, msg.ReceiverID)
-		if err != nil || !ok {
-			cnv := &proto.CreateConversationAndAssign{
-				Id:         uuid.New().String(),
-				SenderID:   msg.SenderID,
-				ReceiverID: msg.ReceiverID,
-			}
-			err = s.storage.CreateAndAssignConversation(c, cnv)
-			if err != nil {
-				//TODO ERROR
-			} else {
-				ctx.Respond(&proto.SuccessOfFillConversationID{Id: cnv.Id})
-			}
 
-		} else {
-			ctx.Respond(&proto.SuccessOfFillConversationID{Id: id})
-		}
-	case *proto.StoreMessage:
-		c := context.Background()
-		err := s.storage.InsertMessage(c, msg.Message)
-		if err != nil {
-			ctx.Respond(&proto.FailureStoreMessage{})
-		} else {
-			ctx.Respond(&proto.SuccessStoreMessage{})
-		}
-	case *proto.GetUserConversation:
-		c := context.Background()
-		conversations, err := s.storage.GetUserConversations(c, msg.Id)
-		if err != nil {
-			ctx.Respond(&proto.FailureGetUserConversation{})
-			fmt.Println(err)
-			//TODO
-		} else {
-			ctx.Respond(&proto.SuccessGetUserConversation{ConvSummary: conversations})
-		}
 	default:
 		utils.Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())
 

@@ -1,6 +1,7 @@
 package application
 
 import (
+	"fmt"
 	"reflect"
 	"runtime"
 
@@ -77,6 +78,9 @@ func (w *Window) Receive(ctx *actor.Context) {
 		utils.Logger.Info("Actor stopped")
 	case *proto.Ping:
 		ctx.Respond(&proto.Pong{})
+	case *proto.DeliverMessage:
+		fmt.Println("ODEBRALEM,", msg.Message)
+		w.inboxScene.messageChan <- msg.Message
 	default:
 		utils.Logger.Warn("server got unknown errorMessage", reflect.TypeOf(msg).String())
 	}

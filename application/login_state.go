@@ -52,25 +52,11 @@ func (w *Window) loginSceneSetup() {
 
 func (w *Window) updateLoginState() {
 	if gui.Button(w.loginSceneScene.loginButton.bounds, w.loginSceneScene.loginButton.text) {
-		/*
-					var waitGroup sync.WaitGroup
-					waitGroup.Add(1)
-					go func(wg *sync.WaitGroup) {
-						defer wg.Done()
-						resp := w.ctx.Request(w.messageServicePID, &proto.Ping{}, utils.WaitTime)
-						res, err := resp.Result()
-						_, ok := res.(*proto.Pong)
-						if !ok || err != nil {
-							w.messageServiceError = true
-				and maybe use this to not make other request we have to wait if goruitne change this var to false and then???
-				//thiis is to set own presence to cut all messsage service from app
-							//TODO do sth
-						}
+		//i have to do check services and then mark this somehow to show that user can use it
 
-			maybe not use witgroup, only if go routine finish succes if will change a var to true and the some render detect it and show
-					}(&waitGroup)
+		//and maybe use this to not make other request we have to wait if goruitne change this var to false and then???
+		//thiis is to set own presence to cut all messsage service from app
 
-		*/
 		email := w.loginSceneScene.emailInput.text
 		pwd := w.loginSceneScene.passwordInput.text
 		if len(email) <= 0 || len(pwd) <= 0 {
@@ -91,13 +77,23 @@ func (w *Window) updateLoginState() {
 			w.loginSceneScene.isLoginError = true
 			w.loginSceneScene.loginErrorMessage = err.Error()
 		} else if v, ok := val.(*proto.AcceptLogin); ok {
-
+			//to show login is taking to much time add some circle or infobar animation
+			resp := w.ctx.Request(w.messageServicePID, &proto.RegisterClient{
+				Id: v.Id,
+				Pid: &proto.PID{
+					Address: w.ctx.PID().Address,
+					Id:      w.ctx.PID().ID,
+				},
+			}, utils.WaitTime)
+			res, err := resp.Result()
+			if _, ok := res.(*proto.SuccessRegisterClient); !ok || err != nil {
+				//mark this sth
+				panic(err)
+			}
 			//TODO if role is 5 this else if ... others
 
 			//TO this point we have to determine if we have error in other services
 			// and w.---.messageServiceError = true
-
-			//waitGroup.Wait()
 			if v.RuleLevel == 5 {
 				w.menuHCSceneSetup()
 				w.currentState = HCMenuState

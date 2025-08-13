@@ -1,19 +1,28 @@
 package messageservice
 
 import (
+	"fmt"
+
 	"github.com/anthdm/hollywood/actor"
+	"github.com/janicaleksander/bcs/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
 
+// TODO   we have to stop actor when presence change
+// ctx.Engine.Poison()
 type Conversation struct {
 	id        string
 	receivers []string
 }
 
-func NewConversation() actor.Producer {
+func NewConversation(receivers []string, id string) actor.Producer {
 	return func() actor.Receiver {
-		return &Conversation{}
+		return &Conversation{
+			receivers: receivers,
+			id:        id,
+		}
 	}
+
 }
 
 func (c *Conversation) Receive(ctx *actor.Context) {
@@ -24,7 +33,53 @@ func (c *Conversation) Receive(ctx *actor.Context) {
 		utils.Logger.Info("Conversation has started")
 	case actor.Stopped:
 		utils.Logger.Info("Conversation has stooped")
+	case *proto.SendMessage:
+		//if store success then ->
+		resp := ctx.Request(ctx.Parent(), &proto.StoreMessage{Message: msg.Message}, utils.WaitTime)
+		res, err := resp.Result()
+		if err != nil {
+			panic(err.Error() + "cnv")
+		}
+		if _, ok := res.(*proto.SuccessStoreMessage); ok {
+			ctx.Respond(&proto.SuccessSend{})
+		} else {
+			ctx.Respond(&proto.FailureSend{})
+			utils.Logger.Error("SOME ERROR in sending ")
+			return
+		}
+		c.sendMessage(ctx, msg)
 	default:
 		_ = msg
+
+	}
+}
+
+func (c *Conversation) sendMessage(ctx *actor.Context, msg *proto.SendMessage) {
+	// i think i will do this: sender makes a messange in instant its added to []Message on client
+	// then is sending throguh ctx request to send to receiver
+	for _, receiver := range c.receivers {
+		if receiver != msg.Message.SenderID {
+			resp := ctx.Request(ctx.Parent(), &proto.GetPresence{Id: receiver}, utils.WaitTime)
+			//TODO do this _ err
+			res, err := resp.Result()
+			if err != nil {
+				panic("error conversation sendMessage")
+			}
+			if message, ok := res.(*proto.Presence); ok {
+				switch message.Presence.Type.(type) {
+				case *proto.PresenceType_Outbox:
+					//only to db in receive loop
+				case *proto.PresenceType_Inbox:
+					//send
+					ctx.Send(ctx.Parent(), &proto.DeliverMessage{
+						Receiver: receiver,
+						Message:  msg.Message,
+					})
+					fmt.Println("WYSYLAM", msg.Message, "do", ctx.Parent())
+				default:
+					utils.Logger.Error("Brak ustawionego typu")
+				}
+			}
+		}
 	}
 }

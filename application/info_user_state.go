@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -426,13 +427,30 @@ func (w *Window) updateInfoUserState() {
 		}
 
 		sender := v.Id
-		// layer up is configure a conversation ID based of if it exists or no etc
+
+		resp = w.ctx.Request(w.messageServicePID, &proto.FillConversationID{
+			SenderID:   sender,
+			ReceiverID: w.infoUserScene.currSelectedUserID,
+		}, utils.WaitTime)
+		res, err = resp.Result()
+		//TOOD finish the err handling sth like messenger type of send error some maybe red circle idk
+		if err != nil {
+			fmt.Println("TUTUAJ")
+			panic(err.Error())
+		}
+		var cnvID string
+		if v, ok := res.(*proto.SuccessOfFillConversationID); ok {
+			cnvID = v.Id
+		} else {
+			panic("ERROR CNV ID")
+		}
+		n := time.Now()
 		resp = w.ctx.Request(w.messageServicePID, &proto.SendMessage{
 			Receiver: w.infoUserScene.currSelectedUserID,
 			Message: &proto.Message{
 				Id:             uuid.New().String(),
 				SenderID:       sender,
-				ConversationID: "", //?
+				ConversationID: cnvID,
 				Content:        message,
 				SentAt:         timestamppb.Now(),
 			}}, utils.WaitTime)
@@ -442,7 +460,7 @@ func (w *Window) updateInfoUserState() {
 			panic(err.Error())
 		}
 		//reset
-
+		fmt.Println("CZAS SENDINGu", time.Since(n))
 		w.infoUserScene.inboxInput.text = ""
 	}
 

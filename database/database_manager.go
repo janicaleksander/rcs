@@ -108,8 +108,8 @@ type Storage interface {
 	AssignUserToUnit(ctx context.Context, userID string, unitID string) error
 	DeleteUserFromUnit(ctx context.Context, userID string, unitID string) error
 	//MESSAGE SERVICE SQL
-	IsConversationExists(ctx context.Context, sender, receiver string) (bool, string, error)
-	CreateAndAssignConversation(ctx context.Context, cnv *proto.CreateConversationAndAssign) error
+	DoConversationExists(ctx context.Context, sender, receiver string) (bool, string, error)
+	CreateConversation(ctx context.Context, cnv *proto.CreateConversation) error
 	InsertMessage(ctx context.Context, msg *proto.Message) error
 	GetUserConversations(ctx context.Context, id string) ([]*proto.ConversationSummary, error)
 	LoadConversation(ctx context.Context, id string) ([]*proto.Message, error)

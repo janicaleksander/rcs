@@ -217,7 +217,7 @@ func (p *Postgres) DeleteUserFromUnit(ctx context.Context, userID string, unitID
 // - true if exists false otherwise
 // - string id of conversation between two user
 // - error
-func (p *Postgres) IsConversationExists(ctx context.Context, sender, receiver string) (bool, string, error) {
+func (p *Postgres) DoConversationExists(ctx context.Context, sender, receiver string) (bool, string, error) {
 	var conversationID string
 	err := p.Conn.QueryRow(`
     SELECT uc1.conversation_id
@@ -235,7 +235,7 @@ func (p *Postgres) IsConversationExists(ctx context.Context, sender, receiver st
 	return true, conversationID, nil
 }
 
-func (p *Postgres) CreateAndAssignConversation(ctx context.Context, cnv *proto.CreateConversationAndAssign) error {
+func (p *Postgres) CreateConversation(ctx context.Context, cnv *proto.CreateConversation) error {
 	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -248,9 +248,10 @@ func (p *Postgres) CreateAndAssignConversation(ctx context.Context, cnv *proto.C
 	_, err = tx.ExecContext(ctx,
 		`INSERT INTO user_conversation (user_id, conversation_id, last_seen_message_id) 
          VALUES ($1, $2, $3), ($4, $2, $3)`,
-		cnv.SenderID, cnv.Id, -1,
+		cnv.SenderID, cnv.Id, nil,
 		cnv.ReceiverID,
 	)
+	//TODO do this last message idk now how to do this and for what this is
 	if err != nil {
 		return err
 	}
@@ -301,7 +302,7 @@ func (p *Postgres) GetUserConversations(ctx context.Context, id string) ([]*prot
 					ORDER BY sent_at DESC
 					LIMIT 1
 					)
-WHERE (uc.user_id = $1 AND other_uc IS NOT NULL)
+WHERE (uc.user_id = $1 AND other_uc.user_id IS NOT NULL)
 ORDER BY m.sent_at DESC;`, id)
 
 	if err != nil {
@@ -321,15 +322,34 @@ ORDER BY m.sent_at DESC;`, id)
 				SentAt:         nil,
 			},
 		}
-		var timestamp time.Time
+		//TODO make it in other places
+		var messageID sql.NullString
+		var sender sql.NullString
+		var content sql.NullString
+		var sentAt sql.NullTime
 		var name string
 		var surname string
-		err = rows.Scan(&cs.ConversationId, &cs.LastMessage.Id, &cs.LastMessage.SenderID, &cs.LastMessage.Content, &timestamp, &cs.WithID, &name, &surname)
+		err = rows.Scan(&cs.ConversationId, &messageID, &sender, &content, &sentAt, &cs.WithID, &name, &surname)
 		if err != nil {
 			//TODO
 		}
-		cs.LastMessage.SentAt = timestamppb.New(timestamp)
+
+		if messageID.Valid {
+			cs.LastMessage.Id = messageID.String
+		}
+		if sender.Valid {
+			cs.LastMessage.SenderID = sender.String
+		}
+		if content.Valid {
+			cs.LastMessage.Content = content.String
+		}
+		if sentAt.Valid {
+			cs.LastMessage.SentAt = timestamppb.New(sentAt.Time)
+		} else {
+			cs.LastMessage.SentAt = nil
+		}
 		cs.Nametag = name + " " + surname
+
 		conversationsSummary = append(conversationsSummary, cs)
 	}
 	return conversationsSummary, nil
