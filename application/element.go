@@ -40,8 +40,16 @@ type ConversationTab struct {
 }
 
 type Message struct {
-	bounds  rl.Rectangle
-	content string
+	bounds    rl.Rectangle
+	content   string
+	originalY float32
 }
 
 //TODO add active status to users
+
+type ScrollPanel struct {
+	bounds  rl.Rectangle
+	content rl.Rectangle
+	scroll  rl.Vector2
+	view    rl.Rectangle
+}

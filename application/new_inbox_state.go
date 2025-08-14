@@ -1,9 +1,6 @@
 package application
 
-/*
-
 import (
-	"fmt"
 	"strings"
 
 	gui "github.com/gen2brain/raylib-go/raygui"
@@ -12,12 +9,22 @@ import (
 	"github.com/janicaleksander/bcs/utils"
 )
 
+type messagePanelLayout struct {
+	middle          float32
+	padding         float32
+	currHeight      float32
+	messageWidth    float32
+	messageFontSize int32
+	leftSide        float32
+	rightSide       float32
+}
 type InboxScene struct {
 	messageChan      chan *proto.Message
 	toolboxArea      rl.Rectangle
 	conversationArea rl.Rectangle
-	messagesArea     rl.Rectangle
 
+	messagePanel       ScrollPanel
+	messagePanelLayout messagePanelLayout
 	usersConversations []*proto.ConversationSummary
 	conversationsTabs  []ConversationTab
 	messages           []Message
@@ -65,13 +72,30 @@ func (w *Window) setupInboxScene() {
 		w.inboxScene.toolboxArea.Height,
 		w.inboxScene.toolboxArea.Width,
 		(7.0/8.0)*float32(w.height))
-	w.inboxScene.messagesArea = rl.NewRectangle(
+
+	w.inboxScene.messagePanel.bounds = rl.NewRectangle(
 		w.inboxScene.toolboxArea.Width,
 		w.inboxScene.toolboxArea.Y,
 		(3.0/5.0)*float32(w.width),
 		float32(w.height))
+	w.inboxScene.messagePanel.content = rl.NewRectangle(
+		w.inboxScene.toolboxArea.Width+5,
+		w.inboxScene.toolboxArea.Y+5,
+		(3.0/5.0)*float32(w.width)-15,
+		float32(w.height)*10)
 
-	fmt.Println(w.inboxScene.usersConversations)
+	w.inboxScene.messagePanel.view = rl.Rectangle{}
+	w.inboxScene.messagePanel.scroll = rl.Vector2{}
+
+	//todo check data type and change to float32 if its possible
+	w.inboxScene.messagePanelLayout.middle = w.inboxScene.messagePanel.bounds.X + (w.inboxScene.messagePanel.bounds.Width)/2.0
+	w.inboxScene.messagePanelLayout.padding = 10
+	w.inboxScene.messagePanelLayout.currHeight = w.inboxScene.messagePanel.bounds.Y + w.inboxScene.messagePanelLayout.padding
+	w.inboxScene.messagePanelLayout.messageWidth = 150
+	w.inboxScene.messagePanelLayout.messageFontSize = 20
+	w.inboxScene.messagePanelLayout.leftSide = w.inboxScene.messagePanel.bounds.X + w.inboxScene.messagePanelLayout.padding
+	w.inboxScene.messagePanelLayout.rightSide = w.inboxScene.messagePanelLayout.middle + w.inboxScene.messagePanelLayout.padding
+
 	var y float32 = w.inboxScene.toolboxArea.Height
 	var height float32 = 40
 	for _, conversation := range w.inboxScene.usersConversations {
@@ -94,22 +118,22 @@ func (w *Window) setupInboxScene() {
 	}
 	w.inboxScene.messageChan = make(chan *proto.Message, 1024)
 	go func() {
-		boxWidth := 200
-		spacing := 20
-		y := w.inboxScene.messagesArea.Y
-		x := w.inboxScene.messagesArea.X
+		//boxWidth := 200
+		//spacing := 20
+		//y := w.inboxScene.messagesArea.Y
+		//	x := w.inboxScene.messagesArea.X
+		/*	for msg := range w.inboxScene.messageChan {
+				content := wrapText(int32(boxWidth), msg.Content, 15)
+				height := (30)*strings.Count(content, "\n") + 1
+				w.inboxScene.messages = append(w.inboxScene.messages, Message{
+					bounds:  rl.NewRectangle(x, y, float32(boxWidth), float32(height)),
+					content: content,
+				})
+				y += float32(spacing) + float32(height)
 
-		for msg := range w.inboxScene.messageChan {
-			fmt.Println("ODEBRALEM", msg)
-			content := wrapText(int32(boxWidth), msg.Content, 15)
-			height := (30)*strings.Count(content, "\n") + 1
-			w.inboxScene.messages = append(w.inboxScene.messages, Message{
-				bounds:  rl.NewRectangle(x, y, float32(boxWidth), float32(height)),
-				content: content,
-			})
-			y += float32(spacing) + float32(height)
+			}
 
-		}
+		*/
 	}()
 }
 func (w *Window) updateInboxState() {
@@ -141,30 +165,38 @@ func (w *Window) updateInboxState() {
 				ReceiverID:     tab.withID,
 				ConversationID: tab.conversationID}, utils.WaitTime)
 			res2, err2 := resp2.Result()
+			//todo name var proper e.g res<what>
 			if err2 != nil {
 				panic(err2)
 			}
+			w.inboxScene.messages = w.inboxScene.messages[:0]
 			if conversation, ok := res2.(*proto.SuccessOpenAndLoadConversation); ok {
-				var y = w.inboxScene.messagesArea.Y
-				var x = w.inboxScene.messagesArea.X
-				boxWidth := 200
-				spacing := 30
+				var xPosition float32
+				var yPosition float32 = w.inboxScene.messagePanel.bounds.Y + w.inboxScene.messagePanelLayout.padding
 				for _, msg := range conversation.Messages {
 					if msg.SenderID == sender {
-						x = w.inboxScene.messagesArea.X + 50
+						xPosition = w.inboxScene.messagePanelLayout.rightSide
 					} else {
-						x = w.inboxScene.messagesArea.X
-
+						xPosition = w.inboxScene.messagePanelLayout.leftSide
 					}
-					//TODO repair styling these boxes
-					content := wrapText(int32(boxWidth), msg.Content, 15)
-					height := (30)*strings.Count(content, "\n") + 1
-					w.inboxScene.messages = append(w.inboxScene.messages, Message{
-						bounds:  rl.NewRectangle(x, y, float32(boxWidth), float32(height)),
-						content: content,
-					})
 
-					y += float32(spacing) + float32(height)
+					//TODO repair styling these boxes
+					content := wrapText(
+						int32(w.inboxScene.messagePanelLayout.messageWidth),
+						msg.Content,
+						w.inboxScene.messagePanelLayout.messageFontSize,
+					)
+					height := float32(w.inboxScene.messagePanelLayout.messageFontSize) * float32(strings.Count(content, "\n")+1)
+					w.inboxScene.messages = append(w.inboxScene.messages, Message{
+						bounds: rl.NewRectangle(
+							xPosition,
+							yPosition,
+							w.inboxScene.messagePanelLayout.messageWidth,
+							height),
+						content:   content,
+						originalY: yPosition,
+					})
+					yPosition += 2*w.inboxScene.messagePanelLayout.padding + height
 				}
 			}
 			//MSSVC -> ConversationManager where is spinning up new actor
@@ -190,7 +222,6 @@ func wrapText(maxWidth int32, input string, fontSize int32) string {
 	return output.String()
 }
 func (w *Window) renderInboxState() {
-
 	rl.DrawRectangle(
 		int32(w.inboxScene.toolboxArea.X),
 		int32(w.inboxScene.toolboxArea.Y),
@@ -205,12 +236,38 @@ func (w *Window) renderInboxState() {
 		int32(w.inboxScene.conversationArea.Height),
 		rl.White)
 
-	rl.DrawRectangle(
-		int32(w.inboxScene.messagesArea.X),
-		int32(w.inboxScene.messagesArea.Y),
-		int32(w.inboxScene.messagesArea.Width),
-		int32(w.inboxScene.messagesArea.Height),
-		rl.LightGray)
+	gui.ScrollPanel(
+		w.inboxScene.messagePanel.bounds,
+		"MESSAGES",
+		w.inboxScene.messagePanel.content,
+		&w.inboxScene.messagePanel.scroll,
+		&w.inboxScene.messagePanel.view,
+	)
+	rl.BeginScissorMode(
+		int32(w.inboxScene.messagePanel.view.X),
+		int32(w.inboxScene.messagePanel.view.Y),
+		int32(w.inboxScene.messagePanel.view.Width),
+		int32(w.inboxScene.messagePanel.view.Height),
+	)
+
+	for i := range w.inboxScene.messages {
+		movingY := w.inboxScene.messages[i].originalY + +w.inboxScene.messagePanel.scroll.Y
+		rl.DrawRectangle(
+			int32(w.inboxScene.messages[i].bounds.X),
+			int32(movingY),
+			int32(w.inboxScene.messages[i].bounds.Width),
+			int32(w.inboxScene.messages[i].bounds.Height),
+			rl.SkyBlue)
+		rl.DrawText(
+			w.inboxScene.messages[i].content,
+			int32(w.inboxScene.messages[i].bounds.X),
+			int32(movingY),
+			15,
+			rl.White)
+
+	}
+
+	rl.EndScissorMode()
 
 	for i := range w.inboxScene.conversationsTabs {
 		rl.DrawRectangle(
@@ -228,23 +285,4 @@ func (w *Window) renderInboxState() {
 		w.inboxScene.conversationsTabs[i].isClicked = gui.Button(w.inboxScene.conversationsTabs[i].enterConversation.bounds, w.inboxScene.conversationsTabs[i].enterConversation.text)
 	}
 
-	for i := range w.inboxScene.messages {
-		rl.DrawRectangle(
-			int32(w.inboxScene.messages[i].bounds.X),
-			int32(w.inboxScene.messages[i].bounds.Y),
-			int32(w.inboxScene.messages[i].bounds.Width),
-			int32(w.inboxScene.messages[i].bounds.Height),
-			rl.SkyBlue)
-		rl.DrawText(
-			w.inboxScene.messages[i].content,
-			int32(w.inboxScene.messages[i].bounds.X),
-			int32(w.inboxScene.messages[i].bounds.Y),
-			15,
-			rl.White)
-
-	}
-
 }
-
-
-*/

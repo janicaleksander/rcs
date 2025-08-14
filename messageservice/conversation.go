@@ -83,3 +83,9 @@ func (c *Conversation) sendMessage(ctx *actor.Context, msg *proto.SendMessage) {
 		}
 	}
 }
+
+//we have to kill this actor somehow
+//e.g i change conversation->then i have to change in map that i dont have opened itd
+//but it depend what i will choose:
+// send from info also add to thisa array->somehow track if user has opened this to not remove this conversation
+// do not do this and every change od conv kill prev children
