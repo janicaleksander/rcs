@@ -57,8 +57,8 @@ func (c *Conversation) Receive(ctx *actor.Context) {
 func (c *Conversation) sendMessage(ctx *actor.Context, msg *proto.SendMessage) {
 	// i think i will do this: sender makes a messange in instant its added to []Message on client
 	// then is sending throguh ctx request to send to receiver
-	for _, receiver := range c.receivers {
-		if receiver != msg.Message.SenderID {
+	for _, receiver := range c.receivers { // cause i cant push directly to message ???
+		if true || receiver != msg.Message.SenderID {
 			resp := ctx.Request(ctx.Parent(), &proto.GetPresence{Id: receiver}, utils.WaitTime)
 			//TODO do this _ err
 			res, err := resp.Result()
