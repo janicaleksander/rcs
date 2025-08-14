@@ -32,7 +32,14 @@ type InboxScene struct {
 	tempWithConvID     string
 	messagePanel       ScrollPanel
 	messagePanelLayout messagePanelLayout
+	//TOOLBOX elements
+	backButton                   Button
+	addConversationButton        Button
+	isAddConversationPressed     bool
+	refreshConversationsButton   Button
+	isRefreshConversationPressed bool
 
+	//
 	textInput           component.InputBox
 	sendButton          Button
 	isSendButtonPressed bool
@@ -78,6 +85,38 @@ func (w *Window) setupInboxScene() {
 		0,
 		(2.0/5.0)*float32(w.width),
 		(1.0/8.0)*float32(w.height))
+
+	//BUTTONS IN TOOLBOX AREA
+
+	//go back button
+	var toolboxButtonPadding float32 = 10
+	var toolBoxButtonWidth float32 = 150
+	var toolBoxButtonHeight float32 = 50
+	w.inboxScene.backButton = Button{
+		bounds: rl.NewRectangle(
+			w.inboxScene.toolboxArea.X+toolboxButtonPadding,
+			w.inboxScene.toolboxArea.Y+toolboxButtonPadding,
+			toolBoxButtonWidth,
+			toolBoxButtonHeight),
+		text: "GO BACK",
+	}
+	w.inboxScene.addConversationButton = Button{
+		bounds: rl.NewRectangle(
+			w.inboxScene.backButton.bounds.X+w.inboxScene.backButton.bounds.Width+toolboxButtonPadding,
+			w.inboxScene.toolboxArea.Y+toolboxButtonPadding,
+			toolBoxButtonWidth,
+			toolBoxButtonHeight),
+		text: "Add \n conversation",
+	}
+	w.inboxScene.refreshConversationsButton = Button{
+		bounds: rl.NewRectangle(
+			w.inboxScene.addConversationButton.bounds.X+w.inboxScene.addConversationButton.bounds.Width+toolboxButtonPadding,
+			w.inboxScene.toolboxArea.Y+toolboxButtonPadding,
+			toolBoxButtonWidth,
+			toolBoxButtonHeight),
+		text: "Fetch \n conversations",
+	}
+
 	w.inboxScene.conversationArea = rl.NewRectangle(
 		w.inboxScene.toolboxArea.X,
 		w.inboxScene.toolboxArea.Height,
@@ -186,6 +225,7 @@ func (w *Window) setupInboxScene() {
 // repair reset e.g. currHeight on every click at other conv
 func (w *Window) updateInboxState() {
 	w.inboxScene.textInput.Update()
+
 	for i, tab := range w.inboxScene.conversationsTabs {
 		if tab.isClicked {
 			res := w.ctx.Request(w.serverPID, &proto.GetLoggedInUUID{
@@ -296,7 +336,6 @@ func (w *Window) updateInboxState() {
 				xPosition = w.inboxScene.messagePanelLayout.leftSide
 			}
 
-			//TODO repair styling these boxes
 			content := wrapText(
 				int32(w.inboxScene.messagePanelLayout.messageWidth),
 				message.Message.Content,
@@ -323,9 +362,6 @@ func (w *Window) updateInboxState() {
 
 }
 
-//TODO add starting positon to last message and increase on the fly the content area
-
-// TODO Repair
 func wrapText(maxWidth int32, input string, fontSize int32) string {
 	var output strings.Builder
 	var line strings.Builder
@@ -357,6 +393,14 @@ func (w *Window) renderInboxState() {
 		int32(w.inboxScene.toolboxArea.Width),
 		int32(w.inboxScene.toolboxArea.Height),
 		rl.Gray)
+
+	//toolbox button section
+	if gui.Button(w.inboxScene.backButton.bounds, w.inboxScene.backButton.text) {
+		w.goSceneBack()
+	}
+
+	w.inboxScene.isAddConversationPressed = gui.Button(w.inboxScene.addConversationButton.bounds, w.inboxScene.addConversationButton.text)
+	w.inboxScene.isRefreshConversationPressed = gui.Button(w.inboxScene.refreshConversationsButton.bounds, w.inboxScene.refreshConversationsButton.text)
 
 	rl.DrawRectangle(
 		int32(w.inboxScene.conversationArea.X),
@@ -417,6 +461,3 @@ func (w *Window) renderInboxState() {
 	}
 
 }
-
-//TODO when i see e.g. modal disable all buttons
-//e.g. in info user when i am sending message i would click other buttons from other layers
