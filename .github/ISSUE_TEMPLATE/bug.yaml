@@ -16,6 +16,14 @@ body:
       value: "A bug happened!"
     validations:
       required: true
+  - type: input
+    id: filename
+    attributes:
+      label: File name (optional)
+      description: If the bug is related to a specific file, please provide the file name.
+      placeholder: "ex. index.js, style.css, README.md"
+    validations:
+      required: false
   - type: textarea
     id: screenshots
     attributes:
