@@ -14,6 +14,12 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+type conversationPanelLayout struct {
+	panelHeight float32
+	startHeight float32
+	currHeight  float32
+}
+
 type messagePanelLayout struct {
 	middle          float32
 	padding         float32
@@ -51,12 +57,13 @@ type InboxScene struct {
 	refreshConversationsButton   Button
 	isRefreshConversationPressed bool
 
-	textInput           component.InputBox
-	sendButton          Button
-	isSendButtonPressed bool
-	usersConversations  []*proto.ConversationSummary
-	conversationsTabs   []ConversationTab
-	messages            []Message
+	textInput               component.InputBox
+	sendButton              Button
+	isSendButtonPressed     bool
+	usersConversations      []*proto.ConversationSummary
+	conversationPanelLayout conversationPanelLayout
+	conversationsTabs       []ConversationTab
+	messages                []Message
 }
 
 func (i *InboxScene) Reset() {
@@ -220,26 +227,12 @@ func (w *Window) setupInboxScene() {
 			30),
 		text: "SEND",
 	}
-	var y float32 = w.inboxScene.toolboxArea.Height
-	var height float32 = 40
-	for _, conversation := range w.inboxScene.usersConversations {
-		w.inboxScene.conversationsTabs = append(w.inboxScene.conversationsTabs, ConversationTab{
-			withID:         conversation.WithID,
-			conversationID: conversation.ConversationId,
-			bounds:         rl.NewRectangle(w.inboxScene.toolboxArea.X, y, w.inboxScene.toolboxArea.Width, height),
-			nametag:        conversation.Nametag,
-			enterConversation: Button{
-				bounds: rl.NewRectangle(
-					(3.0/4.0)*w.inboxScene.toolboxArea.Width,
-					y,
-					80,
-					40),
-				text: "ENTER",
-			},
-		})
-
-		y += height
+	w.inboxScene.conversationPanelLayout = conversationPanelLayout{
+		startHeight: 80,
+		panelHeight: 40,
+		currHeight:  80,
 	}
+	w.refreshConversationsPanel()
 	w.inboxScene.messageChan = make(chan *proto.Message, 1024)
 	go func() {
 		for msg := range w.inboxScene.messageChan {
@@ -463,6 +456,37 @@ func (w *Window) addNewConversation() {
 
 }
 func (w *Window) refreshConversationsPanel() {
+	w.inboxScene.conversationsTabs = w.inboxScene.conversationsTabs[:0]
+	resp := w.ctx.Request(w.messageServicePID, &proto.GetUserConversation{Id: w.inboxScene.tempUserID}, utils.WaitTime)
+	res, err := resp.Result()
+	if conversations, ok := res.(*proto.SuccessGetUserConversation); ok && err == nil {
+		w.inboxScene.usersConversations = conversations.ConvSummary
+	} else {
+		//TODO error
+	}
+	w.inboxScene.conversationPanelLayout.currHeight = w.inboxScene.conversationPanelLayout.startHeight
+	for _, conversation := range w.inboxScene.usersConversations {
+		w.inboxScene.conversationsTabs = append(w.inboxScene.conversationsTabs, ConversationTab{
+			withID:         conversation.WithID,
+			conversationID: conversation.ConversationId,
+			bounds: rl.NewRectangle(
+				w.inboxScene.toolboxArea.X,
+				w.inboxScene.conversationPanelLayout.currHeight,
+				w.inboxScene.toolboxArea.Width,
+				w.inboxScene.conversationPanelLayout.panelHeight,
+			),
+			nametag: conversation.Nametag,
+			enterConversation: Button{
+				bounds: rl.NewRectangle(
+					(3.0/4.0)*w.inboxScene.toolboxArea.Width,
+					w.inboxScene.conversationPanelLayout.currHeight,
+					80,
+					40),
+				text: "ENTER",
+			},
+		})
+		w.inboxScene.conversationPanelLayout.currHeight += w.inboxScene.conversationPanelLayout.panelHeight
+	}
 }
 
 func wrapText(maxWidth int32, input string, fontSize int32) string {
