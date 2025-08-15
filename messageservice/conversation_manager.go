@@ -35,6 +35,33 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		utils.Logger.Info("Conversation manager has started")
 	case actor.Stopped:
 		utils.Logger.Info("Conversation manager has stooped")
+	case *proto.CreateConversation:
+		c := context.Background()
+		go func() {
+			exists, _, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
+			if exists || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
+				utils.Logger.Error("Here x1", err, exists)
+				ctx.Respond(&proto.FailureOfCreateConversation{})
+				return
+			}
+			cnv := &proto.Conversation{
+				Id:         msg.Id,
+				SenderID:   msg.SenderID,
+				ReceiverID: msg.ReceiverID,
+			}
+			err = cm.storage.CreateConversation(c, cnv)
+			if err != nil {
+				utils.Logger.Error("Here x2")
+
+				ctx.Respond(&proto.FailureOfCreateConversation{})
+				return
+			} else {
+				utils.Logger.Error("Here x3")
+
+				ctx.Respond(&proto.SuccessOfCreateConversation{})
+				return
+			}
+		}()
 	case *proto.OpenAndLoadConversation:
 		cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID), "conversation")
 		// db call
@@ -72,8 +99,7 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 				}
 			}
 			if !ok {
-				fmt.Println(msg.SenderID, msg.ReceiverID)
-				cnv := &proto.CreateConversation{
+				cnv := &proto.Conversation{
 					Id:         uuid.New().String(),
 					SenderID:   msg.SenderID,
 					ReceiverID: msg.ReceiverID,
@@ -132,6 +158,14 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 	case *proto.DeliverMessage:
 		fmt.Println("odebralem od cnv", msg.Message, ctx.Parent())
 		ctx.Send(ctx.Parent(), msg)
+	case *proto.GetUsersToNewConversation:
+		c := context.Background()
+		users, err := cm.storage.SelectUsersToNewConversation(c, msg.Id)
+		if err != nil {
+			ctx.Respond(&proto.FailureUsersToNewConversation{})
+		} else {
+			ctx.Respond(&proto.SuccessUsersToNewConversation{Users: users})
+		}
 	default:
 		_ = msg
 	}

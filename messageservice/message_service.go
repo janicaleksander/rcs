@@ -46,7 +46,6 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 		ms.presenceManger = ctx.SpawnChild(NewPresenceManager(), "presence_manager")
 		ms.conversationManger = ctx.SpawnChild(NewConversationManager(ms.storage), "conversation_manager")
 	case actor.Stopped:
-
 		utils.Logger.Info("messageservice is stopped")
 	case *proto.Ping:
 
@@ -62,7 +61,6 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 			},
 		})
 	case *proto.GetPresence:
-
 		go func() {
 			resp := ctx.Request(ms.presenceManger, msg, utils.WaitTime)
 			res, _ := resp.Result()
@@ -78,11 +76,11 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 	case *proto.OpenAndLoadConversation:
 		go func() {
 			resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
-			res, _ := resp.Result()
+			res, err := resp.Result()
 			if message, ok := res.(*proto.SuccessOpenAndLoadConversation); ok {
 				ctx.Respond(message)
 			} else {
-				utils.Logger.Error("Error in MSSVC OpenAndLoadConversation")
+				utils.Logger.Error("Error in MSSVC OpenAndLoadConversation" + err.Error())
 				ctx.Respond(message)
 			}
 
@@ -128,40 +126,45 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 		fmt.Println("odebralem od cnv manager", msg)
 		ctx.Send(ms.connections[msg.Receiver], msg)
 		fmt.Println(ms.connections[msg.Receiver])
+	case *proto.GetUsersToNewConversation:
+		go func() {
+			resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
+			res, err := resp.Result()
+			if err != nil {
+				panic(err)
+			}
+			if message, ok := res.(*proto.SuccessUsersToNewConversation); ok {
+				ctx.Respond(message)
+			} else {
+
+				utils.Logger.Error("Error in MSSVC GetUsersToNewConversation")
+				ctx.Respond(message)
+			}
+		}()
+	case *proto.CreateConversation:
+		go func() {
+			resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
+			res, err := resp.Result()
+			if err != nil {
+				utils.Logger.Error("Here x4")
+
+				ctx.Respond(&proto.FailureOfCreateConversation{})
+				return
+			}
+			if _, ok := res.(*proto.SuccessOfCreateConversation); ok {
+				ctx.Respond(&proto.SuccessOfCreateConversation{})
+				utils.Logger.Error("Here x5")
+
+				return
+			} else {
+				utils.Logger.Error("Here x6")
+				ctx.Respond(&proto.FailureOfCreateConversation{})
+				return
+			}
+		}()
+
 	default:
 
 		_ = msg
 	}
 }
-
-/*
-case *proto.FillConversationID:
-c := context.Background()
-ok, id, err := s.storage.IsConversationExists(c, msg.SenderID, msg.ReceiverID)
-if err != nil || !ok {
-cnv := &proto.CreateConversationAndAssign{
-Id:         uuid.New().String(),
-SenderID:   msg.SenderID,
-ReceiverID: msg.ReceiverID,
-}
-err = s.storage.CreateAndAssignConversation(c, cnv)
-if err != nil {
-//TODO ERROR
-} else {
-ctx.Respond(&proto.SuccessOfFillConversationID{Id: cnv.Id})
-}
-
-} else {
-ctx.Respond(&proto.SuccessOfFillConversationID{Id: id})
-}
-case *proto.StoreMessage:
-c := context.Background()
-err := s.storage.InsertMessage(c, msg.Message)
-if err != nil {
-ctx.Respond(&proto.FailureStoreMessage{})
-} else {
-ctx.Respond(&proto.SuccessStoreMessage{})
-}
-
-
-*/

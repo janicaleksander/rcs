@@ -159,6 +159,11 @@ message FailureOfDelete{}
 // ========================
 // MessageService OPERATIONS
 // ========================
+message Conversation{
+    string id = 1;
+    string senderID =3;
+    string receiverID =4;
+}
 message RegisterClient{
   string id =1;
   PID pid =2;
@@ -274,3 +279,14 @@ message SuccessLoadConversation{
 }
 message FailureLoadConversation{}
 /* rm from server fill conv id maybe*/
+
+
+
+message GetUsersToNewConversation{
+  string id = 1;
+}
+
+message SuccessUsersToNewConversation{
+  repeated User users = 1;
+}
+message FailureUsersToNewConversation{}

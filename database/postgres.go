@@ -228,14 +228,14 @@ func (p *Postgres) DoConversationExists(ctx context.Context, sender, receiver st
       AND uc2.user_id = $2
     LIMIT 1
 `, sender, receiver).Scan(&conversationID)
-	if errors.Is(err, sql.ErrNoRows) {
+	if err != nil {
 		return false, "", err
 	}
 
 	return true, conversationID, nil
 }
 
-func (p *Postgres) CreateConversation(ctx context.Context, cnv *proto.CreateConversation) error {
+func (p *Postgres) CreateConversation(ctx context.Context, cnv *proto.Conversation) error {
 	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -335,6 +335,7 @@ ORDER BY m.sent_at DESC;`, id)
 		}
 
 		if messageID.Valid {
+
 			cs.LastMessage.Id = messageID.String
 		}
 		if sender.Valid {
@@ -349,7 +350,6 @@ ORDER BY m.sent_at DESC;`, id)
 			cs.LastMessage.SentAt = nil
 		}
 		cs.Nametag = name + " " + surname
-
 		conversationsSummary = append(conversationsSummary, cs)
 	}
 	return conversationsSummary, nil
@@ -382,4 +382,36 @@ func (p *Postgres) LoadConversation(ctx context.Context, id string) ([]*proto.Me
 		messages = append(messages, m)
 	}
 	return messages, nil
+}
+
+func (p *Postgres) SelectUsersToNewConversation(ctx context.Context, userID string) ([]*proto.User, error) {
+	rows, err := p.Conn.Query(
+		`SELECT 
+    				u.id,u.email, p.name, p.surname 
+				FROM users u 
+				INNER JOIN personal p 
+				    ON u.id = p.user_id
+				WHERE (u.id <> $1)`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	users := make([]*proto.User, 0, 64)
+	for rows.Next() {
+
+		usr := &proto.User{
+			Id:    "",
+			Email: "",
+			Personal: &proto.Personal{
+				Name:    "",
+				Surname: "",
+			},
+		}
+		err = rows.Scan(&usr.Id, &usr.Email, &usr.Personal.Name, &usr.Personal.Surname)
+		if err != nil {
+			//TODO
+		}
+		users = append(users, usr)
+	}
+	return users, nil
 }
