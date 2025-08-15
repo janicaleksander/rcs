@@ -30,16 +30,27 @@ type InboxScene struct {
 	conversationArea   rl.Rectangle
 	tempWithID         string
 	tempWithConvID     string
+	tempUserID         string
 	messagePanel       ScrollPanel
 	messagePanelLayout messagePanelLayout
-	//TOOLBOX elements
-	backButton                   Button
-	addConversationButton        Button
-	isAddConversationPressed     bool
+	//go back button
+	backButton Button
+	//section related with add conversation
+	addConversationButton          Button
+	showAddConversationModal       bool
+	addConversationModal           Modal
+	usersSlider                    ListSlider    // users with I dont have conversation
+	users                          []*proto.User // users with I dont have conversation
+	acceptAddConversationButton    Button
+	isAcceptAddConversationPressed bool
+	errorBoxModal                  rl.Rectangle
+	isErrorModal                   bool
+	textErrorModal                 string
+
+	//section related with refresh conversation panel
 	refreshConversationsButton   Button
 	isRefreshConversationPressed bool
 
-	//
 	textInput           component.InputBox
 	sendButton          Button
 	isSendButtonPressed bool
@@ -56,7 +67,6 @@ func (i *InboxScene) Reset() {
 // TODO in refactor change all names to pattern verb+scene
 func (w *Window) setupInboxScene() {
 
-	//get users conversations
 	res := w.ctx.Request(w.serverPID, &proto.GetLoggedInUUID{
 		Pid: &proto.PID{
 			Address: w.ctx.PID().Address,
@@ -70,14 +80,25 @@ func (w *Window) setupInboxScene() {
 		//TODO
 	}
 	sender := v.Id
+	w.inboxScene.tempUserID = v.Id
+
+	//get users conversations
 	res = w.ctx.Request(w.messageServicePID, &proto.GetUserConversation{Id: sender}, utils.WaitTime)
 	resp, err = res.Result()
 	_, ok = resp.(*proto.FailureGetUserConversation)
-	if err != nil || !ok {
+	if conversations, ok := resp.(*proto.SuccessGetUserConversation); ok && err == nil {
+		w.inboxScene.usersConversations = conversations.ConvSummary
+	} else {
 		//TODO error
 	}
-	if conversations, ok := resp.(*proto.SuccessGetUserConversation); ok {
-		w.inboxScene.usersConversations = conversations.ConvSummary
+
+	//get user to create conversation with
+	res = w.ctx.Request(w.messageServicePID, &proto.GetUsersToNewConversation{Id: sender}, utils.WaitTime)
+	resp, err = res.Result()
+	if conversations, ok := resp.(*proto.SuccessUsersToNewConversation); ok && err == nil {
+		w.inboxScene.users = conversations.Users
+	} else {
+		//TODO error
 	}
 
 	w.inboxScene.toolboxArea = rl.NewRectangle(
@@ -85,8 +106,6 @@ func (w *Window) setupInboxScene() {
 		0,
 		(2.0/5.0)*float32(w.width),
 		(1.0/8.0)*float32(w.height))
-
-	//BUTTONS IN TOOLBOX AREA
 
 	//go back button
 	var toolboxButtonPadding float32 = 10
@@ -108,6 +127,44 @@ func (w *Window) setupInboxScene() {
 			toolBoxButtonHeight),
 		text: "Add \n conversation",
 	}
+	w.inboxScene.addConversationModal = Modal{
+		background: rl.NewRectangle(
+			0,
+			0,
+			float32(w.width),
+			float32(w.height)),
+		bgColor: rl.Fade(rl.LightGray, 0.2),
+		core:    rl.NewRectangle(float32(w.width/2-150.0), float32(w.height/2-150.0), 300, 280),
+	}
+	var addConversationModalPadding float32 = 20
+	w.inboxScene.usersSlider = ListSlider{
+		strings: make([]string, 0, 64),
+		bounds: rl.NewRectangle(
+			w.inboxScene.addConversationModal.core.X+w.inboxScene.addConversationModal.core.Width/2-(w.inboxScene.addConversationModal.core.Width/2)/2,
+			w.inboxScene.addConversationModal.core.Y+2*addConversationModalPadding,
+			w.inboxScene.addConversationModal.core.Width/2,
+			80),
+		idxActiveElement: 0,
+		focus:            0,
+		idxScroll:        0,
+	}
+	for _, user := range w.inboxScene.users {
+		w.inboxScene.usersSlider.strings = append(w.inboxScene.usersSlider.strings,
+			user.Email+"\n"+user.Personal.Name+user.Personal.Name)
+	}
+	w.inboxScene.acceptAddConversationButton = Button{
+		bounds: rl.NewRectangle(
+			w.inboxScene.usersSlider.bounds.X,
+			w.inboxScene.usersSlider.bounds.Y+5*addConversationModalPadding,
+			w.inboxScene.usersSlider.bounds.Width,
+			25),
+		text: "Add conversation",
+	}
+	w.inboxScene.errorBoxModal = rl.NewRectangle(
+		w.inboxScene.usersSlider.bounds.X,
+		w.inboxScene.usersSlider.bounds.Y+8*addConversationModalPadding,
+		w.inboxScene.usersSlider.bounds.Width,
+		75)
 	w.inboxScene.refreshConversationsButton = Button{
 		bounds: rl.NewRectangle(
 			w.inboxScene.addConversationButton.bounds.X+w.inboxScene.addConversationButton.bounds.Width+toolboxButtonPadding,
@@ -360,6 +417,52 @@ func (w *Window) updateInboxState() {
 		}
 	}
 
+	// ADD NEW CONVERSATION SECTION
+	if w.inboxScene.isAcceptAddConversationPressed {
+		w.addNewConversation()
+	}
+	// ADD NEW CONVERSATION SECTION
+	if w.inboxScene.isRefreshConversationPressed {
+		w.refreshConversationsPanel()
+	}
+
+}
+func (w *Window) addNewConversation() {
+
+	//fetch a users to a slider, but only fetch this with I dont have any conversation
+	// get sender and receiver
+	//check if conversation exists
+	//create a conversation and add a new section
+	w.inboxScene.isErrorModal = false
+	w.inboxScene.textErrorModal = ""
+	if w.inboxScene.usersSlider.idxActiveElement == -1 {
+		w.inboxScene.isErrorModal = true
+		w.inboxScene.textErrorModal = "Select user!"
+	} else {
+		selectedUSer := w.inboxScene.users[w.inboxScene.usersSlider.idxActiveElement]
+		fmt.Println(selectedUSer)
+		resp := w.ctx.Request(w.messageServicePID, &proto.CreateConversation{
+			Id:         uuid.New().String(),
+			SenderID:   w.inboxScene.tempUserID,
+			ReceiverID: selectedUSer.Id,
+		}, utils.WaitTime)
+		res, err := resp.Result()
+		if err != nil {
+			w.inboxScene.isErrorModal = true
+			w.inboxScene.textErrorModal = "Error" + err.Error()
+		} else {
+			if _, ok := res.(*proto.SuccessOfCreateConversation); ok {
+				w.refreshConversationsPanel()
+			} else {
+				w.inboxScene.isErrorModal = true
+				w.inboxScene.textErrorModal = "Error"
+
+			}
+		}
+	}
+
+}
+func (w *Window) refreshConversationsPanel() {
 }
 
 func wrapText(maxWidth int32, input string, fontSize int32) string {
@@ -387,6 +490,7 @@ func (w *Window) renderInboxState() {
 		}
 
 	}
+	//toolbox
 	rl.DrawRectangle(
 		int32(w.inboxScene.toolboxArea.X),
 		int32(w.inboxScene.toolboxArea.Y),
@@ -398,8 +502,10 @@ func (w *Window) renderInboxState() {
 	if gui.Button(w.inboxScene.backButton.bounds, w.inboxScene.backButton.text) {
 		w.goSceneBack()
 	}
+	if gui.Button(w.inboxScene.addConversationButton.bounds, w.inboxScene.addConversationButton.text) {
+		w.inboxScene.showAddConversationModal = true
+	}
 
-	w.inboxScene.isAddConversationPressed = gui.Button(w.inboxScene.addConversationButton.bounds, w.inboxScene.addConversationButton.text)
 	w.inboxScene.isRefreshConversationPressed = gui.Button(w.inboxScene.refreshConversationsButton.bounds, w.inboxScene.refreshConversationsButton.text)
 
 	rl.DrawRectangle(
@@ -458,6 +564,37 @@ func (w *Window) renderInboxState() {
 			25,
 			rl.Black)
 		w.inboxScene.conversationsTabs[i].isClicked = gui.Button(w.inboxScene.conversationsTabs[i].enterConversation.bounds, w.inboxScene.conversationsTabs[i].enterConversation.text)
+	}
+
+	if w.inboxScene.showAddConversationModal {
+		rl.DrawRectangle(
+			int32(w.inboxScene.addConversationModal.background.X),
+			int32(w.inboxScene.addConversationModal.background.Y),
+			int32(w.inboxScene.addConversationModal.background.Width),
+			int32(w.inboxScene.addConversationModal.background.Height),
+			w.inboxScene.addConversationModal.bgColor)
+		if gui.WindowBox(w.inboxScene.addConversationModal.core, "Add conversation") {
+			w.inboxScene.showAddConversationModal = false
+			w.inboxScene.usersSlider.strings = w.inboxScene.usersSlider.strings[:0]
+
+		}
+		gui.ListViewEx(
+			w.inboxScene.usersSlider.bounds,
+			w.inboxScene.usersSlider.strings,
+			&w.inboxScene.usersSlider.idxScroll,
+			&w.inboxScene.usersSlider.idxActiveElement,
+			w.inboxScene.usersSlider.focus)
+
+		w.inboxScene.isAcceptAddConversationPressed = gui.Button(w.inboxScene.acceptAddConversationButton.bounds, w.inboxScene.acceptAddConversationButton.text)
+		if w.inboxScene.isErrorModal {
+			rl.DrawRectangle(
+				int32(w.inboxScene.errorBoxModal.X),
+				int32(w.inboxScene.errorBoxModal.Y),
+				int32(w.inboxScene.errorBoxModal.Width),
+				int32(w.inboxScene.errorBoxModal.Height),
+				rl.LightGray)
+			rl.DrawText(w.inboxScene.textErrorModal, int32(w.inboxScene.errorBoxModal.X), int32(w.inboxScene.errorBoxModal.Y), 15, rl.Red)
+		}
 	}
 
 }
