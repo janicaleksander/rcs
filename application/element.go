@@ -2,6 +2,7 @@ package application
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/janicaleksander/bcs/application/component"
 )
 
 type Circle struct {
@@ -33,7 +34,7 @@ type ConversationTab struct {
 	bounds  rl.Rectangle
 	nametag string
 	//lastMessage       string TODO now we only have 2 states one outside conversation and one in conversation
-	enterConversation Button
+	enterConversation component.Button
 	isClicked         bool
 	conversationID    string // to remove in the future, when i made own scrollbar i will use tab[currIDX]
 	withID            string // to remove in the future, when i made own scrollbar i will use tab[currIDX]

@@ -3,8 +3,8 @@ package component
 import rl "github.com/gen2brain/raylib-go/raylib"
 
 type Button struct {
+	Bounds rl.Rectangle
 	text   string
-	bounds rl.Rectangle
 	focus  bool
 	cfg    ButtonConfig
 }
@@ -48,38 +48,42 @@ func WithButtonColor(color rl.Color) func(*ButtonConfig) {
 }
 func NewButton(cfg *ButtonConfig, bounds rl.Rectangle, text string, focus bool) *Button {
 	return &Button{
+		Bounds: bounds,
 		text:   text,
-		bounds: bounds,
 		focus:  focus,
 		cfg:    *cfg,
 	}
 }
 
 func (b *Button) Update() bool {
-	if b.focus {
-		active := false
-		mousePos := rl.GetMousePosition()
-		if rl.CheckCollisionPointRec(mousePos, b.bounds) {
-			if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
-				active = true
-			}
-		}
-		return active
+	mouse := rl.GetMousePosition()
+	hovered := rl.CheckCollisionPointRec(mouse, b.Bounds)
+
+	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) && hovered {
+		b.focus = true
+	}
+	if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
+		click := b.focus && hovered
+		b.focus = false
+		return click
+	}
+	if b.focus && !rl.IsMouseButtonDown(rl.MouseButtonLeft) {
+		b.focus = false
 	}
 	return false
 }
 
 func (b *Button) Render() {
 	rl.DrawRectangle(
-		int32(b.bounds.X),
-		int32(b.bounds.Y),
-		int32(b.bounds.Width),
-		int32(b.bounds.Height),
+		int32(b.Bounds.X),
+		int32(b.Bounds.Y),
+		int32(b.Bounds.Width),
+		int32(b.Bounds.Height),
 		b.cfg.buttonColor,
 	)
 	textWidth := rl.MeasureText(b.text, b.cfg.textFontSize)
-	textX := int32(b.bounds.X + (b.bounds.Width-float32(textWidth))/2)
-	textY := int32(b.bounds.Y + (b.bounds.Height-float32(b.cfg.textFontSize))/2)
+	textX := int32(b.Bounds.X + (b.Bounds.Width-float32(textWidth))/2)
+	textY := int32(b.Bounds.Y + (b.Bounds.Height-float32(b.cfg.textFontSize))/2)
 	rl.DrawText(
 		b.text,
 		textX,
