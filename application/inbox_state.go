@@ -70,6 +70,7 @@ type InboxScene struct {
 
 func (i *InboxScene) Reset() {
 	i.isConversationSelected = false
+	i.messagePanelLayout.currHeight = 0
 }
 
 // TODO maybe use redis for fast cache to e.g user UUID
@@ -306,6 +307,7 @@ func (w *Window) updateInboxState() {
 	}
 	for i, tab := range w.inboxScene.conversationsTabs {
 		if tab.isClicked {
+			w.inboxScene.messagePanelLayout.currHeight = 0
 			w.inboxScene.isConversationSelected = true
 			res := w.ctx.Request(w.serverPID, &proto.GetLoggedInUUID{
 				Pid: &proto.PID{
