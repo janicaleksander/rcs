@@ -56,24 +56,25 @@ type InboxScene struct {
 	//section related with refresh conversation panel
 	refreshConversationsButton   Button
 	isRefreshConversationPressed bool
-
-	textInput               component.InputBox
-	sendButton              Button
-	isSendButtonPressed     bool
-	usersConversations      []*proto.ConversationSummary
-	conversationPanelLayout conversationPanelLayout
-	conversationsTabs       []ConversationTab
-	messages                []Message
+	isConversationSelected       bool
+	textInput                    component.InputBox
+	sendButton                   Button
+	isSendButtonPressed          bool
+	usersConversations           []*proto.ConversationSummary
+	conversationPanelLayout      conversationPanelLayout
+	conversationsTabs            []ConversationTab
+	messages                     []Message
 }
 
 func (i *InboxScene) Reset() {
-
+	i.isConversationSelected = false
 }
 
 // TODO maybe use redis for fast cache to e.g user UUID
 // TODO in refactor change all names to pattern verb+scene
 func (w *Window) setupInboxScene() {
-
+	w.inboxScene.Reset()
+	fmt.Println(w.inboxScene.isConversationSelected)
 	res := w.ctx.Request(w.serverPID, &proto.GetLoggedInUUID{
 		Pid: &proto.PID{
 			Address: w.ctx.PID().Address,
@@ -278,10 +279,13 @@ func (w *Window) updateInboxState() {
 
 	for i, tab := range w.inboxScene.conversationsTabs {
 		if tab.isClicked {
+			w.inboxScene.isConversationSelected = true
 			res := w.ctx.Request(w.serverPID, &proto.GetLoggedInUUID{
 				Pid: &proto.PID{
 					Address: w.ctx.PID().Address,
-					Id:      w.ctx.PID().ID}}, utils.WaitTime)
+					Id:      w.ctx.PID().ID,
+				},
+			}, utils.WaitTime)
 			resp, err := res.Result()
 			if err != nil {
 				//TODO STH
@@ -572,8 +576,10 @@ func (w *Window) renderInboxState() {
 	}
 
 	rl.EndScissorMode()
-	w.inboxScene.textInput.Render()
-	w.inboxScene.isSendButtonPressed = gui.Button(w.inboxScene.sendButton.bounds, w.inboxScene.sendButton.text)
+	if w.inboxScene.isConversationSelected {
+		w.inboxScene.isSendButtonPressed = gui.Button(w.inboxScene.sendButton.bounds, w.inboxScene.sendButton.text)
+		w.inboxScene.textInput.Render()
+	}
 	for i := range w.inboxScene.conversationsTabs {
 		rl.DrawRectangle(
 			int32(w.inboxScene.conversationsTabs[i].bounds.X),
