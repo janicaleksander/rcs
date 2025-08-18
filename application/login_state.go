@@ -3,17 +3,21 @@ package application
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/application/component"
+	"github.com/janicaleksander/bcs/utils"
 )
 
 // LOGIN STATE
 type LoginScene struct {
+	scheduler            utils.Scheduler
 	loginButton          component.Button
 	emailInput           component.InputBox
 	passwordInput        component.InputBox
 	isLoginButtonPressed bool
-	isLoginError         bool
-	loginErrorMessage    string
-	errorBox             rl.Rectangle
+	errorSection         ErrorSection
+}
+type ErrorSection struct {
+	errorPopup        component.Popup
+	loginErrorMessage string
 }
 
 func (w *Window) loginSceneSetup() {
@@ -36,16 +40,16 @@ func (w *Window) loginSceneSetup() {
 		float32(rl.GetScreenHeight()/2-80),
 		200, 30,
 	), false)
-
-	w.loginScene.errorBox = rl.NewRectangle(
+	w.loginScene.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2.0-100.0),
 		float32(rl.GetScreenHeight()/2.0+40.0),
 		200,
-		50)
-
+		100), &w.loginScene.errorSection.loginErrorMessage)
 }
 
 func (w *Window) updateLoginState() {
+	w.loginScene.scheduler.Update(float64(rl.GetFrameTime()))
+
 	w.loginScene.emailInput.Update()
 	w.loginScene.passwordInput.Update()
 	w.loginScene.isLoginButtonPressed = w.loginScene.loginButton.Update()
@@ -81,20 +85,8 @@ func (w *Window) renderLoginState() {
 		}
 	}
 	rl.DrawText("Login Page", 50, 50, 20, rl.DarkGray)
-	if w.loginScene.isLoginError {
-		rl.DrawRectangle(
-			int32(w.loginScene.errorBox.X),
-			int32(w.loginScene.errorBox.Y),
-			int32(w.loginScene.errorBox.Width),
-			int32(w.loginScene.errorBox.Height),
-			rl.LightGray)
-		rl.DrawText(w.loginScene.loginErrorMessage,
-			int32(w.loginScene.errorBox.X),
-			int32(w.loginScene.errorBox.Y),
-			15,
-			rl.Red)
-	}
 
+	w.loginScene.errorSection.errorPopup.Render()
 	//TODO: secret password inboxInput box
 	w.loginScene.emailInput.Render()
 	w.loginScene.passwordInput.Render()

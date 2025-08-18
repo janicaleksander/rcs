@@ -80,7 +80,7 @@ func (w *Window) AppendMessage(msg *proto.Message) {
 	}
 
 	//TODO repair styling these boxes
-	content := wrapText(
+	content := utils.WrapText(
 		int32(w.inboxScene.messageSection.messagePanelLayout.messageWidth),
 		msg.Content,
 		w.inboxScene.messageSection.messagePanelLayout.messageFontSize,
@@ -181,20 +181,4 @@ func (w *Window) refreshConversationsPanel() {
 		w.inboxScene.conversationSection.conversationPanel.scroll.Y = w.inboxScene.conversationSection.conversationPanel.content.Height
 
 	}
-}
-
-func wrapText(maxWidth int32, input string, fontSize int32) string {
-	var output strings.Builder
-	var line strings.Builder
-	for _, char := range input {
-		line.WriteString(string(char))
-		width := rl.MeasureText(line.String(), fontSize)
-		if width >= maxWidth {
-			output.WriteString("\n")
-			line.Reset()
-		}
-		output.WriteString(string(char))
-	}
-
-	return output.String()
 }

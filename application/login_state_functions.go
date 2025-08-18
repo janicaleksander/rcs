@@ -1,6 +1,8 @@
 package application
 
 import (
+	"time"
+
 	"github.com/janicaleksander/bcs/utils"
 
 	"github.com/janicaleksander/bcs/proto"
@@ -8,8 +10,7 @@ import (
 
 func (l *LoginScene) Reset() {
 	l.isLoginButtonPressed = false
-	l.isLoginError = false
-	l.loginErrorMessage = ""
+	l.errorSection.loginErrorMessage = ""
 
 }
 
@@ -17,8 +18,11 @@ func (w *Window) Login() {
 	email := w.loginScene.emailInput.GetText()
 	pwd := w.loginScene.passwordInput.GetText()
 	if len(email) <= 0 || len(pwd) <= 0 {
-		w.loginScene.isLoginError = true
-		w.loginScene.loginErrorMessage = "Zero length inboxInput"
+		w.loginScene.errorSection.loginErrorMessage = "Zero length inboxInput"
+		w.loginScene.errorSection.errorPopup.Show()
+		w.loginScene.scheduler.After((3 * time.Second).Seconds(), func() {
+			w.loginScene.errorSection.errorPopup.Hide()
+		})
 		return
 	}
 
@@ -32,8 +36,11 @@ func (w *Window) Login() {
 	}))
 	if err != nil {
 		//error context deadline exceeded
-		w.loginScene.isLoginError = true
-		w.loginScene.loginErrorMessage = err.Error()
+		w.loginScene.errorSection.loginErrorMessage = err.Error()
+		w.loginScene.errorSection.errorPopup.Show()
+		w.loginScene.scheduler.After((3 * time.Second).Seconds(), func() {
+			w.loginScene.errorSection.errorPopup.Hide()
+		})
 		return
 	}
 
@@ -50,10 +57,23 @@ func (w *Window) Login() {
 
 		if err != nil {
 			//context deadline exceeded
+			w.loginScene.errorSection.loginErrorMessage = err.Error()
+			w.loginScene.errorSection.errorPopup.Show()
+			w.loginScene.scheduler.After((3 * time.Second).Seconds(), func() {
+				w.loginScene.errorSection.errorPopup.Hide()
+			})
+			return
 		}
 
-		if _, ok := res.(*proto.SuccessRegisterClient); !ok || err != nil {
-			//mark this sth
+		if _, ok := res.(*proto.SuccessRegisterClient); !ok {
+			w.loginScene.errorSection.loginErrorMessage = "CANT LOGIN TO Service message"
+
+			//TODO but i dont know if this should be critical error to have error below
+			w.loginScene.errorSection.errorPopup.Show()
+			w.loginScene.scheduler.After((3 * time.Second).Seconds(), func() {
+				w.loginScene.errorSection.errorPopup.Hide()
+			})
+			return
 		}
 		//TODO if role is 5 this else if ... others
 
@@ -67,11 +87,10 @@ func (w *Window) Login() {
 
 	} else {
 		//error
-		/*
-			w.loginScene.isLoginError = true
-			w.loginScene.loginErrorMessage = msg.Info
-			}
-		*/
-
+		w.loginScene.errorSection.loginErrorMessage = "Invalid credentials"
+		w.loginScene.errorSection.errorPopup.Show()
+		w.loginScene.scheduler.After((3 * time.Second).Seconds(), func() {
+			w.loginScene.errorSection.errorPopup.Hide()
+		})
 	}
 }
