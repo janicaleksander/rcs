@@ -31,13 +31,15 @@ type Modal struct {
 }
 
 type ConversationTab struct {
+	ID      int32
 	bounds  rl.Rectangle
 	nametag string
 	//lastMessage       string TODO now we only have 2 states one outside conversation and one in conversation
 	enterConversation component.Button
-	isClicked         bool
-	conversationID    string // to remove in the future, when i made own scrollbar i will use tab[currIDX]
-	withID            string // to remove in the future, when i made own scrollbar i will use tab[currIDX]
+	isPressed         bool
+	conversationID    string
+	withID            string
+	originalY         float32
 }
 
 type Message struct {

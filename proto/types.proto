@@ -4,6 +4,7 @@ package types;
 
 option go_package = "github.com/janicaleksander/bcs/proto";
 import  "google/protobuf/timestamp.proto";
+
 // ========================
 // DATA MODELS
 // ========================
