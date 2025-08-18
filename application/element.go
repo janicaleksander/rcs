@@ -39,6 +39,7 @@ type ConversationTab struct {
 	isPressed         bool
 	conversationID    string
 	withID            string
+	originalY         float32
 }
 
 type Message struct {

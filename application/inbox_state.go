@@ -47,14 +47,15 @@ type MessageSection struct {
 	nameOnTheWindow    string
 }
 type ConversationSection struct {
-	conversationArea        rl.Rectangle // area where messages display
-	isConversationSelected  bool
 	usersConversations      []*proto.ConversationSummary
 	conversationPanelLayout conversationPanelLayout
+	conversationPanel       ScrollPanel
 	conversationsTabs       []ConversationTab
+	isConversationSelected  bool
 	activeConversation      int32
 	activeConversationID    string
 	activeWithID            string
+	nameOnTheWindow         string
 }
 
 type InboxScene struct {
@@ -173,20 +174,32 @@ func (w *Window) setupInboxScene() {
 			toolBoxButtonHeight),
 		"Fetch \n conversations", false)
 
-	w.inboxScene.conversationSection.conversationArea = rl.NewRectangle(
+	//conversationPanel slider
+	w.inboxScene.conversationSection.conversationPanel.bounds = rl.NewRectangle(
 		w.inboxScene.toolboxSection.toolboxArea.X,
 		w.inboxScene.toolboxSection.toolboxArea.Height,
 		w.inboxScene.toolboxSection.toolboxArea.Width,
 		(7.0/8.0)*float32(w.height))
 
+	w.inboxScene.conversationSection.conversationPanel.content = rl.NewRectangle(
+		w.inboxScene.toolboxSection.toolboxArea.X,
+		w.inboxScene.toolboxSection.toolboxArea.Height,
+		w.inboxScene.toolboxSection.toolboxArea.Width-15,
+		(7.0/8.0)*float32(w.height))
+
+	w.inboxScene.conversationSection.nameOnTheWindow = "CONVERSATIONS"
+	w.inboxScene.conversationSection.conversationPanel.view = rl.Rectangle{}
+	w.inboxScene.conversationSection.conversationPanel.scroll = rl.Vector2{}
+
+	//messagePanel slider
 	w.inboxScene.messageSection.messagePanel.bounds = rl.NewRectangle(
 		w.inboxScene.toolboxSection.toolboxArea.Width,
 		w.inboxScene.toolboxSection.toolboxArea.Y,
 		(3.0/5.0)*float32(w.width),
 		float32(w.height))
 	w.inboxScene.messageSection.messagePanel.content = rl.NewRectangle(
-		w.inboxScene.toolboxSection.toolboxArea.Width+5,
-		w.inboxScene.toolboxSection.toolboxArea.Y+5,
+		w.inboxScene.toolboxSection.toolboxArea.Width,
+		w.inboxScene.toolboxSection.toolboxArea.Y,
 		(3.0/5.0)*float32(w.width)-15,
 		float32(w.height)*10)
 
@@ -223,7 +236,7 @@ func (w *Window) setupInboxScene() {
 	w.inboxScene.conversationSection.conversationPanelLayout = conversationPanelLayout{
 		currHeight:  80,
 		panelHeight: 80,
-		startHeight: 100,
+		startHeight: 120,
 	}
 	w.refreshConversationsPanel()
 	w.inboxScene.messageSection.messageChan = make(chan *proto.Message, 1024)
@@ -380,13 +393,7 @@ func (w *Window) renderInboxState() {
 	w.inboxScene.toolboxSection.addConversationButton.Render()
 	w.inboxScene.toolboxSection.refreshConversationsButton.Render()
 
-	rl.DrawRectangle(
-		int32(w.inboxScene.conversationSection.conversationArea.X),
-		int32(w.inboxScene.conversationSection.conversationArea.Y),
-		int32(w.inboxScene.conversationSection.conversationArea.Width),
-		int32(w.inboxScene.conversationSection.conversationArea.Height),
-		rl.White)
-
+	//messageSection slider
 	gui.ScrollPanel(
 		w.inboxScene.messageSection.messagePanel.bounds,
 		w.inboxScene.messageSection.nameOnTheWindow,
@@ -424,21 +431,41 @@ func (w *Window) renderInboxState() {
 		w.inboxScene.messageSection.sendButton.Render()
 		w.inboxScene.messageSection.textInput.Render()
 	}
+
+	gui.ScrollPanel(
+		w.inboxScene.conversationSection.conversationPanel.bounds,
+		w.inboxScene.conversationSection.nameOnTheWindow,
+		w.inboxScene.conversationSection.conversationPanel.content,
+		&w.inboxScene.conversationSection.conversationPanel.scroll,
+		&w.inboxScene.conversationSection.conversationPanel.view,
+	)
+	rl.BeginScissorMode(
+		int32(w.inboxScene.conversationSection.conversationPanel.view.X),
+		int32(w.inboxScene.conversationSection.conversationPanel.view.Y),
+		int32(w.inboxScene.conversationSection.conversationPanel.view.Width),
+		int32(w.inboxScene.conversationSection.conversationPanel.view.Height),
+	)
 	for i := range w.inboxScene.conversationSection.conversationsTabs {
+		movingYTabs := w.inboxScene.conversationSection.conversationsTabs[i].originalY + w.inboxScene.conversationSection.conversationPanel.scroll.Y
 		rl.DrawRectangle(
 			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.X),
-			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.Y),
+			int32(movingYTabs),
 			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.Width),
 			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.Height),
 			rl.Red)
 		rl.DrawText(
 			w.inboxScene.conversationSection.conversationsTabs[i].nametag,
 			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.X),
-			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.Y),
+			int32(movingYTabs),
 			25,
 			rl.Black)
+		movingYButtons := movingYTabs
+
+		w.inboxScene.conversationSection.conversationsTabs[i].enterConversation.Bounds.Y = movingYButtons
 		w.inboxScene.conversationSection.conversationsTabs[i].enterConversation.Render()
 	}
+
+	rl.EndScissorMode()
 
 	if w.inboxScene.toolboxSection.showAddConversationModal {
 		rl.DrawRectangle(

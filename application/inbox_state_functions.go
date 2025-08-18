@@ -20,6 +20,8 @@ func (i *InboxScene) Reset() {
 	i.modalSection.textErrorModal = ""
 	i.messageSection.isSendButtonPressed = false
 	i.conversationSection.isConversationSelected = false
+	i.messageSection.messages = i.messageSection.messages[:0]
+
 }
 
 func (w *Window) GetLoggedID() {
@@ -166,7 +168,8 @@ func (w *Window) refreshConversationsPanel() {
 				w.inboxScene.toolboxSection.toolboxArea.Width,
 				w.inboxScene.conversationSection.conversationPanelLayout.panelHeight,
 			),
-			nametag: conversation.Nametag,
+			originalY: w.inboxScene.conversationSection.conversationPanelLayout.currHeight,
+			nametag:   conversation.Nametag,
 			enterConversation: *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 				(3.0/4.0)*w.inboxScene.toolboxSection.toolboxArea.Width,
 				w.inboxScene.conversationSection.conversationPanelLayout.currHeight,
@@ -174,6 +177,9 @@ func (w *Window) refreshConversationsPanel() {
 				40), "ENTER", true),
 		})
 		w.inboxScene.conversationSection.conversationPanelLayout.currHeight += w.inboxScene.conversationSection.conversationPanelLayout.panelHeight
+		w.inboxScene.conversationSection.conversationPanel.content.Height = w.inboxScene.conversationSection.conversationPanelLayout.currHeight
+		w.inboxScene.conversationSection.conversationPanel.scroll.Y = w.inboxScene.conversationSection.conversationPanel.content.Height
+
 	}
 }
 
