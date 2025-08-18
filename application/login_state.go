@@ -1,120 +1,60 @@
 package application
 
 import (
-	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/application/component"
-	"github.com/janicaleksander/bcs/proto"
-	"github.com/janicaleksander/bcs/utils"
 )
 
 // LOGIN STATE
 type LoginScene struct {
-	loginButton   Button
-	emailInput    component.InputBox
-	passwordInput component.InputBox
-
-	isLoginError      bool
-	loginErrorMessage string
-	errorPosition     Position
+	loginButton          component.Button
+	emailInput           component.InputBox
+	passwordInput        component.InputBox
+	isLoginButtonPressed bool
+	isLoginError         bool
+	loginErrorMessage    string
+	errorBox             rl.Rectangle
 }
 
-func (l *LoginScene) Reset() {
-	l.isLoginError = false
-	l.loginErrorMessage = ""
-}
 func (w *Window) loginSceneSetup() {
+	w.loginScene.Reset()
 
-	w.loginSceneScene.Reset()
-	w.loginSceneScene.loginButton = Button{
-		bounds: rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2-100),
-			float32(rl.GetScreenHeight()/2),
-			200, 40,
-		),
-		text: "Login",
-	}
-	w.loginSceneScene.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
+	w.loginScene.loginButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		float32(rl.GetScreenWidth()/2-100),
+		float32(rl.GetScreenHeight()/2),
+		200, 40,
+	), "Login", false)
+
+	w.loginScene.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-140),
 		200, 30,
 	), false)
 
-	w.loginSceneScene.passwordInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
+	w.loginScene.passwordInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-80),
 		200, 30,
 	), false)
 
-	w.loginSceneScene.errorPosition = Position{
-		x: int32(rl.GetScreenWidth()/2 - 100),
-		y: int32(rl.GetScreenHeight()/2 + 40),
-	}
+	w.loginScene.errorBox = rl.NewRectangle(
+		float32(rl.GetScreenWidth()/2.0-100.0),
+		float32(rl.GetScreenHeight()/2.0+40.0),
+		200,
+		50)
+
 }
 
-//maybe move this to setup?
-
 func (w *Window) updateLoginState() {
-	w.loginSceneScene.emailInput.Update()
-	w.loginSceneScene.passwordInput.Update()
-
-	if gui.Button(w.loginSceneScene.loginButton.bounds, w.loginSceneScene.loginButton.text) {
+	w.loginScene.emailInput.Update()
+	w.loginScene.passwordInput.Update()
+	w.loginScene.isLoginButtonPressed = w.loginScene.loginButton.Update()
+	if w.loginScene.isLoginButtonPressed {
 		//i have to do check services and then mark this somehow to show that user can use it
 
 		//and maybe use this to not make other request we have to wait if goruitne change this var to false and then???
 		//thiis is to set own presence to cut all messsage service from app
-
-		email := w.loginSceneScene.emailInput.GetText()
-		pwd := w.loginSceneScene.passwordInput.GetText()
-		if len(email) <= 0 || len(pwd) <= 0 {
-			w.loginSceneScene.isLoginError = true
-			w.loginSceneScene.loginErrorMessage = "Zero length inboxInput"
-			return
-		}
-		resp := w.ctx.Request(w.serverPID, &proto.LoginUser{
-			Pid: &proto.PID{
-				Address: w.ctx.PID().GetAddress(),
-				Id:      w.ctx.PID().GetID(),
-			},
-			Email:    email,
-			Password: pwd,
-		}, utils.WaitTime)
-		val, err := resp.Result()
-		if err != nil {
-			w.loginSceneScene.isLoginError = true
-			w.loginSceneScene.loginErrorMessage = err.Error()
-		} else if v, ok := val.(*proto.AcceptLogin); ok {
-			//to show login is taking to much time add some circle or infobar animation
-			resp := w.ctx.Request(w.messageServicePID, &proto.RegisterClient{
-				Id: v.Id,
-				Pid: &proto.PID{
-					Address: w.ctx.PID().Address,
-					Id:      w.ctx.PID().ID,
-				},
-			}, utils.WaitTime)
-			res, err := resp.Result()
-			if _, ok := res.(*proto.SuccessRegisterClient); !ok || err != nil {
-				//mark this sth
-				panic(err)
-			}
-			//TODO if role is 5 this else if ... others
-
-			//TO this point we have to determine if we have error in other services
-			// and w.---.messageServiceError = true
-			if v.RuleLevel == 5 {
-				w.menuHCSceneSetup()
-				w.currentState = HCMenuState
-				w.sceneStack = append(w.sceneStack, HCMenuState)
-			}
-
-		} else if msg, ok := val.(*proto.DenyLogin); ok {
-			w.loginSceneScene.isLoginError = true
-			w.loginSceneScene.loginErrorMessage = msg.Info
-		} else {
-			w.loginSceneScene.isLoginError = true
-			w.loginSceneScene.loginErrorMessage = "Unknown response type"
-		}
-
+		w.Login()
 	}
 
 }
@@ -126,31 +66,38 @@ func (w *Window) updateLoginState() {
 // TODO (user can be offline but also error with messageSrvies is reason to set his status to offline
 // even he is logged in
 func (w *Window) renderLoginState() {
+
+	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
+		w.loginScene.emailInput.Deactivate()
+		w.loginScene.passwordInput.Deactivate()
+
+		mousePos := rl.GetMousePosition()
+		if rl.CheckCollisionPointRec(mousePos, w.loginScene.emailInput.Bounds) {
+			w.loginScene.emailInput.Active()
+			w.loginScene.passwordInput.Deactivate()
+		} else if rl.CheckCollisionPointRec(mousePos, w.loginScene.passwordInput.Bounds) {
+			w.loginScene.emailInput.Deactivate()
+			w.loginScene.passwordInput.Active()
+		}
+	}
 	rl.DrawText("Login Page", 50, 50, 20, rl.DarkGray)
-	if w.loginSceneScene.isLoginError {
-		rl.DrawText(w.loginSceneScene.loginErrorMessage,
-			w.loginSceneScene.errorPosition.x,
-			w.loginSceneScene.errorPosition.y,
-			20,
+	if w.loginScene.isLoginError {
+		rl.DrawRectangle(
+			int32(w.loginScene.errorBox.X),
+			int32(w.loginScene.errorBox.Y),
+			int32(w.loginScene.errorBox.Width),
+			int32(w.loginScene.errorBox.Height),
+			rl.LightGray)
+		rl.DrawText(w.loginScene.loginErrorMessage,
+			int32(w.loginScene.errorBox.X),
+			int32(w.loginScene.errorBox.Y),
+			15,
 			rl.Red)
 	}
 
-	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
-		mousePos := rl.GetMousePosition()
-		if rl.CheckCollisionPointRec(mousePos, w.loginSceneScene.emailInput.Bounds) {
-			w.loginSceneScene.emailInput.Active()
-			w.loginSceneScene.passwordInput.Deactivate()
-		} else if rl.CheckCollisionPointRec(mousePos, w.loginSceneScene.passwordInput.Bounds) {
-			w.loginSceneScene.emailInput.Deactivate()
-			w.loginSceneScene.passwordInput.Active()
-		} else {
-			w.loginSceneScene.emailInput.Deactivate()
-			w.loginSceneScene.passwordInput.Deactivate()
-		}
-	}
-
 	//TODO: secret password inboxInput box
-	w.loginSceneScene.emailInput.Render()
-	w.loginSceneScene.passwordInput.Render()
+	w.loginScene.emailInput.Render()
+	w.loginScene.passwordInput.Render()
+	w.loginScene.loginButton.Render()
 
 }

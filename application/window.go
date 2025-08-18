@@ -42,7 +42,7 @@ type Window struct {
 
 	messageServiceError bool
 	//and other errors this is good idea
-	loginSceneScene LoginScene
+	loginScene      LoginScene
 	hcMenuScene     HCMenuScene
 	createUnitScene CreateUnitScene
 	infoUnitScene   InfoUnitScene
