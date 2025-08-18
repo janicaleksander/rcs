@@ -1,24 +1,37 @@
 package application
 
 import (
-	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/janicaleksander/bcs/application/component"
 )
 
 type HCMenuScene struct {
-	//backButton       Button
 	profileRectangle rl.Rectangle
-	unitRectangle    rl.Rectangle
-	userRectangle    rl.Rectangle
-	inboxRectangle   rl.Rectangle
+	unitSection      UnitSection
+	userSection      UserSection
+	inboxSection     InboxSection
+}
 
-	createUnitButton Button
-	infoUnitButton   Button
+type UnitSection struct {
+	unitRectangle       rl.Rectangle
+	createUnitButton    component.Button
+	isCreateUnitPressed bool
+	infoUnitButton      component.Button
+	isInfoUnitPressed   bool
+}
 
-	createUserButton Button
-	infoUserButton   Button
+type UserSection struct {
+	userRectangle       rl.Rectangle
+	createUserButton    component.Button
+	isCreateUserPressed bool
+	infoUserButton      component.Button
+	isInfoUserPressed   bool
+}
 
-	openInboxButton Button
+type InboxSection struct {
+	inboxRectangle     rl.Rectangle
+	openInboxButton    component.Button
+	isOpenInboxPressed bool
 }
 
 func (w *Window) menuHCSceneSetup() {
@@ -36,68 +49,103 @@ func (w *Window) menuHCSceneSetup() {
 	width := w.width - 2*padding
 
 	//unit
-	w.hcMenuScene.unitRectangle = rl.NewRectangle(
+	w.hcMenuScene.unitSection.unitRectangle = rl.NewRectangle(
 		float32(padding),
 		height,
 		float32(width/4),
 		0.75*float32(w.height),
 	)
 	//user
-	w.hcMenuScene.userRectangle = rl.NewRectangle(
-		w.hcMenuScene.unitRectangle.X+w.hcMenuScene.unitRectangle.Width+float32(padding),
-		w.hcMenuScene.unitRectangle.Y,
-		w.hcMenuScene.unitRectangle.Width,
-		w.hcMenuScene.unitRectangle.Height,
+	w.hcMenuScene.userSection.userRectangle = rl.NewRectangle(
+		w.hcMenuScene.unitSection.unitRectangle.X+w.hcMenuScene.unitSection.unitRectangle.Width+float32(padding),
+		w.hcMenuScene.unitSection.unitRectangle.Y,
+		w.hcMenuScene.unitSection.unitRectangle.Width,
+		w.hcMenuScene.unitSection.unitRectangle.Height,
 	)
 	//inbox
-	w.hcMenuScene.inboxRectangle = rl.NewRectangle(
-		w.hcMenuScene.userRectangle.X+w.hcMenuScene.userRectangle.Width+float32(padding),
-		w.hcMenuScene.userRectangle.Y,
+	w.hcMenuScene.inboxSection.inboxRectangle = rl.NewRectangle(
+		w.hcMenuScene.userSection.userRectangle.X+w.hcMenuScene.userSection.userRectangle.Width+float32(padding),
+		w.hcMenuScene.userSection.userRectangle.Y,
 		float32(width/2),
-		w.hcMenuScene.unitRectangle.Height,
+		w.hcMenuScene.unitSection.unitRectangle.Height,
 	)
 
 	//create unit
-	w.hcMenuScene.createUnitButton = Button{
-		bounds: rl.NewRectangle(
-			10+w.hcMenuScene.unitRectangle.X,
-			10+w.hcMenuScene.unitRectangle.Y,
-			200,
-			40,
-		),
-		text: "Create unit",
-	}
+	w.hcMenuScene.unitSection.createUnitButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		10+w.hcMenuScene.unitSection.unitRectangle.X,
+		10+w.hcMenuScene.unitSection.unitRectangle.Y,
+		200,
+		40,
+	), "Create unit", false)
 
 	//info about units
-	w.hcMenuScene.infoUnitButton = Button{
-		bounds: rl.NewRectangle(
-			10+w.hcMenuScene.unitRectangle.X,
-			80+w.hcMenuScene.unitRectangle.Y,
-			200,
-			40,
-		),
-		text: "Units info",
-	}
+	w.hcMenuScene.unitSection.infoUnitButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		10+w.hcMenuScene.unitSection.unitRectangle.X,
+		80+w.hcMenuScene.unitSection.unitRectangle.Y,
+		200,
+		40,
+	), "Units info", false)
 
 	// create user
-	w.hcMenuScene.createUserButton = Button{
-		bounds: rl.NewRectangle(w.hcMenuScene.userRectangle.X, w.hcMenuScene.userRectangle.Y, 200, 40),
-		text:   "Create User",
-	}
+	w.hcMenuScene.userSection.createUserButton = *component.NewButton(component.NewButtonConfig(),
+		rl.NewRectangle(
+			w.hcMenuScene.userSection.userRectangle.X,
+			w.hcMenuScene.userSection.userRectangle.Y,
+			200,
+			40),
+		"Create User", false)
 
 	//info about users
-	w.hcMenuScene.infoUserButton = Button{
-		bounds: rl.NewRectangle(w.hcMenuScene.userRectangle.X, w.hcMenuScene.userRectangle.Y+80, 200, 40),
-		text:   "Users info",
-	}
-	w.hcMenuScene.openInboxButton = Button{
-		bounds: rl.NewRectangle(w.hcMenuScene.inboxRectangle.X, w.hcMenuScene.inboxRectangle.Y+80, 200, 40),
-		text:   "Open inbox",
-	}
+	w.hcMenuScene.userSection.infoUserButton = *component.NewButton(component.NewButtonConfig(),
+		rl.NewRectangle(
+			w.hcMenuScene.userSection.userRectangle.X,
+			w.hcMenuScene.userSection.userRectangle.Y+80,
+			200,
+			40),
+		"Users info", false)
+
+	w.hcMenuScene.inboxSection.openInboxButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		w.hcMenuScene.inboxSection.inboxRectangle.X,
+		w.hcMenuScene.inboxSection.inboxRectangle.Y+80,
+		200,
+		40), "Open inbox", false)
 
 }
 func (w *Window) updateHCMenuState() {
+	w.hcMenuScene.unitSection.isCreateUnitPressed = w.hcMenuScene.unitSection.createUnitButton.Update()
+	w.hcMenuScene.unitSection.isInfoUnitPressed = w.hcMenuScene.unitSection.infoUnitButton.Update()
+	w.hcMenuScene.userSection.isCreateUserPressed = w.hcMenuScene.userSection.createUserButton.Update()
+	w.hcMenuScene.userSection.isInfoUserPressed = w.hcMenuScene.userSection.infoUserButton.Update()
+	w.hcMenuScene.inboxSection.isOpenInboxPressed = w.hcMenuScene.inboxSection.openInboxButton.Update()
 
+	if w.hcMenuScene.unitSection.isInfoUnitPressed {
+		w.infoUnitSceneSetup()
+		w.currentState = InfoUnitState
+		w.sceneStack = append(w.sceneStack, InfoUnitState)
+	}
+	//button create user
+	if w.hcMenuScene.unitSection.isCreateUnitPressed {
+		w.createUnitSceneSetup()
+		w.currentState = CreateUnitState
+		w.sceneStack = append(w.sceneStack, CreateUnitState)
+	}
+	if w.hcMenuScene.userSection.isCreateUserPressed {
+		w.createUserSceneSetup()
+		w.currentState = CreateUserState
+		w.sceneStack = append(w.sceneStack, CreateUserState)
+	}
+	//info user button
+	if w.hcMenuScene.userSection.isInfoUserPressed {
+		w.InfoUserSceneSetup()
+		w.currentState = InfoUserState
+		w.sceneStack = append(w.sceneStack, InfoUserState)
+	}
+	//open inbox
+	if w.hcMenuScene.inboxSection.isOpenInboxPressed {
+		w.setupInboxScene()
+		w.currentState = InboxState
+		w.sceneStack = append(w.sceneStack, InboxState)
+	}
 }
 func (w *Window) renderHCMenuState() {
 	rl.DrawText("HC Menu Page", 50, 50, 20, rl.DarkGray)
@@ -110,60 +158,29 @@ func (w *Window) renderHCMenuState() {
 
 	//unit
 	rl.DrawRectangle(
-		int32(w.hcMenuScene.unitRectangle.X),
-		int32(w.hcMenuScene.unitRectangle.Y),
-		int32(w.hcMenuScene.unitRectangle.Width),
-		int32(w.hcMenuScene.unitRectangle.Height), rl.Green)
+		int32(w.hcMenuScene.unitSection.unitRectangle.X),
+		int32(w.hcMenuScene.unitSection.unitRectangle.Y),
+		int32(w.hcMenuScene.unitSection.unitRectangle.Width),
+		int32(w.hcMenuScene.unitSection.unitRectangle.Height), rl.Green)
 
 	//user
 	rl.DrawRectangle(
-		int32(w.hcMenuScene.userRectangle.X),
-		int32(w.hcMenuScene.userRectangle.Y),
-		int32(w.hcMenuScene.userRectangle.Width),
-		int32(w.hcMenuScene.userRectangle.Height), rl.Green)
+		int32(w.hcMenuScene.userSection.userRectangle.X),
+		int32(w.hcMenuScene.userSection.userRectangle.Y),
+		int32(w.hcMenuScene.userSection.userRectangle.Width),
+		int32(w.hcMenuScene.userSection.userRectangle.Height), rl.Green)
 
 	//inbox
 	rl.DrawRectangle(
-		int32(w.hcMenuScene.inboxRectangle.X),
-		int32(w.hcMenuScene.inboxRectangle.Y),
-		int32(w.hcMenuScene.inboxRectangle.Width),
-		int32(w.hcMenuScene.inboxRectangle.Height), rl.Green)
+		int32(w.hcMenuScene.inboxSection.inboxRectangle.X),
+		int32(w.hcMenuScene.inboxSection.inboxRectangle.Y),
+		int32(w.hcMenuScene.inboxSection.inboxRectangle.Width),
+		int32(w.hcMenuScene.inboxSection.inboxRectangle.Height), rl.Green)
 
-	//button create unit
-	if gui.Button(w.hcMenuScene.createUnitButton.bounds, w.hcMenuScene.createUnitButton.text) {
-		w.createUnitSceneSetup()
-		w.currentState = CreateUnitState
-		w.sceneStack = append(w.sceneStack, CreateUnitState)
-	}
-
-	//button info units
-	if gui.Button(w.hcMenuScene.infoUnitButton.bounds, w.hcMenuScene.infoUnitButton.text) {
-
-		w.infoUnitSceneSetup()
-		w.currentState = InfoUnitState
-		w.sceneStack = append(w.sceneStack, InfoUnitState)
-	}
-	//button create user
-	if gui.Button(w.hcMenuScene.createUserButton.bounds, w.hcMenuScene.createUserButton.text) {
-
-		w.createUserSceneSetup()
-		w.currentState = CreateUserState
-		w.sceneStack = append(w.sceneStack, CreateUserState)
-	}
-	//info user button
-	if gui.Button(w.hcMenuScene.infoUserButton.bounds, w.hcMenuScene.infoUserButton.text) {
-
-		w.InfoUserSceneSetup()
-		w.currentState = InfoUserState
-		w.sceneStack = append(w.sceneStack, InfoUserState)
-	}
-	//open inbox
-	if gui.Button(w.hcMenuScene.openInboxButton.bounds, w.hcMenuScene.openInboxButton.text) {
-		//TODO
-
-		w.setupInboxScene()
-		w.currentState = InboxState
-		w.sceneStack = append(w.sceneStack, InboxState)
-	}
+	w.hcMenuScene.unitSection.createUnitButton.Render()
+	w.hcMenuScene.unitSection.infoUnitButton.Render()
+	w.hcMenuScene.userSection.createUserButton.Render()
+	w.hcMenuScene.userSection.infoUserButton.Render()
+	w.hcMenuScene.inboxSection.openInboxButton.Render()
 
 }

@@ -46,7 +46,6 @@ func (w *Window) Login() {
 
 	if v, ok := res.(*proto.AcceptLogin); ok {
 		//to show login is taking to much time add some circle or infobar animation
-
 		res, err := utils.MakeRequest(utils.NewRequest(w.ctx, w.messageServicePID, &proto.RegisterClient{
 			Id: v.Id,
 			Pid: &proto.PID{
