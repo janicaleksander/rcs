@@ -273,6 +273,13 @@ func (p *Postgres) InsertMessage(ctx context.Context, msg *proto.Message) error 
 	if err != nil {
 		return err
 	}
+	_, err = tx.ExecContext(ctx,
+		`UPDATE user_conversation 
+				SET last_seen_message_id=$1
+				WHERE (conversation_id=$1) `, msg.Id)
+	if err != nil {
+		return err
+	}
 	if err = tx.Commit(); err != nil {
 		return err
 	}
@@ -303,7 +310,7 @@ func (p *Postgres) GetUserConversations(ctx context.Context, id string) ([]*prot
 					LIMIT 1
 					)
 WHERE (uc.user_id = $1 AND other_uc.user_id IS NOT NULL)
-ORDER BY m.sent_at DESC;`, id)
+ORDER BY m.sent_at DESC NULLS LAST ;`, id)
 
 	if err != nil {
 		return nil, err

@@ -1,8 +1,6 @@
 package application
 
 import (
-	"fmt"
-	"strings"
 	"sync"
 
 	gui "github.com/gen2brain/raylib-go/raygui"
@@ -14,15 +12,68 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+type ToolboxSection struct {
+	toolboxArea                rl.Rectangle     // area with navigation buttons
+	backButton                 component.Button // go back button
+	addConversationButton      component.Button // button to add new conversation
+	refreshConversationsButton component.Button // button to refresh users conversation
+
+	isGoBackButtonPressed        bool
+	showAddConversationModal     bool // if we want to show window to add new conversation
+	isRefreshConversationPressed bool
+}
+
+type ModalSection struct { // Modal add conversation
+	addConversationModal           Modal
+	usersSlider                    ListSlider       // user slider inside modals
+	users                          []*proto.User    // users from DB without logged in user
+	acceptAddConversationButton    component.Button // button inside modal to confirm
+	isAcceptAddConversationPressed bool
+	//error inside modal
+	errorBoxModal  rl.Rectangle
+	isErrorModal   bool
+	textErrorModal string
+}
+
+type MessageSection struct {
+	textInput           component.InputBox
+	sendButton          component.Button
+	isSendButtonPressed bool
+
+	messageChan        chan *proto.Message //chan to transport messages from window actor
+	messages           []Message           // messages for current conversation
+	messagePanel       ScrollPanel         //slider with all messages
+	messagePanelLayout messagePanelLayout  // messagePanel configuration
+	nameOnTheWindow    string
+}
+type ConversationSection struct {
+	conversationArea        rl.Rectangle // area where messages display
+	isConversationSelected  bool
+	usersConversations      []*proto.ConversationSummary
+	conversationPanelLayout conversationPanelLayout
+	conversationsTabs       []ConversationTab
+	activeConversation      int32
+	activeConversationID    string
+	activeWithID            string
+}
+
+type InboxScene struct {
+	tempUserID          string // id of current logged in a user
+	toolboxSection      ToolboxSection
+	modalSection        ModalSection
+	messageSection      MessageSection
+	conversationSection ConversationSection
+}
+
 type conversationPanelLayout struct {
+	currHeight  float32
 	panelHeight float32
 	startHeight float32
-	currHeight  float32
 }
 
 type messagePanelLayout struct {
-	middle          float32
 	padding         float32
+	middle          float32
 	currHeight      float32
 	messageWidth    float32
 	messageFontSize int32
@@ -30,89 +81,17 @@ type messagePanelLayout struct {
 	rightSide       float32
 	mu              sync.RWMutex
 }
-type InboxScene struct {
-	messageChan        chan *proto.Message
-	toolboxArea        rl.Rectangle
-	conversationArea   rl.Rectangle
-	tempWithID         string
-	tempWithConvID     string
-	tempUserID         string
-	messagePanel       ScrollPanel
-	messagePanelLayout messagePanelLayout
-	//go back button
-	backButton component.Button
-	//section related with add conversation
-	addConversationButton          component.Button
-	showAddConversationModal       bool
-	addConversationModal           Modal
-	usersSlider                    ListSlider    // users with I dont have conversation
-	users                          []*proto.User // users with I dont have conversation
-	acceptAddConversationButton    component.Button
-	isAcceptAddConversationPressed bool
-	errorBoxModal                  rl.Rectangle
-	isErrorModal                   bool
-	textErrorModal                 string
-
-	//section related with refresh conversation panel
-
-	isGoBackButtonPressed        bool
-	refreshConversationsButton   component.Button
-	isRefreshConversationPressed bool
-	isConversationSelected       bool
-	textInput                    component.InputBox
-	sendButton                   component.Button
-	isSendButtonPressed          bool
-	usersConversations           []*proto.ConversationSummary
-	conversationPanelLayout      conversationPanelLayout
-	conversationsTabs            []ConversationTab
-	messages                     []Message
-}
-
-func (i *InboxScene) Reset() {
-	i.isConversationSelected = false
-	i.messagePanelLayout.currHeight = 0
-}
 
 // TODO maybe use redis for fast cache to e.g user UUID
 // TODO in refactor change all names to pattern verb+scene
 func (w *Window) setupInboxScene() {
 	w.inboxScene.Reset()
-	fmt.Println(w.inboxScene.isConversationSelected)
-	res := w.ctx.Request(w.serverPID, &proto.GetLoggedInUUID{
-		Pid: &proto.PID{
-			Address: w.ctx.PID().Address,
-			Id:      w.ctx.PID().ID}}, utils.WaitTime)
-	resp, err := res.Result()
-	if err != nil {
-		//TODO STH
-	}
-	v, ok := resp.(*proto.LoggedInUUID)
-	if !ok {
-		//TODO
-	}
-	sender := v.Id
-	w.inboxScene.tempUserID = v.Id
 
-	//get users conversations
-	res = w.ctx.Request(w.messageServicePID, &proto.GetUserConversation{Id: sender}, utils.WaitTime)
-	resp, err = res.Result()
-	_, ok = resp.(*proto.FailureGetUserConversation)
-	if conversations, ok := resp.(*proto.SuccessGetUserConversation); ok && err == nil {
-		w.inboxScene.usersConversations = conversations.ConvSummary
-	} else {
-		//TODO error
-	}
+	w.GetLoggedID()
+	w.GetUserConversation()
+	w.GetUserToNewConversation()
 
-	//get user to create conversation with
-	res = w.ctx.Request(w.messageServicePID, &proto.GetUsersToNewConversation{Id: sender}, utils.WaitTime)
-	resp, err = res.Result()
-	if conversations, ok := resp.(*proto.SuccessUsersToNewConversation); ok && err == nil {
-		w.inboxScene.users = conversations.Users
-	} else {
-		//TODO error
-	}
-
-	w.inboxScene.toolboxArea = rl.NewRectangle(
+	w.inboxScene.toolboxSection.toolboxArea = rl.NewRectangle(
 		0,
 		0,
 		(2.0/5.0)*float32(w.width),
@@ -123,27 +102,27 @@ func (w *Window) setupInboxScene() {
 	var toolBoxButtonWidth float32 = 150
 	var toolBoxButtonHeight float32 = 50
 
-	w.inboxScene.backButton = *component.NewButton(
+	w.inboxScene.toolboxSection.backButton = *component.NewButton(
 		component.NewButtonConfig(),
 		rl.NewRectangle(
-			w.inboxScene.toolboxArea.X+toolboxButtonPadding,
-			w.inboxScene.toolboxArea.Y+toolboxButtonPadding,
+			w.inboxScene.toolboxSection.toolboxArea.X+toolboxButtonPadding,
+			w.inboxScene.toolboxSection.toolboxArea.Y+toolboxButtonPadding,
 			toolBoxButtonWidth,
 			toolBoxButtonHeight),
 		"GO BACK",
 		false)
 
-	w.inboxScene.addConversationButton = *component.NewButton(
+	w.inboxScene.toolboxSection.addConversationButton = *component.NewButton(
 		component.NewButtonConfig(),
 		rl.NewRectangle(
-			w.inboxScene.backButton.Bounds.X+w.inboxScene.backButton.Bounds.Width+toolboxButtonPadding,
-			w.inboxScene.toolboxArea.Y+toolboxButtonPadding,
+			w.inboxScene.toolboxSection.backButton.Bounds.X+w.inboxScene.toolboxSection.backButton.Bounds.Width+toolboxButtonPadding,
+			w.inboxScene.toolboxSection.toolboxArea.Y+toolboxButtonPadding,
 			toolBoxButtonWidth,
 			toolBoxButtonHeight),
 		"Add \n conversation",
 		false)
 
-	w.inboxScene.addConversationModal = Modal{
+	w.inboxScene.modalSection.addConversationModal = Modal{
 		background: rl.NewRectangle(
 			0,
 			0,
@@ -153,470 +132,286 @@ func (w *Window) setupInboxScene() {
 		core:    rl.NewRectangle(float32(w.width/2-150.0), float32(w.height/2-150.0), 300, 280),
 	}
 	var addConversationModalPadding float32 = 20
-	w.inboxScene.usersSlider = ListSlider{
+	w.inboxScene.modalSection.usersSlider = ListSlider{
 		strings: make([]string, 0, 64),
 		bounds: rl.NewRectangle(
-			w.inboxScene.addConversationModal.core.X+w.inboxScene.addConversationModal.core.Width/2-(w.inboxScene.addConversationModal.core.Width/2)/2,
-			w.inboxScene.addConversationModal.core.Y+2*addConversationModalPadding,
-			w.inboxScene.addConversationModal.core.Width/2,
+			w.inboxScene.modalSection.addConversationModal.core.X+w.inboxScene.modalSection.addConversationModal.core.Width/2-(w.inboxScene.modalSection.addConversationModal.core.Width/2)/2,
+			w.inboxScene.modalSection.addConversationModal.core.Y+2*addConversationModalPadding,
+			w.inboxScene.modalSection.addConversationModal.core.Width/2,
 			80),
 		idxActiveElement: 0,
 		focus:            0,
 		idxScroll:        0,
 	}
-	for _, user := range w.inboxScene.users {
-		w.inboxScene.usersSlider.strings = append(w.inboxScene.usersSlider.strings,
+	//fill above slice with users
+	for _, user := range w.inboxScene.modalSection.users {
+		w.inboxScene.modalSection.usersSlider.strings = append(w.inboxScene.modalSection.usersSlider.strings,
 			user.Email+"\n"+user.Personal.Name+user.Personal.Name)
 	}
-	w.inboxScene.acceptAddConversationButton = *component.NewButton(
-		component.NewButtonConfig(),
-		rl.NewRectangle(
-			w.inboxScene.usersSlider.bounds.X,
-			w.inboxScene.usersSlider.bounds.Y+5*addConversationModalPadding,
-			w.inboxScene.usersSlider.bounds.Width,
-			25),
-		"Add conversartion", false)
 
-	w.inboxScene.errorBoxModal = rl.NewRectangle(
-		w.inboxScene.usersSlider.bounds.X,
-		w.inboxScene.usersSlider.bounds.Y+8*addConversationModalPadding,
-		w.inboxScene.usersSlider.bounds.Width,
-		75)
-	w.inboxScene.refreshConversationsButton = *component.NewButton(
+	w.inboxScene.modalSection.acceptAddConversationButton = *component.NewButton(
 		component.NewButtonConfig(),
 		rl.NewRectangle(
-			w.inboxScene.addConversationButton.Bounds.X+w.inboxScene.addConversationButton.Bounds.Width+toolboxButtonPadding,
-			w.inboxScene.toolboxArea.Y+toolboxButtonPadding,
+			w.inboxScene.modalSection.usersSlider.bounds.X,
+			w.inboxScene.modalSection.usersSlider.bounds.Y+5*addConversationModalPadding,
+			w.inboxScene.modalSection.usersSlider.bounds.Width,
+			25),
+		"Add conversation", false)
+
+	w.inboxScene.modalSection.errorBoxModal = rl.NewRectangle(
+		w.inboxScene.modalSection.usersSlider.bounds.X,
+		w.inboxScene.modalSection.usersSlider.bounds.Y+8*addConversationModalPadding,
+		w.inboxScene.modalSection.usersSlider.bounds.Width,
+		75)
+
+	w.inboxScene.toolboxSection.refreshConversationsButton = *component.NewButton(
+		component.NewButtonConfig(),
+		rl.NewRectangle(
+			w.inboxScene.toolboxSection.addConversationButton.Bounds.X+w.inboxScene.toolboxSection.addConversationButton.Bounds.Width+toolboxButtonPadding,
+			w.inboxScene.toolboxSection.toolboxArea.Y+toolboxButtonPadding,
 			toolBoxButtonWidth,
 			toolBoxButtonHeight),
 		"Fetch \n conversations", false)
 
-	w.inboxScene.conversationArea = rl.NewRectangle(
-		w.inboxScene.toolboxArea.X,
-		w.inboxScene.toolboxArea.Height,
-		w.inboxScene.toolboxArea.Width,
+	w.inboxScene.conversationSection.conversationArea = rl.NewRectangle(
+		w.inboxScene.toolboxSection.toolboxArea.X,
+		w.inboxScene.toolboxSection.toolboxArea.Height,
+		w.inboxScene.toolboxSection.toolboxArea.Width,
 		(7.0/8.0)*float32(w.height))
 
-	w.inboxScene.messagePanel.bounds = rl.NewRectangle(
-		w.inboxScene.toolboxArea.Width,
-		w.inboxScene.toolboxArea.Y,
+	w.inboxScene.messageSection.messagePanel.bounds = rl.NewRectangle(
+		w.inboxScene.toolboxSection.toolboxArea.Width,
+		w.inboxScene.toolboxSection.toolboxArea.Y,
 		(3.0/5.0)*float32(w.width),
 		float32(w.height))
-	w.inboxScene.messagePanel.content = rl.NewRectangle(
-		w.inboxScene.toolboxArea.Width+5,
-		w.inboxScene.toolboxArea.Y+5,
+	w.inboxScene.messageSection.messagePanel.content = rl.NewRectangle(
+		w.inboxScene.toolboxSection.toolboxArea.Width+5,
+		w.inboxScene.toolboxSection.toolboxArea.Y+5,
 		(3.0/5.0)*float32(w.width)-15,
 		float32(w.height)*10)
 
-	w.inboxScene.messagePanel.view = rl.Rectangle{}
-	w.inboxScene.messagePanel.scroll = rl.Vector2{}
+	w.inboxScene.messageSection.nameOnTheWindow = "MESSAGES"
+	w.inboxScene.messageSection.messagePanel.view = rl.Rectangle{}
+	w.inboxScene.messageSection.messagePanel.scroll = rl.Vector2{}
 
-	//todo check data type and change to float32 if its possible
-	w.inboxScene.messagePanelLayout.middle = w.inboxScene.messagePanel.bounds.X + (w.inboxScene.messagePanel.bounds.Width)/2.0
-	w.inboxScene.messagePanelLayout.padding = 10
-	w.inboxScene.messagePanelLayout.currHeight = w.inboxScene.messagePanel.bounds.Y + w.inboxScene.messagePanelLayout.padding
-	w.inboxScene.messagePanelLayout.messageWidth = 150
-	w.inboxScene.messagePanelLayout.messageFontSize = 20
-	w.inboxScene.messagePanelLayout.leftSide = w.inboxScene.messagePanel.bounds.X + w.inboxScene.messagePanelLayout.padding
-	w.inboxScene.messagePanelLayout.rightSide = w.inboxScene.messagePanelLayout.middle + w.inboxScene.messagePanelLayout.padding
+	w.inboxScene.messageSection.messagePanelLayout.padding = 20.0
+	w.inboxScene.messageSection.messagePanelLayout.middle = w.inboxScene.messageSection.messagePanel.bounds.X + (w.inboxScene.messageSection.messagePanel.bounds.Width)/2.0
+	w.inboxScene.messageSection.messagePanelLayout.currHeight = w.inboxScene.messageSection.messagePanel.bounds.Y + 3*w.inboxScene.messageSection.messagePanelLayout.padding
+	w.inboxScene.messageSection.messagePanelLayout.messageWidth = 150
+	w.inboxScene.messageSection.messagePanelLayout.messageFontSize = 20
+	w.inboxScene.messageSection.messagePanelLayout.leftSide = w.inboxScene.messageSection.messagePanel.bounds.X + w.inboxScene.messageSection.messagePanelLayout.padding
+	w.inboxScene.messageSection.messagePanelLayout.rightSide = w.inboxScene.messageSection.messagePanelLayout.middle + w.inboxScene.messageSection.messagePanelLayout.padding
 
-	w.inboxScene.textInput = *component.NewInputBox(
+	w.inboxScene.messageSection.textInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
-			w.inboxScene.messagePanel.bounds.X,
-			w.inboxScene.messagePanel.bounds.Height-30, //height
-			w.inboxScene.messagePanel.bounds.Width-70,  //for button
+			w.inboxScene.messageSection.messagePanel.bounds.X,
+			w.inboxScene.messageSection.messagePanel.bounds.Height-30, //height
+			w.inboxScene.messageSection.messagePanel.bounds.Width-70,  //for button// TODO vars
 			30),
 		false)
 
-	w.inboxScene.sendButton = *component.NewButton(
+	w.inboxScene.messageSection.sendButton = *component.NewButton(
 		component.NewButtonConfig(),
 		rl.NewRectangle(
-			w.inboxScene.messagePanel.bounds.X+w.inboxScene.textInput.Bounds.Width,
-			w.inboxScene.messagePanel.bounds.Height-30,
+			w.inboxScene.messageSection.messagePanel.bounds.X+w.inboxScene.messageSection.textInput.Bounds.Width,
+			w.inboxScene.messageSection.messagePanel.bounds.Height-30,
 			65,
 			30),
 		"SEND",
 		false)
-	w.inboxScene.conversationPanelLayout = conversationPanelLayout{
-		startHeight: 80,
-		panelHeight: 40,
+	w.inboxScene.conversationSection.conversationPanelLayout = conversationPanelLayout{
 		currHeight:  80,
+		panelHeight: 80,
+		startHeight: 100,
 	}
 	w.refreshConversationsPanel()
-	w.inboxScene.messageChan = make(chan *proto.Message, 1024)
+	w.inboxScene.messageSection.messageChan = make(chan *proto.Message, 1024)
 	go func() {
-		for msg := range w.inboxScene.messageChan {
-			var xPosition float32
-			if msg.SenderID == sender {
-				xPosition = w.inboxScene.messagePanelLayout.rightSide
-			} else {
-				xPosition = w.inboxScene.messagePanelLayout.leftSide
-			}
-
-			//TODO repair styling these boxes
-			content := wrapText(
-				int32(w.inboxScene.messagePanelLayout.messageWidth),
-				msg.Content,
-				w.inboxScene.messagePanelLayout.messageFontSize,
-			)
-			height := float32(w.inboxScene.messagePanelLayout.messageFontSize) * float32(strings.Count(content, "\n")+1)
-			w.inboxScene.messagePanelLayout.mu.Lock()
-			currHeight := w.inboxScene.messagePanelLayout.currHeight
-			w.inboxScene.messagePanelLayout.mu.Unlock()
-
-			w.inboxScene.messages = append(w.inboxScene.messages, Message{
-				bounds: rl.NewRectangle(
-					xPosition,
-					currHeight,
-					w.inboxScene.messagePanelLayout.messageWidth,
-					height),
-				content:   content,
-				originalY: w.inboxScene.messagePanelLayout.currHeight,
-			})
-			w.inboxScene.messagePanelLayout.mu.Lock()
-			w.inboxScene.messagePanelLayout.currHeight += 2*w.inboxScene.messagePanelLayout.padding + height
-			w.inboxScene.messagePanelLayout.mu.Unlock()
-
+		for msg := range w.inboxScene.messageSection.messageChan {
+			w.AppendMessage(msg)
 		}
-
 	}()
+
 }
 
-// repair reset e.g. currHeight on every click at other conv
 func (w *Window) updateInboxState() {
-	w.inboxScene.textInput.Update()
-	w.inboxScene.isGoBackButtonPressed = w.inboxScene.backButton.Update()
-	if w.inboxScene.addConversationButton.Update() {
+	if w.inboxScene.toolboxSection.isGoBackButtonPressed {
+		w.goSceneBack()
+	}
+
+	w.inboxScene.messageSection.textInput.Update()
+	w.inboxScene.toolboxSection.isGoBackButtonPressed = w.inboxScene.toolboxSection.backButton.Update()
+	if w.inboxScene.toolboxSection.addConversationButton.Update() {
 		// we need this if to remain windowbox on the screen
 		//in other cases we can use one line because e.g we send sth so we need this true state for short time (moment)
-		w.inboxScene.showAddConversationModal = true
+		w.inboxScene.toolboxSection.showAddConversationModal = true
 	}
-	w.inboxScene.isRefreshConversationPressed = w.inboxScene.refreshConversationsButton.Update()
-	w.inboxScene.isAcceptAddConversationPressed = w.inboxScene.acceptAddConversationButton.Update()
-	w.inboxScene.isSendButtonPressed = w.inboxScene.sendButton.Update()
-	for i := range w.inboxScene.conversationsTabs {
-		if w.inboxScene.conversationsTabs[i].enterConversation.Update() {
-			w.inboxScene.conversationsTabs[i].isClicked = true
+	w.inboxScene.toolboxSection.isRefreshConversationPressed = w.inboxScene.toolboxSection.refreshConversationsButton.Update()
+	w.inboxScene.modalSection.isAcceptAddConversationPressed = w.inboxScene.modalSection.acceptAddConversationButton.Update()
+	w.inboxScene.messageSection.isSendButtonPressed = w.inboxScene.messageSection.sendButton.Update()
+	for i := range w.inboxScene.conversationSection.conversationsTabs {
+		if w.inboxScene.conversationSection.conversationsTabs[i].enterConversation.Update() {
+			w.inboxScene.conversationSection.conversationsTabs[i].isPressed = true
 		}
 	}
+	w.inboxScene.conversationSection.activeConversation = -1
+	for i, tab := range w.inboxScene.conversationSection.conversationsTabs {
+		if tab.isPressed {
+			w.inboxScene.messageSection.nameOnTheWindow = "MESSAGES WITH " + w.inboxScene.conversationSection.usersConversations[tab.ID].Nametag
 
-	if w.inboxScene.isGoBackButtonPressed {
-		w.goSceneBack()
+			//we have to mark this to know if we have to show input box with send button
+			w.inboxScene.conversationSection.isConversationSelected = true
+			w.inboxScene.conversationSection.activeWithID = tab.withID
+			w.inboxScene.conversationSection.activeConversationID = tab.conversationID
+			if tab.ID != w.inboxScene.conversationSection.activeConversation {
+				w.inboxScene.conversationSection.activeConversation = tab.ID
 
-	}
-	for i, tab := range w.inboxScene.conversationsTabs {
-		if tab.isClicked {
-			w.inboxScene.messagePanelLayout.currHeight = 0
-			w.inboxScene.isConversationSelected = true
-			res := w.ctx.Request(w.serverPID, &proto.GetLoggedInUUID{
-				Pid: &proto.PID{
-					Address: w.ctx.PID().Address,
-					Id:      w.ctx.PID().ID,
+				//open conversation
+				w.ctx.Send(w.messageServicePID, &proto.UpdatePresence{
+					Id: w.inboxScene.tempUserID,
+					Presence: &proto.PresenceType{
+						Type: &proto.PresenceType_Inbox{
+							Inbox: &proto.Inbox{
+								WithID: tab.withID}}},
+				})
+				res, err := utils.MakeRequest(utils.NewRequest(w.ctx, w.messageServicePID, &proto.OpenAndLoadConversation{
+					UserID:         w.inboxScene.tempUserID,
+					ReceiverID:     tab.withID,
+					ConversationID: tab.conversationID,
 				},
-			}, utils.WaitTime)
-			resp, err := res.Result()
-			if err != nil {
-				//TODO STH
-			}
-			v, ok := resp.(*proto.LoggedInUUID)
-			if !ok {
-				//TODO
-			}
-			sender := v.Id
-			//open conversation
-			w.ctx.Send(w.messageServicePID, &proto.UpdatePresence{
-				Id: sender,
-				Presence: &proto.PresenceType{
-					Type: &proto.PresenceType_Inbox{
-						Inbox: &proto.Inbox{
-							WithID: tab.withID}}},
-			})
-			w.inboxScene.tempWithID = tab.withID
-			w.inboxScene.tempWithConvID = tab.conversationID
-			resp2 := w.ctx.Request(w.messageServicePID, &proto.OpenAndLoadConversation{
-				UserID:         sender,
-				ReceiverID:     tab.withID,
-				ConversationID: tab.conversationID}, utils.WaitTime)
-			res2, err2 := resp2.Result()
-			//todo name var proper e.g res<what>
-			if err2 != nil {
-				panic(err2)
-			}
-			w.inboxScene.messages = w.inboxScene.messages[:0]
-			if conversation, ok := res2.(*proto.SuccessOpenAndLoadConversation); ok {
-				var xPosition float32
-				for _, msg := range conversation.Messages {
-					if msg.SenderID == sender {
-						xPosition = w.inboxScene.messagePanelLayout.rightSide
-					} else {
-						xPosition = w.inboxScene.messagePanelLayout.leftSide
-					}
-
-					//TODO repair styling these boxes
-					content := wrapText(
-						int32(w.inboxScene.messagePanelLayout.messageWidth),
-						msg.Content,
-						w.inboxScene.messagePanelLayout.messageFontSize,
-					)
-					height := float32(w.inboxScene.messagePanelLayout.messageFontSize) * float32(strings.Count(content, "\n")+1)
-					w.inboxScene.messagePanelLayout.mu.Lock()
-					currHeight := w.inboxScene.messagePanelLayout.currHeight
-					w.inboxScene.messagePanelLayout.mu.Unlock()
-					w.inboxScene.messages = append(w.inboxScene.messages, Message{
-						bounds: rl.NewRectangle(
-							xPosition,
-							currHeight,
-							w.inboxScene.messagePanelLayout.messageWidth,
-							height),
-						content:   content,
-						originalY: w.inboxScene.messagePanelLayout.currHeight,
-					})
-					w.inboxScene.messagePanelLayout.mu.Lock()
-					w.inboxScene.messagePanelLayout.currHeight += 2*w.inboxScene.messagePanelLayout.padding + height
-					w.inboxScene.messagePanelLayout.mu.Unlock()
+				))
+				if err != nil {
+					//TODO context deadline exceeded
 				}
+				w.inboxScene.messageSection.messages = w.inboxScene.messageSection.messages[:0]
+				w.inboxScene.messageSection.messagePanelLayout.currHeight = w.inboxScene.messageSection.messagePanel.bounds.Y + 3*w.inboxScene.messageSection.messagePanelLayout.padding
+				if v, ok := res.(*proto.SuccessOpenAndLoadConversation); ok {
+					for _, msg := range v.Messages {
+						w.AppendMessage(msg)
+					}
+				} else {
+					//TODO err
+				}
+				w.inboxScene.conversationSection.conversationsTabs[i].isPressed = false // to not load every time
 			}
-			//MSSVC -> ConversationManager where is spinning up new actor
-
-			w.inboxScene.conversationsTabs[i].isClicked = false // to not load every time
 		}
 
 	}
-	if w.inboxScene.isSendButtonPressed {
-		res := w.ctx.Request(w.serverPID, &proto.GetLoggedInUUID{
-			Pid: &proto.PID{
-				Address: w.ctx.PID().Address,
-				Id:      w.ctx.PID().ID}}, utils.WaitTime)
-		resp, err := res.Result()
-		if err != nil {
-			//TODO STH
-		}
-		v, ok := resp.(*proto.LoggedInUUID)
-		if !ok {
-			//TODO
-		}
-		sender := v.Id
-		resp2 := w.ctx.Request(w.messageServicePID, &proto.SendMessage{
-			Receiver: w.inboxScene.tempWithID,
+	if w.inboxScene.messageSection.isSendButtonPressed {
+		res, err := utils.MakeRequest(utils.NewRequest(w.ctx, w.messageServicePID, &proto.SendMessage{
+			Receiver: w.inboxScene.conversationSection.activeWithID,
 			Message: &proto.Message{
 				Id:             uuid.New().String(),
-				SenderID:       sender,
-				ConversationID: w.inboxScene.tempWithConvID,
-				Content:        w.inboxScene.textInput.GetText(),
+				SenderID:       w.inboxScene.tempUserID,
+				ConversationID: w.inboxScene.conversationSection.activeConversationID,
+				Content:        w.inboxScene.messageSection.textInput.GetText(),
 				SentAt:         timestamppb.Now(),
 			},
-		}, utils.WaitTime)
-		res2, err := resp2.Result()
+		}))
 		if err != nil {
-			panic(err)
+			// context deadline exceed
 		}
-		if message, ok := res2.(*proto.DeliverMessage); ok {
-			var xPosition float32
-			if message.Message.SenderID == message.Receiver {
-				xPosition = w.inboxScene.messagePanelLayout.rightSide
-			} else {
-				xPosition = w.inboxScene.messagePanelLayout.leftSide
-			}
 
-			content := wrapText(
-				int32(w.inboxScene.messagePanelLayout.messageWidth),
-				message.Message.Content,
-				w.inboxScene.messagePanelLayout.messageFontSize,
-			)
-			height := float32(w.inboxScene.messagePanelLayout.messageFontSize) * float32(strings.Count(content, "\n")+1)
-			w.inboxScene.messagePanelLayout.mu.Lock()
-			currHeight := w.inboxScene.messagePanelLayout.currHeight
-			w.inboxScene.messagePanelLayout.mu.Unlock()
-			w.inboxScene.messages = append(w.inboxScene.messages, Message{
-				bounds: rl.NewRectangle(
-					xPosition,
-					currHeight,
-					w.inboxScene.messagePanelLayout.messageWidth,
-					height),
-				content:   content,
-				originalY: w.inboxScene.messagePanelLayout.currHeight,
-			})
-			w.inboxScene.messagePanelLayout.mu.Lock()
-			w.inboxScene.messagePanelLayout.currHeight += 2*w.inboxScene.messagePanelLayout.padding + height
-			w.inboxScene.messagePanelLayout.mu.Unlock()
+		if v, ok := res.(*proto.DeliverMessage); ok {
+			w.AppendMessage(v.Message)
+		} else {
+			//error
 		}
+
 	}
 
-	// ADD NEW CONVERSATION SECTION
-	if w.inboxScene.isAcceptAddConversationPressed {
+	if w.inboxScene.modalSection.isAcceptAddConversationPressed {
 		w.addNewConversation()
 	}
-	// ADD NEW CONVERSATION SECTION
-	if w.inboxScene.isRefreshConversationPressed {
+	if w.inboxScene.toolboxSection.isRefreshConversationPressed {
 		w.refreshConversationsPanel()
 	}
 
 }
-func (w *Window) addNewConversation() {
 
-	//fetch a users to a slider, but only fetch this with I dont have any conversation
-	// get sender and receiver
-	//check if conversation exists
-	//create a conversation and add a new section
-	w.inboxScene.isErrorModal = false
-	w.inboxScene.textErrorModal = ""
-	if w.inboxScene.usersSlider.idxActiveElement == -1 {
-		w.inboxScene.isErrorModal = true
-		w.inboxScene.textErrorModal = "Select user!"
-	} else {
-		selectedUSer := w.inboxScene.users[w.inboxScene.usersSlider.idxActiveElement]
-		fmt.Println(selectedUSer)
-		resp := w.ctx.Request(w.messageServicePID, &proto.CreateConversation{
-			Id:         uuid.New().String(),
-			SenderID:   w.inboxScene.tempUserID,
-			ReceiverID: selectedUSer.Id,
-		}, utils.WaitTime)
-		res, err := resp.Result()
-		if err != nil {
-			w.inboxScene.isErrorModal = true
-			w.inboxScene.textErrorModal = "Error" + err.Error()
-		} else {
-			if _, ok := res.(*proto.SuccessOfCreateConversation); ok {
-				w.refreshConversationsPanel()
-			} else {
-				w.inboxScene.isErrorModal = true
-				w.inboxScene.textErrorModal = "Error"
-
-			}
-		}
-	}
-
-}
-func (w *Window) refreshConversationsPanel() {
-	w.inboxScene.conversationsTabs = w.inboxScene.conversationsTabs[:0]
-	resp := w.ctx.Request(w.messageServicePID, &proto.GetUserConversation{Id: w.inboxScene.tempUserID}, utils.WaitTime)
-	res, err := resp.Result()
-	if conversations, ok := res.(*proto.SuccessGetUserConversation); ok && err == nil {
-		w.inboxScene.usersConversations = conversations.ConvSummary
-	} else {
-		//TODO error
-	}
-	w.inboxScene.conversationPanelLayout.currHeight = w.inboxScene.conversationPanelLayout.startHeight
-	for _, conversation := range w.inboxScene.usersConversations {
-		w.inboxScene.conversationsTabs = append(w.inboxScene.conversationsTabs, ConversationTab{
-			withID:         conversation.WithID,
-			conversationID: conversation.ConversationId,
-			bounds: rl.NewRectangle(
-				w.inboxScene.toolboxArea.X,
-				w.inboxScene.conversationPanelLayout.currHeight,
-				w.inboxScene.toolboxArea.Width,
-				w.inboxScene.conversationPanelLayout.panelHeight,
-			),
-			nametag: conversation.Nametag,
-			enterConversation: *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-				(3.0/4.0)*w.inboxScene.toolboxArea.Width,
-				w.inboxScene.conversationPanelLayout.currHeight,
-				80,
-				40), "ENTER", true),
-		})
-		w.inboxScene.conversationPanelLayout.currHeight += w.inboxScene.conversationPanelLayout.panelHeight
-	}
-}
-
-func wrapText(maxWidth int32, input string, fontSize int32) string {
-	var output strings.Builder
-	var line strings.Builder
-	for _, char := range input {
-		line.WriteString(string(char))
-		width := rl.MeasureText(line.String(), fontSize)
-		if width >= maxWidth {
-			output.WriteString("\n")
-			line.Reset()
-		}
-		output.WriteString(string(char))
-	}
-
-	return output.String()
-}
 func (w *Window) renderInboxState() {
 	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
 		mousePos := rl.GetMousePosition()
-		w.inboxScene.backButton.Deactivate()
-		w.inboxScene.addConversationButton.Deactivate()
-		w.inboxScene.refreshConversationsButton.Deactivate()
-		w.inboxScene.acceptAddConversationButton.Deactivate()
-		w.inboxScene.sendButton.Deactivate()
+		w.inboxScene.toolboxSection.backButton.Deactivate()
+		w.inboxScene.toolboxSection.addConversationButton.Deactivate()
+		w.inboxScene.toolboxSection.refreshConversationsButton.Deactivate()
+		w.inboxScene.modalSection.acceptAddConversationButton.Deactivate()
+		w.inboxScene.messageSection.sendButton.Deactivate()
 
-		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.backButton.Bounds) && !w.inboxScene.showAddConversationModal {
-			w.inboxScene.backButton.Active()
+		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.toolboxSection.backButton.Bounds) && !w.inboxScene.toolboxSection.showAddConversationModal {
+			w.inboxScene.toolboxSection.backButton.Active()
 		}
-		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.addConversationButton.Bounds) && !w.inboxScene.showAddConversationModal {
-			w.inboxScene.addConversationButton.Active()
+		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.toolboxSection.addConversationButton.Bounds) && !w.inboxScene.toolboxSection.showAddConversationModal {
+			w.inboxScene.toolboxSection.addConversationButton.Active()
 		}
-		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.refreshConversationsButton.Bounds) && !w.inboxScene.showAddConversationModal {
-			w.inboxScene.refreshConversationsButton.Active()
+		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.toolboxSection.refreshConversationsButton.Bounds) && !w.inboxScene.toolboxSection.showAddConversationModal {
+			w.inboxScene.toolboxSection.refreshConversationsButton.Active()
 		}
-		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.acceptAddConversationButton.Bounds) {
-			w.inboxScene.acceptAddConversationButton.Active()
+		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.modalSection.acceptAddConversationButton.Bounds) {
+			w.inboxScene.modalSection.acceptAddConversationButton.Active()
 		}
-		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.sendButton.Bounds) && !w.inboxScene.showAddConversationModal {
-			w.inboxScene.sendButton.Active()
+		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.messageSection.sendButton.Bounds) && !w.inboxScene.toolboxSection.showAddConversationModal {
+			w.inboxScene.messageSection.sendButton.Active()
 		}
-		if w.inboxScene.showAddConversationModal {
-			for i := range w.inboxScene.conversationsTabs {
-				w.inboxScene.conversationsTabs[i].enterConversation.Deactivate()
+		if w.inboxScene.toolboxSection.showAddConversationModal {
+			for i := range w.inboxScene.conversationSection.conversationsTabs {
+				w.inboxScene.conversationSection.conversationsTabs[i].enterConversation.Deactivate()
 			}
-			w.inboxScene.textInput.Deactivate()
+			w.inboxScene.messageSection.textInput.Deactivate()
 		} else {
-			w.inboxScene.textInput.Active()
-			for i := range w.inboxScene.conversationsTabs {
-				w.inboxScene.conversationsTabs[i].enterConversation.Active()
+			w.inboxScene.messageSection.textInput.Active()
+			for i := range w.inboxScene.conversationSection.conversationsTabs {
+				w.inboxScene.conversationSection.conversationsTabs[i].enterConversation.Active()
 			}
 		}
 
 	}
 	//toolbox
 	rl.DrawRectangle(
-		int32(w.inboxScene.toolboxArea.X),
-		int32(w.inboxScene.toolboxArea.Y),
-		int32(w.inboxScene.toolboxArea.Width),
-		int32(w.inboxScene.toolboxArea.Height),
+		int32(w.inboxScene.toolboxSection.toolboxArea.X),
+		int32(w.inboxScene.toolboxSection.toolboxArea.Y),
+		int32(w.inboxScene.toolboxSection.toolboxArea.Width),
+		int32(w.inboxScene.toolboxSection.toolboxArea.Height),
 		rl.Gray)
 
 	//toolbox button section
-	w.inboxScene.backButton.Render()
-	w.inboxScene.addConversationButton.Render()
-	w.inboxScene.refreshConversationsButton.Render()
+	w.inboxScene.toolboxSection.backButton.Render()
+	w.inboxScene.toolboxSection.addConversationButton.Render()
+	w.inboxScene.toolboxSection.refreshConversationsButton.Render()
 
 	rl.DrawRectangle(
-		int32(w.inboxScene.conversationArea.X),
-		int32(w.inboxScene.conversationArea.Y),
-		int32(w.inboxScene.conversationArea.Width),
-		int32(w.inboxScene.conversationArea.Height),
+		int32(w.inboxScene.conversationSection.conversationArea.X),
+		int32(w.inboxScene.conversationSection.conversationArea.Y),
+		int32(w.inboxScene.conversationSection.conversationArea.Width),
+		int32(w.inboxScene.conversationSection.conversationArea.Height),
 		rl.White)
 
 	gui.ScrollPanel(
-		w.inboxScene.messagePanel.bounds,
-		"MESSAGES",
-		w.inboxScene.messagePanel.content,
-		&w.inboxScene.messagePanel.scroll,
-		&w.inboxScene.messagePanel.view,
+		w.inboxScene.messageSection.messagePanel.bounds,
+		w.inboxScene.messageSection.nameOnTheWindow,
+		w.inboxScene.messageSection.messagePanel.content,
+		&w.inboxScene.messageSection.messagePanel.scroll,
+		&w.inboxScene.messageSection.messagePanel.view,
 	)
 	rl.BeginScissorMode(
-		int32(w.inboxScene.messagePanel.view.X),
-		int32(w.inboxScene.messagePanel.view.Y),
-		int32(w.inboxScene.messagePanel.view.Width),
-		int32(w.inboxScene.messagePanel.view.Height),
+		int32(w.inboxScene.messageSection.messagePanel.view.X),
+		int32(w.inboxScene.messageSection.messagePanel.view.Y),
+		int32(w.inboxScene.messageSection.messagePanel.view.Width),
+		int32(w.inboxScene.messageSection.messagePanel.view.Height),
 	)
 
-	for i := range w.inboxScene.messages {
-		fmt.Println(len(w.inboxScene.messages))
-		movingY := w.inboxScene.messages[i].originalY + w.inboxScene.messagePanel.scroll.Y
+	for i := range w.inboxScene.messageSection.messages {
+		movingY := w.inboxScene.messageSection.messages[i].originalY + w.inboxScene.messageSection.messagePanel.scroll.Y
 		rl.DrawRectangle(
-			int32(w.inboxScene.messages[i].bounds.X),
+			int32(w.inboxScene.messageSection.messages[i].bounds.X),
 			int32(movingY),
-			int32(w.inboxScene.messages[i].bounds.Width),
-			int32(w.inboxScene.messages[i].bounds.Height),
+			int32(w.inboxScene.messageSection.messages[i].bounds.Width),
+			int32(w.inboxScene.messageSection.messages[i].bounds.Height),
 			rl.SkyBlue)
 		rl.DrawText(
-			w.inboxScene.messages[i].content,
-			int32(w.inboxScene.messages[i].bounds.X),
+			w.inboxScene.messageSection.messages[i].content,
+			int32(w.inboxScene.messageSection.messages[i].bounds.X),
 			int32(movingY),
 			15,
 			rl.White)
@@ -624,54 +419,55 @@ func (w *Window) renderInboxState() {
 	}
 
 	rl.EndScissorMode()
-	if w.inboxScene.isConversationSelected {
-		w.inboxScene.sendButton.Render()
-		w.inboxScene.textInput.Render()
+
+	if w.inboxScene.conversationSection.isConversationSelected {
+		w.inboxScene.messageSection.sendButton.Render()
+		w.inboxScene.messageSection.textInput.Render()
 	}
-	for i := range w.inboxScene.conversationsTabs {
+	for i := range w.inboxScene.conversationSection.conversationsTabs {
 		rl.DrawRectangle(
-			int32(w.inboxScene.conversationsTabs[i].bounds.X),
-			int32(w.inboxScene.conversationsTabs[i].bounds.Y),
-			int32(w.inboxScene.conversationsTabs[i].bounds.Width),
-			int32(w.inboxScene.conversationsTabs[i].bounds.Height),
+			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.X),
+			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.Y),
+			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.Width),
+			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.Height),
 			rl.Red)
 		rl.DrawText(
-			w.inboxScene.conversationsTabs[i].nametag,
-			int32(w.inboxScene.conversationsTabs[i].bounds.X),
-			int32(w.inboxScene.conversationsTabs[i].bounds.Y),
+			w.inboxScene.conversationSection.conversationsTabs[i].nametag,
+			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.X),
+			int32(w.inboxScene.conversationSection.conversationsTabs[i].bounds.Y),
 			25,
 			rl.Black)
-		w.inboxScene.conversationsTabs[i].enterConversation.Render()
+		w.inboxScene.conversationSection.conversationsTabs[i].enterConversation.Render()
 	}
 
-	if w.inboxScene.showAddConversationModal {
+	if w.inboxScene.toolboxSection.showAddConversationModal {
 		rl.DrawRectangle(
-			int32(w.inboxScene.addConversationModal.background.X),
-			int32(w.inboxScene.addConversationModal.background.Y),
-			int32(w.inboxScene.addConversationModal.background.Width),
-			int32(w.inboxScene.addConversationModal.background.Height),
-			w.inboxScene.addConversationModal.bgColor)
-		if gui.WindowBox(w.inboxScene.addConversationModal.core, "Add conversation") {
-			w.inboxScene.showAddConversationModal = false
-			w.inboxScene.usersSlider.strings = w.inboxScene.usersSlider.strings[:0]
+			int32(w.inboxScene.modalSection.addConversationModal.background.X),
+			int32(w.inboxScene.modalSection.addConversationModal.background.Y),
+			int32(w.inboxScene.modalSection.addConversationModal.background.Width),
+			int32(w.inboxScene.modalSection.addConversationModal.background.Height),
+			w.inboxScene.modalSection.addConversationModal.bgColor)
+		if gui.WindowBox(w.inboxScene.modalSection.addConversationModal.core, "Add conversation") {
+			w.inboxScene.toolboxSection.showAddConversationModal = false
+			w.inboxScene.modalSection.usersSlider.strings = w.inboxScene.modalSection.usersSlider.strings[:0]
 
 		}
 		gui.ListViewEx(
-			w.inboxScene.usersSlider.bounds,
-			w.inboxScene.usersSlider.strings,
-			&w.inboxScene.usersSlider.idxScroll,
-			&w.inboxScene.usersSlider.idxActiveElement,
-			w.inboxScene.usersSlider.focus)
+			w.inboxScene.modalSection.usersSlider.bounds,
+			w.inboxScene.modalSection.usersSlider.strings,
+			&w.inboxScene.modalSection.usersSlider.idxScroll,
+			&w.inboxScene.modalSection.usersSlider.idxActiveElement,
+			w.inboxScene.modalSection.usersSlider.focus)
 
-		w.inboxScene.acceptAddConversationButton.Render()
-		if w.inboxScene.isErrorModal {
+		w.inboxScene.modalSection.acceptAddConversationButton.Render()
+		if w.inboxScene.modalSection.isErrorModal {
 			rl.DrawRectangle(
-				int32(w.inboxScene.errorBoxModal.X),
-				int32(w.inboxScene.errorBoxModal.Y),
-				int32(w.inboxScene.errorBoxModal.Width),
-				int32(w.inboxScene.errorBoxModal.Height),
+				int32(w.inboxScene.modalSection.errorBoxModal.X),
+				int32(w.inboxScene.modalSection.errorBoxModal.Y),
+				int32(w.inboxScene.modalSection.errorBoxModal.Width),
+				int32(w.inboxScene.modalSection.errorBoxModal.Height),
 				rl.LightGray)
-			rl.DrawText(w.inboxScene.textErrorModal, int32(w.inboxScene.errorBoxModal.X), int32(w.inboxScene.errorBoxModal.Y), 15, rl.Red)
+			rl.DrawText(w.inboxScene.modalSection.textErrorModal, int32(w.inboxScene.modalSection.errorBoxModal.X), int32(w.inboxScene.modalSection.errorBoxModal.Y), 15, rl.Red)
 		}
 	}
 
