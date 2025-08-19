@@ -42,6 +42,17 @@ func NewPopup(cfg *PopupConfig, bounds rl.Rectangle, text *string) *Popup {
 	}
 
 }
+
+func WithBgColor(color rl.Color) func(*PopupConfig) {
+	return func(c *PopupConfig) {
+		c.bgColor = color
+	}
+}
+func WithFontColor(color rl.Color) func(*PopupConfig) {
+	return func(c *PopupConfig) {
+		c.textColor = color
+	}
+}
 func (p *Popup) Show() { p.show = true }
 func (p *Popup) Hide() { p.show = false }
 func (p *Popup) Render() {
