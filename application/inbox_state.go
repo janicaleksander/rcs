@@ -221,8 +221,7 @@ func (w *Window) setupInboxScene() {
 			w.inboxScene.messageSection.messagePanel.bounds.X,
 			w.inboxScene.messageSection.messagePanel.bounds.Height-30, //height
 			w.inboxScene.messageSection.messagePanel.bounds.Width-70,  //for button// TODO vars
-			30),
-		false)
+			30))
 
 	w.inboxScene.messageSection.sendButton = *component.NewButton(
 		component.NewButtonConfig(),

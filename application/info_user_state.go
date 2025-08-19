@@ -16,118 +16,119 @@ import (
 )
 
 type InfoUserScene struct {
-	// user list slider
-	usersList       ListSlider
-	users           []*proto.User
+	unitListSection     UnitListSection
+	userListSection     UserListSection
+	descriptionSection  DescriptionSection
+	actionSection       ActionSection
+	addActionSection    AddActionSection
+	removeActionSection RemoveActionSection
+	sendMessageSection  SendMessageSection
+}
+
+type UnitListSection struct {
 	units           []*proto.Unit
 	userToUnitCache map[string]string // userID->unitID
-	// description area
+}
+type UserListSection struct {
+	users                []*proto.User
+	usersList            ListSlider
+	lastProcessedUserIdx int32
+}
+
+type DescriptionSection struct {
 	descriptionBounds  rl.Rectangle
 	descriptionName    string
 	descriptionSurname string
 	descriptionLVL     string
 	currSelectedUserID string
-	isInUnit           bool
-
-	// action button area
-	actionButtonArea rl.Rectangle
-	// add btn
-	addButton                 Button
-	isConfirmAddButtonPressed bool
-	inUnitBackground          rl.Rectangle
-
-	//TODO add errors field to two modals
-	//modal after add btn
+}
+type ActionSection struct {
+	isInUnit            bool
+	actionButtonArea    rl.Rectangle
+	inUnitBackground    rl.Rectangle
+	notInUnitBackground rl.Rectangle
+	addButton           component.Button
 	showAddModal        bool
-	unitsToAssignSlider ListSlider
-	acceptAddButton     Button
-	addModal            Modal
+	removeButton        component.Button
+	showRemoveModal     bool
+	inboxButton         component.Button
+	showInboxModal      bool
+}
 
-	// rmv btn
-	removeButton                 Button
+type AddActionSection struct {
+	isConfirmAddButtonPressed bool
+	unitsToAssignSlider       ListSlider
+	acceptAddButton           component.Button
+	addModal                  Modal
+}
+type RemoveActionSection struct {
 	isConfirmRemoveButtonPressed bool
-	notInUnitBackground          rl.Rectangle
-
-	//modal after rmv btn
-	showRemoveModal    bool
-	usersUnitsSlider   ListSlider
-	acceptRemoveButton Button
-	removeModal        Modal
-
-	// inbox btn
-	inboxButton                Button
-	showInboxModal             bool
+	usersUnitsSlider             ListSlider
+	acceptRemoveButton           component.Button
+	removeModal                  Modal
+}
+type SendMessageSection struct {
 	inboxModal                 Modal
 	inboxInput                 component.InputBox
-	sendMessage                Button
+	sendMessage                component.Button
 	activeUserCircle           Circle
 	isSendMessageButtonPressed bool
-
-	//idxs
-	lastProcessedUserIdx int32
 }
 
-func (i *InfoUserScene) Reset() {
-	i.lastProcessedUserIdx = -1
-	i.descriptionName = ""
-	i.descriptionSurname = ""
-	i.descriptionLVL = ""
-	i.currSelectedUserID = ""
-
-}
 func (w *Window) InfoUserSceneSetup() {
 	w.infoUserScene.Reset()
-	resp := w.ctx.Request(w.serverPID, &proto.GetAllUnits{}, utils.WaitTime)
-	val, err := resp.Result()
+
+	res, err := utils.MakeRequest(utils.NewRequest(w.ctx, w.serverPID, &proto.GetAllUnits{}))
 	if err != nil {
-		// TODO error
+		// context deadline exceeded
 	}
-	w.infoUserScene.units = make([]*proto.Unit, 0, 64)
-	if v, ok := val.(*proto.AllUnits); ok {
+
+	w.infoUserScene.unitListSection.units = make([]*proto.Unit, 0, 64)
+
+	if v, ok := res.(*proto.AllUnits); ok {
 		for _, unit := range v.Units {
-			w.infoUserScene.units = append(w.infoUserScene.units, unit)
+			w.infoUserScene.unitListSection.units = append(w.infoUserScene.unitListSection.units, unit)
 		}
 	} else {
 		// TODO error
 	}
 
 	//TODO get proper lvl
-	resp = w.ctx.Request(w.serverPID, &proto.GetUserAboveLVL{Lvl: -1}, utils.WaitTime)
-	val, err = resp.Result()
+	res, err = utils.MakeRequest(utils.NewRequest(w.ctx, w.serverPID, &proto.GetUserAboveLVL{Lvl: -1}))
 	if err != nil {
-		// TODO error
+		// context deadline exceeded
 	}
-	w.infoUserScene.users = make([]*proto.User, 0, 64)
-	if v, ok := val.(*proto.UsersAboveLVL); ok {
+
+	w.infoUserScene.userListSection.users = make([]*proto.User, 0, 64)
+	if v, ok := res.(*proto.UsersAboveLVL); ok {
 		for _, user := range v.Users {
-			w.infoUserScene.users = append(w.infoUserScene.users, user)
+			w.infoUserScene.userListSection.users = append(w.infoUserScene.userListSection.users, user)
 		}
 	} else {
 		// TODO error
 	}
 
 	//cache users information
-	w.infoUserScene.userToUnitCache = make(map[string]string, len(w.infoUserScene.users))
+	w.infoUserScene.unitListSection.userToUnitCache = make(map[string]string, len(w.infoUserScene.userListSection.users))
 	var waitGroup sync.WaitGroup
 	cacheChan := make(chan struct {
 		userID string
 		unitID string
 	}, 1024)
-	for _, user := range w.infoUserScene.users {
+
+	for _, user := range w.infoUserScene.userListSection.users {
 		waitGroup.Add(1)
 		go func(wg *sync.WaitGroup, userID string) {
 			defer wg.Done()
-			resp = w.ctx.Request(w.serverPID, &proto.IsUserInUnit{Id: userID}, utils.WaitTime)
-			v, err := resp.Result()
+			res, err = utils.MakeRequest(utils.NewRequest(w.ctx, w.serverPID, &proto.IsUserInUnit{Id: userID}))
 			if err != nil {
-				// TODO
-				fmt.Println("ERROR")
+				//context deadline exceeded
 			}
-			if payload, ok := v.(*proto.UserInUnit); ok {
+			if v, ok := res.(*proto.UserInUnit); ok {
 				cacheChan <- struct {
 					userID string
 					unitID string
-				}{userID: userID, unitID: payload.UnitID}
+				}{userID: userID, unitID: v.UnitID}
 			}
 
 		}(&waitGroup, user.Id)
@@ -137,9 +138,9 @@ func (w *Window) InfoUserSceneSetup() {
 		close(cacheChan)
 	}()
 	for v := range cacheChan {
-		w.infoUserScene.userToUnitCache[v.userID] = v.unitID
+		w.infoUserScene.unitListSection.userToUnitCache[v.userID] = v.unitID
 	}
-	w.infoUserScene.usersList = ListSlider{
+	w.infoUserScene.userListSection.usersList = ListSlider{
 		strings: make([]string, 0, 64),
 		bounds: rl.NewRectangle(
 			0,
@@ -151,8 +152,8 @@ func (w *Window) InfoUserSceneSetup() {
 		idxScroll:        -1,
 	}
 	//TODO maybe check in all places to start -1
-	for _, user := range w.infoUserScene.users {
-		w.infoUserScene.usersList.strings = append(w.infoUserScene.usersList.strings, user.Personal.Name+"\n"+user.Personal.Surname)
+	for _, user := range w.infoUserScene.userListSection.users {
+		w.infoUserScene.userListSection.usersList.strings = append(w.infoUserScene.userListSection.usersList.strings, user.Personal.Name+"\n"+user.Personal.Surname)
 	}
 	w.infoUserScene.descriptionBounds = rl.NewRectangle(
 		w.infoUserScene.usersList.bounds.Width,
