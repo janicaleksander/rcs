@@ -10,178 +10,148 @@ import (
 
 // TODO add better description to component in GUI
 type CreateUnitScene struct {
+	scheduler      utils.Scheduler
+	backButton     component.Button
+	newUnitSection NewUnitSection
+	errorSection   ErrorSection2
+	infoSection    InfoSection
+}
+
+// TODO CHANGE THIS NAME TO ONLY ERROR SECTION AFTER PACKAGE REFACTOR
+type ErrorSection2 struct {
 	isSetupError  bool
 	isCreateError bool
 	errorMessage  string
-	errorPosition Position
-
+	errorPopup    component.Popup
+}
+type InfoSection struct {
 	isInfoMessage bool
 	infoMessage   string
-	infoPosition  Position
+	infoPopup     component.Popup
+}
 
-	backButton   Button
-	acceptButton Button
-
-	//name of new unit
-	nameInput component.InputBox
-
-	//user choose dropdown
-	usersDropdown ListSlider
+type NewUnitSection struct {
+	acceptButton    component.Button
+	isAcceptPressed bool
+	nameInput       component.InputBox
+	usersDropdown   ListSlider
 }
 
 func (s *CreateUnitScene) Reset() {
-	s.isSetupError = false
-	s.isCreateError = false
-	s.isInfoMessage = false
-	s.infoMessage = ""
-	s.errorMessage = ""
+	s.errorSection.isSetupError = false
+	s.errorSection.isCreateError = false
+	s.infoSection.isInfoMessage = false
+	s.infoSection.infoMessage = ""
+	s.errorSection.errorMessage = ""
 }
 
 func (w *Window) createUnitSceneSetup() {
 	w.createUnitScene.Reset()
 
-	//get user slice from DB
 	//TODO get proper lvl value
-	resp := w.ctx.Request(w.serverPID, &proto.GetUserAboveLVL{Lvl: -1}, utils.WaitTime)
-
-	val, err := resp.Result()
+	res, err := utils.MakeRequest(utils.NewRequest(w.ctx, w.serverPID, &proto.GetUserAboveLVL{Lvl: -1}))
 	if err != nil {
-		w.createUnitScene.isSetupError = true
+		//context deadline exceeded
+		//do sth with that
+		w.createUnitScene.errorSection.isSetupError = true
 	}
 
-	if v, ok := val.(*proto.UsersAboveLVL); ok {
-		w.createUnitScene.usersDropdown.strings = make([]string, 0, 64)
-		w.createUnitScene.usersDropdown.strings = append(w.createUnitScene.usersDropdown.strings, "Choose user by his ID")
+	if v, ok := res.(*proto.UsersAboveLVL); ok {
+		w.createUnitScene.newUnitSection.usersDropdown.strings = make([]string, 0, 64)
+		w.createUnitScene.newUnitSection.usersDropdown.strings = append(w.createUnitScene.newUnitSection.usersDropdown.strings,
+			"Choose user by his ID")
 		for _, user := range v.Users {
-			w.createUnitScene.usersDropdown.strings = append(w.createUnitScene.usersDropdown.strings, user.Id+"\n"+user.Email)
+			w.createUnitScene.newUnitSection.usersDropdown.strings = append(w.createUnitScene.newUnitSection.usersDropdown.strings,
+				user.Id+"\n"+user.Email)
 		}
 	} else {
-		w.createUnitScene.isSetupError = true
-	}
-	w.createUnitScene.errorPosition = Position{
-		int32(w.width / 2),
-		int32(w.height - 20),
-	}
-	w.createUnitScene.infoPosition = Position{
-		int32(w.width / 2),
-		int32(w.height - 20),
-	}
-
-	//go back from creating unit
-	w.createUnitScene.backButton = Button{
-		bounds: rl.NewRectangle(
-			10,
-			float32(w.height-50),
-			150,
-			50),
-		text: "GO BACK",
-	}
-
-	//accept button
-	w.createUnitScene.acceptButton = Button{
-		bounds: rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2-100),
-			float32(rl.GetScreenHeight()/2+50),
-			200, 40,
-		),
-		text: "Accept ",
+		w.createUnitScene.errorSection.isSetupError = true
 	}
 
 	//name of unit
-	w.createUnitScene.nameInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
+	w.createUnitScene.newUnitSection.nameInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-100),
 		200, 40,
-	), false)
+	))
 
 	//dropdown with users
-	w.createUnitScene.usersDropdown.idxScroll = 0
-	w.createUnitScene.usersDropdown.idxActiveElement = 0
-	w.createUnitScene.usersDropdown.bounds = rl.NewRectangle(
+	w.createUnitScene.newUnitSection.usersDropdown.idxScroll = 0
+	w.createUnitScene.newUnitSection.usersDropdown.idxActiveElement = 0
+	w.createUnitScene.newUnitSection.usersDropdown.bounds = rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-120),
 		float32(rl.GetScreenHeight()/2-60),
 		240, 80,
 	)
+	w.createUnitScene.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
+		float32(w.width/2),
+		float32(w.height-20),
+		100, 20), &w.createUnitScene.errorSection.errorMessage)
+
+	w.createUnitScene.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
+		float32(w.width/2),
+		float32(w.height-20),
+		100, 20), &w.createUnitScene.infoSection.infoMessage)
+
+	//accept button
+	w.createUnitScene.newUnitSection.acceptButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		float32(rl.GetScreenWidth()/2-100),
+		float32(rl.GetScreenHeight()/2+50),
+		200, 40,
+	), "Accept", false)
+
+	//go back from creating unit
+	w.createUnitScene.backButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		10,
+		float32(w.height-50),
+		150,
+		50), "Go back", false)
+
 }
 
 func (w *Window) updateCreateUnitState() {
-	w.createUnitScene.nameInput.Update()
-	if w.createUnitScene.isSetupError {
-		w.createUnitScene.errorMessage = "Setup error, can't do this now!"
-	}
-	if !w.createUnitScene.isSetupError && gui.Button(w.createUnitScene.acceptButton.bounds, w.createUnitScene.acceptButton.text) {
-		w.createUnitScene.Reset()
-		name := w.createUnitScene.nameInput.GetText()
-		user := w.createUnitScene.usersDropdown.idxActiveElement
-		if len(name) <= 0 || user <= 0 {
-			w.createUnitScene.isCreateError = true
-			w.createUnitScene.errorMessage = "Zero length error"
-		} else {
-			//user can be only in one unit in the same time -> error
-			resp := w.ctx.Request(w.serverPID, &proto.CreateUnit{
-				Name:         name,
-				IsConfigured: false,
-				UserID:       w.createUnitScene.usersDropdown.strings[user],
-			}, utils.WaitTime)
-			val, err := resp.Result()
-			if err != nil {
-				w.createUnitScene.isCreateError = true
-				w.createUnitScene.errorMessage = err.Error()
-			}
-			if _, ok := val.(*proto.AcceptCreateUnit); ok {
-				w.createUnitScene.isInfoMessage = true
-				w.createUnitScene.infoMessage = "Success!"
-			}
-			if v, ok := val.(*proto.DenyCreateUnit); ok {
-				w.createUnitScene.isCreateError = true
-				w.createUnitScene.errorMessage = v.Info
+	w.createUnitScene.scheduler.Update(float64(rl.GetFrameTime()))
 
-			}
+	//go back button
+	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
+		mousePos := rl.GetMousePosition()
+		if rl.CheckCollisionPointRec(mousePos, w.createUnitScene.newUnitSection.usersDropdown.bounds) {
+			w.createUnitScene.newUnitSection.usersDropdown.focus = 1
+		} else {
+			w.createUnitScene.newUnitSection.usersDropdown.focus = 0
 		}
+	}
+
+	w.createUnitScene.newUnitSection.nameInput.Update()
+	w.createUnitScene.newUnitSection.isAcceptPressed = w.createUnitScene.newUnitSection.acceptButton.Update()
+	if w.createUnitScene.backButton.Update() {
+		w.goSceneBack()
+		return
+	}
+	//TODO add other from render
+	if w.createUnitScene.errorSection.isSetupError {
+		w.createUnitScene.errorSection.errorMessage = "Setup error, can't do this now!"
+		return
+	}
+
+	if w.createUnitScene.newUnitSection.isAcceptPressed {
+		w.CreateUnit()
 	}
 
 }
 func (w *Window) renderCreateUnitState() {
 	rl.DrawText(`Create unit Menu Page`, 50, 50, 20, rl.DarkGray)
+	w.createUnitScene.newUnitSection.nameInput.Render()
+	w.createUnitScene.newUnitSection.acceptButton.Render()
+	w.createUnitScene.backButton.Render()
+	gui.ListViewEx(
+		w.createUnitScene.newUnitSection.usersDropdown.bounds,
+		w.createUnitScene.newUnitSection.usersDropdown.strings,
+		&w.createUnitScene.newUnitSection.usersDropdown.idxScroll,
+		&w.createUnitScene.newUnitSection.usersDropdown.idxActiveElement,
+		w.createUnitScene.newUnitSection.usersDropdown.focus,
+	)
 
-	if w.createUnitScene.isCreateError || w.createUnitScene.isSetupError {
-		rl.DrawText(w.createUnitScene.errorMessage,
-			w.createUnitScene.errorPosition.x,
-			w.createUnitScene.errorPosition.y,
-			20,
-			rl.Red)
-	}
-	if w.createUnitScene.isInfoMessage {
-		rl.DrawText(w.createUnitScene.infoMessage,
-			w.createUnitScene.infoPosition.x,
-			w.createUnitScene.infoPosition.y,
-			20,
-			rl.Green)
-	}
-	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
-		mousePos := rl.GetMousePosition()
-		if rl.CheckCollisionPointRec(mousePos, w.createUnitScene.usersDropdown.bounds) {
-			w.createUnitScene.nameInput.Active()
-			w.createUnitScene.usersDropdown.focus = 0
-		} else if rl.CheckCollisionPointRec(mousePos, w.createUnitScene.usersDropdown.bounds) {
-			w.createUnitScene.nameInput.Deactivate()
-			w.createUnitScene.usersDropdown.focus = 1
-		} else {
-			w.createUnitScene.nameInput.Deactivate()
-			w.createUnitScene.usersDropdown.focus = 0
-		}
-	}
-	//rl.DrawText("Name of unit")
-
-	w.createUnitScene.nameInput.Render()
-
-	//rl.DrawText("Dropdown with users")
-	gui.ListViewEx(w.createUnitScene.usersDropdown.bounds, w.createUnitScene.usersDropdown.strings, &w.createUnitScene.usersDropdown.idxScroll, &w.createUnitScene.usersDropdown.idxActiveElement, w.createUnitScene.usersDropdown.focus)
-
-	//go back button
-	if gui.Button(w.createUnitScene.backButton.bounds, w.createUnitScene.backButton.text) {
-		w.goSceneBack()
-	}
 }
 
 //scene HC unit info  dodac guziki w polu desxc podzielnic na 4 kwadraty i np mapa, opis mzoe urzadzenia itd itd
