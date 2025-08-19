@@ -6,7 +6,7 @@ type InputBox struct {
 	Bounds  rl.Rectangle
 	text    []rune
 	length  int32
-	focus   bool
+	enabled bool
 	scrollX int32
 	//appearance config
 	cfg InputBoxConfig
@@ -78,17 +78,18 @@ func checkCharacterInput(key int32) bool {
 	return false
 }
 
-func NewInputBox(cfg *InputBoxConfig, bounds rl.Rectangle, focus bool) *InputBox {
+func NewInputBox(cfg *InputBoxConfig, bounds rl.Rectangle) *InputBox {
 	return &InputBox{
-		Bounds: bounds,
-		text:   make([]rune, 0, cfg.maxLength),
-		focus:  focus,
-		cfg:    *cfg,
+		Bounds:  bounds,
+		text:    make([]rune, 0, cfg.maxLength),
+		enabled: true,
+		cfg:     *cfg,
 	}
 }
 
 func (i *InputBox) Update() {
-	if i.focus {
+	mouse := rl.GetMousePosition()
+	if i.enabled && rl.CheckCollisionPointRec(mouse, i.Bounds) {
 		rl.SetMouseCursor(rl.MouseCursorIBeam)
 		for {
 			key := rl.GetCharPressed()
@@ -126,7 +127,6 @@ func (i *InputBox) Render() {
 	rl.DrawRectangleRec(i.Bounds, rl.White)
 	rl.DrawRectangleLinesEx(i.Bounds, i.cfg.lineThick, i.cfg.lineColor)
 
-	// Włączamy maskowanie rysowania
 	rl.BeginScissorMode(int32(i.Bounds.X), int32(i.Bounds.Y), int32(i.Bounds.Width), int32(i.Bounds.Height))
 
 	rl.DrawText(string(i.text),
@@ -134,17 +134,15 @@ func (i *InputBox) Render() {
 		int32(i.Bounds.Y+8),
 		i.cfg.fontsize,
 		i.cfg.textColor)
-	if i.focus {
+	if i.enabled {
 		cursorX := int32(i.Bounds.X) + i.cfg.leftMargin + int32(rl.MeasureText(string(i.text), i.cfg.fontsize)) - i.scrollX
 		cursorY1 := int32(i.Bounds.Y + 3)
 		cursorY2 := int32(i.Bounds.Y + i.Bounds.Height - 3)
 
-		// Animowany kursor (migający)
 		if int32(rl.GetTime()*2)%2 == 0 {
 			rl.DrawRectangle(cursorX, cursorY1, 2, cursorY2, i.cfg.textColor)
 		}
 	}
-	// Wyłączamy maskowanie
 	rl.EndScissorMode()
 }
 
@@ -158,8 +156,8 @@ func (i *InputBox) Clear() {
 	i.scrollX = 0
 }
 
-func (i *InputBox) Active() { i.focus = true }
+func (i *InputBox) Active() { i.enabled = true }
 func (i *InputBox) Deactivate() {
-	i.focus = false
+	i.enabled = false
 	rl.SetMouseCursor(rl.MouseCursorDefault)
 }
