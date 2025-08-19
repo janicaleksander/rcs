@@ -3,10 +3,11 @@ package component
 import rl "github.com/gen2brain/raylib-go/raylib"
 
 type Button struct {
-	Bounds rl.Rectangle
-	text   string
-	focus  bool
-	cfg    ButtonConfig
+	Bounds  rl.Rectangle
+	text    string
+	focus   bool
+	enabled bool
+	cfg     ButtonConfig
 }
 
 type ButtonConfig struct {
@@ -48,17 +49,20 @@ func WithButtonColor(color rl.Color) func(*ButtonConfig) {
 }
 func NewButton(cfg *ButtonConfig, bounds rl.Rectangle, text string, focus bool) *Button {
 	return &Button{
-		Bounds: bounds,
-		text:   text,
-		focus:  focus,
-		cfg:    *cfg,
+		Bounds:  bounds,
+		text:    text,
+		focus:   focus,
+		enabled: true,
+		cfg:     *cfg,
 	}
 }
 
 func (b *Button) Update() bool {
 	mouse := rl.GetMousePosition()
 	hovered := rl.CheckCollisionPointRec(mouse, b.Bounds)
-
+	if !b.enabled {
+		return false
+	}
 	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) && hovered {
 		b.focus = true
 	}
@@ -92,9 +96,10 @@ func (b *Button) Render() {
 		b.cfg.textColor,
 	)
 }
-
-func (b *Button) Active() { b.focus = true }
+func (b *Button) SetActive(bl bool) { b.enabled = bl }
+func (b *Button) Active()           { b.enabled = true }
 func (b *Button) Deactivate() {
 	b.focus = false
+	b.enabled = false
 	rl.SetMouseCursor(rl.MouseCursorDefault)
 }

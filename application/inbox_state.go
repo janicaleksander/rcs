@@ -249,11 +249,13 @@ func (w *Window) setupInboxScene() {
 }
 
 func (w *Window) updateInboxState() {
-	if w.inboxScene.toolboxSection.isGoBackButtonPressed {
-		w.goSceneBack()
-	}
 
-	w.inboxScene.messageSection.textInput.Update()
+	modalOpen := w.inboxScene.toolboxSection.showAddConversationModal
+	w.inboxScene.toolboxSection.backButton.SetActive(!modalOpen)
+	w.inboxScene.toolboxSection.addConversationButton.SetActive(!modalOpen)
+	w.inboxScene.toolboxSection.refreshConversationsButton.SetActive(!modalOpen)
+	w.inboxScene.messageSection.sendButton.SetActive(!modalOpen)
+
 	w.inboxScene.toolboxSection.isGoBackButtonPressed = w.inboxScene.toolboxSection.backButton.Update()
 	if w.inboxScene.toolboxSection.addConversationButton.Update() {
 		// we need this if to remain windowbox on the screen
@@ -263,10 +265,19 @@ func (w *Window) updateInboxState() {
 	w.inboxScene.toolboxSection.isRefreshConversationPressed = w.inboxScene.toolboxSection.refreshConversationsButton.Update()
 	w.inboxScene.modalSection.isAcceptAddConversationPressed = w.inboxScene.modalSection.acceptAddConversationButton.Update()
 	w.inboxScene.messageSection.isSendButtonPressed = w.inboxScene.messageSection.sendButton.Update()
+
 	for i := range w.inboxScene.conversationSection.conversationsTabs {
 		if w.inboxScene.conversationSection.conversationsTabs[i].enterConversation.Update() {
 			w.inboxScene.conversationSection.conversationsTabs[i].isPressed = true
+			w.inboxScene.conversationSection.conversationsTabs[i].enterConversation.SetActive(!modalOpen)
 		}
+	}
+
+	//ACTIONS AFTER BUTTON UPDATES
+	w.inboxScene.messageSection.textInput.Update()
+
+	if w.inboxScene.toolboxSection.isGoBackButtonPressed {
+		w.goSceneBack()
 	}
 	w.inboxScene.conversationSection.activeConversation = -1
 	for i, tab := range w.inboxScene.conversationSection.conversationsTabs {
@@ -344,42 +355,6 @@ func (w *Window) updateInboxState() {
 }
 
 func (w *Window) renderInboxState() {
-	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
-		mousePos := rl.GetMousePosition()
-		w.inboxScene.toolboxSection.backButton.Deactivate()
-		w.inboxScene.toolboxSection.addConversationButton.Deactivate()
-		w.inboxScene.toolboxSection.refreshConversationsButton.Deactivate()
-		w.inboxScene.modalSection.acceptAddConversationButton.Deactivate()
-		w.inboxScene.messageSection.sendButton.Deactivate()
-
-		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.toolboxSection.backButton.Bounds) && !w.inboxScene.toolboxSection.showAddConversationModal {
-			w.inboxScene.toolboxSection.backButton.Active()
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.toolboxSection.addConversationButton.Bounds) && !w.inboxScene.toolboxSection.showAddConversationModal {
-			w.inboxScene.toolboxSection.addConversationButton.Active()
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.toolboxSection.refreshConversationsButton.Bounds) && !w.inboxScene.toolboxSection.showAddConversationModal {
-			w.inboxScene.toolboxSection.refreshConversationsButton.Active()
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.modalSection.acceptAddConversationButton.Bounds) {
-			w.inboxScene.modalSection.acceptAddConversationButton.Active()
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.inboxScene.messageSection.sendButton.Bounds) && !w.inboxScene.toolboxSection.showAddConversationModal {
-			w.inboxScene.messageSection.sendButton.Active()
-		}
-		if w.inboxScene.toolboxSection.showAddConversationModal {
-			for i := range w.inboxScene.conversationSection.conversationsTabs {
-				w.inboxScene.conversationSection.conversationsTabs[i].enterConversation.Deactivate()
-			}
-			w.inboxScene.messageSection.textInput.Deactivate()
-		} else {
-			w.inboxScene.messageSection.textInput.Active()
-			for i := range w.inboxScene.conversationSection.conversationsTabs {
-				w.inboxScene.conversationSection.conversationsTabs[i].enterConversation.Active()
-			}
-		}
-
-	}
 	//toolbox
 	rl.DrawRectangle(
 		int32(w.inboxScene.toolboxSection.toolboxArea.X),
