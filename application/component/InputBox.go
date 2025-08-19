@@ -161,3 +161,4 @@ func (i *InputBox) Deactivate() {
 	i.enabled = false
 	rl.SetMouseCursor(rl.MouseCursorDefault)
 }
+func (i *InputBox) SetActive(b bool) { i.enabled = b }

@@ -1,21 +1,14 @@
 package application
 
 import (
-	"fmt"
-	"strconv"
-	"sync"
-	"time"
-
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"github.com/google/uuid"
 	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/proto"
-	"github.com/janicaleksander/bcs/utils"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type InfoUserScene struct {
+	backButton          component.Button
 	unitListSection     UnitListSection
 	userListSection     UserListSection
 	descriptionSection  DescriptionSection
@@ -33,6 +26,8 @@ type UserListSection struct {
 	users                []*proto.User
 	usersList            ListSlider
 	lastProcessedUserIdx int32
+	currSelectedUserID   string
+	isInUnit             bool
 }
 
 type DescriptionSection struct {
@@ -40,10 +35,8 @@ type DescriptionSection struct {
 	descriptionName    string
 	descriptionSurname string
 	descriptionLVL     string
-	currSelectedUserID string
 }
 type ActionSection struct {
-	isInUnit            bool
 	actionButtonArea    rl.Rectangle
 	inUnitBackground    rl.Rectangle
 	notInUnitBackground rl.Rectangle
@@ -77,69 +70,9 @@ type SendMessageSection struct {
 
 func (w *Window) InfoUserSceneSetup() {
 	w.infoUserScene.Reset()
-
-	res, err := utils.MakeRequest(utils.NewRequest(w.ctx, w.serverPID, &proto.GetAllUnits{}))
-	if err != nil {
-		// context deadline exceeded
-	}
-
-	w.infoUserScene.unitListSection.units = make([]*proto.Unit, 0, 64)
-
-	if v, ok := res.(*proto.AllUnits); ok {
-		for _, unit := range v.Units {
-			w.infoUserScene.unitListSection.units = append(w.infoUserScene.unitListSection.units, unit)
-		}
-	} else {
-		// TODO error
-	}
-
+	w.FetchUnits()
 	//TODO get proper lvl
-	res, err = utils.MakeRequest(utils.NewRequest(w.ctx, w.serverPID, &proto.GetUserAboveLVL{Lvl: -1}))
-	if err != nil {
-		// context deadline exceeded
-	}
-
-	w.infoUserScene.userListSection.users = make([]*proto.User, 0, 64)
-	if v, ok := res.(*proto.UsersAboveLVL); ok {
-		for _, user := range v.Users {
-			w.infoUserScene.userListSection.users = append(w.infoUserScene.userListSection.users, user)
-		}
-	} else {
-		// TODO error
-	}
-
-	//cache users information
-	w.infoUserScene.unitListSection.userToUnitCache = make(map[string]string, len(w.infoUserScene.userListSection.users))
-	var waitGroup sync.WaitGroup
-	cacheChan := make(chan struct {
-		userID string
-		unitID string
-	}, 1024)
-
-	for _, user := range w.infoUserScene.userListSection.users {
-		waitGroup.Add(1)
-		go func(wg *sync.WaitGroup, userID string) {
-			defer wg.Done()
-			res, err = utils.MakeRequest(utils.NewRequest(w.ctx, w.serverPID, &proto.IsUserInUnit{Id: userID}))
-			if err != nil {
-				//context deadline exceeded
-			}
-			if v, ok := res.(*proto.UserInUnit); ok {
-				cacheChan <- struct {
-					userID string
-					unitID string
-				}{userID: userID, unitID: v.UnitID}
-			}
-
-		}(&waitGroup, user.Id)
-	}
-	go func() {
-		waitGroup.Wait()
-		close(cacheChan)
-	}()
-	for v := range cacheChan {
-		w.infoUserScene.unitListSection.userToUnitCache[v.userID] = v.unitID
-	}
+	w.FetchUsers()
 	w.infoUserScene.userListSection.usersList = ListSlider{
 		strings: make([]string, 0, 64),
 		bounds: rl.NewRectangle(
@@ -147,7 +80,7 @@ func (w *Window) InfoUserSceneSetup() {
 			0,
 			(2.0/9.0)*float32(w.width),
 			float32(w.height)),
-		idxActiveElement: -1,
+		idxActiveElement: -1, // ?
 		focus:            0,
 		idxScroll:        -1,
 	}
@@ -155,61 +88,56 @@ func (w *Window) InfoUserSceneSetup() {
 	for _, user := range w.infoUserScene.userListSection.users {
 		w.infoUserScene.userListSection.usersList.strings = append(w.infoUserScene.userListSection.usersList.strings, user.Personal.Name+"\n"+user.Personal.Surname)
 	}
-	w.infoUserScene.descriptionBounds = rl.NewRectangle(
-		w.infoUserScene.usersList.bounds.Width,
-		w.infoUserScene.usersList.bounds.Y,
+
+	w.infoUserScene.descriptionSection.descriptionBounds = rl.NewRectangle(
+		w.infoUserScene.userListSection.usersList.bounds.Width,
+		w.infoUserScene.userListSection.usersList.bounds.Y,
 		(7.0/9.0)*float32(w.width),
 		(7.0/9.0)*float32(w.height),
 	)
-	w.infoUserScene.actionButtonArea = rl.NewRectangle(
-		w.infoUserScene.descriptionBounds.X,
-		w.infoUserScene.descriptionBounds.Y+w.infoUserScene.descriptionBounds.Height,
-		w.infoUserScene.descriptionBounds.Width,
+
+	w.infoUserScene.actionSection.actionButtonArea = rl.NewRectangle(
+		w.infoUserScene.descriptionSection.descriptionBounds.X,
+		w.infoUserScene.descriptionSection.descriptionBounds.Y+w.infoUserScene.descriptionSection.descriptionBounds.Height,
+		w.infoUserScene.descriptionSection.descriptionBounds.Width,
 		(2.0/9.0)*float32(w.height))
 	var padding float32 = 80
 	//add to unit button
-	w.infoUserScene.addButton = Button{
-		bounds: rl.NewRectangle(
-			w.infoUserScene.actionButtonArea.X+padding,
-			w.infoUserScene.actionButtonArea.Y,
-			100,
-			80),
-		text: "+",
-	}
-	w.infoUserScene.inUnitBackground = rl.NewRectangle(
-		w.infoUserScene.addButton.bounds.X,
-		w.infoUserScene.addButton.bounds.Y,
-		w.infoUserScene.addButton.bounds.Width,
-		w.infoUserScene.addButton.bounds.Height)
+	w.infoUserScene.actionSection.addButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		w.infoUserScene.actionSection.actionButtonArea.X+padding,
+		w.infoUserScene.actionSection.actionButtonArea.Y,
+		100,
+		80), "+", false)
+
+	w.infoUserScene.actionSection.inUnitBackground = rl.NewRectangle(
+		w.infoUserScene.actionSection.addButton.Bounds.X,
+		w.infoUserScene.actionSection.addButton.Bounds.Y,
+		w.infoUserScene.actionSection.addButton.Bounds.Width,
+		w.infoUserScene.actionSection.addButton.Bounds.Height)
+
 	//remove from unit
-	w.infoUserScene.removeButton = Button{
-		bounds: rl.NewRectangle(
-			w.infoUserScene.actionButtonArea.X+padding+w.infoUserScene.addButton.bounds.Width,
-			w.infoUserScene.actionButtonArea.Y,
-			100,
-			80),
-		text: "-",
-	}
-	w.infoUserScene.notInUnitBackground = rl.NewRectangle(
-		w.infoUserScene.removeButton.bounds.X,
-		w.infoUserScene.removeButton.bounds.Y,
-		w.infoUserScene.removeButton.bounds.Width,
-		w.infoUserScene.removeButton.bounds.Height)
+	w.infoUserScene.actionSection.removeButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		w.infoUserScene.actionSection.actionButtonArea.X+padding+w.infoUserScene.actionSection.addButton.Bounds.Width,
+		w.infoUserScene.actionSection.actionButtonArea.Y,
+		100,
+		80), "-", false)
 
-	w.infoUserScene.inboxButton = Button{
-		bounds: rl.NewRectangle(
-			w.infoUserScene.removeButton.bounds.X+padding,
-			w.infoUserScene.removeButton.bounds.Y,
-			w.infoUserScene.removeButton.bounds.Width,
-			w.infoUserScene.removeButton.bounds.Height),
-		text: "Send \n message",
-	}
+	w.infoUserScene.actionSection.notInUnitBackground = rl.NewRectangle(
+		w.infoUserScene.actionSection.removeButton.Bounds.X,
+		w.infoUserScene.actionSection.removeButton.Bounds.Y,
+		w.infoUserScene.actionSection.removeButton.Bounds.Width,
+		w.infoUserScene.actionSection.removeButton.Bounds.Height)
 
-	if len(w.infoUserScene.users) > 0 {
-		w.infoUserScene.usersList.idxActiveElement = 0
+	w.infoUserScene.actionSection.inboxButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		w.infoUserScene.actionSection.removeButton.Bounds.X+padding,
+		w.infoUserScene.actionSection.removeButton.Bounds.Y,
+		w.infoUserScene.actionSection.removeButton.Bounds.Width,
+		w.infoUserScene.actionSection.removeButton.Bounds.Height), "Send message!", false)
+
+	if len(w.infoUserScene.userListSection.users) > 0 {
+		w.infoUserScene.userListSection.usersList.idxActiveElement = 0
 	} else {
-		w.infoUserScene.usersList.idxActiveElement = -1
-
+		w.infoUserScene.userListSection.usersList.idxActiveElement = -1
 	}
 	//TODO make one rule with ruleLVL when i can add what lvl and what lvl can do sth
 	//e.g lvl5,lvl4 can only add lvl5; lvl4 can only add a lvl 3 2 1
@@ -217,335 +145,229 @@ func (w *Window) InfoUserSceneSetup() {
 	//or we cant add 5lvl to units cause their have access everywhere
 	//POPUP after add button (sliders with units)
 
-	w.infoUserScene.addModal = Modal{
+	w.infoUserScene.addActionSection.addModal = Modal{
 		background: rl.NewRectangle(0, 0, float32(w.width), float32(w.height)),
 		bgColor:    rl.Fade(rl.Gray, 0.3),
 		core:       rl.NewRectangle(float32(w.width/2-150.0), float32(w.height/2-150.0), 300, 300),
-	}
-	w.infoUserScene.unitsToAssignSlider = ListSlider{
-		strings: make([]string, 0, 64),
-		bounds: rl.NewRectangle(
-			w.infoUserScene.addModal.core.X+4,
-			w.infoUserScene.addModal.core.Y+50,
-			(3.9/4.0)*float32(w.infoUserScene.addModal.core.Width),
-			(2.5/4.0)*float32(w.infoUserScene.addModal.core.Height)),
-		idxActiveElement: -1,
-		focus:            0,
-		idxScroll:        0,
-	}
-	w.infoUserScene.acceptAddButton = Button{
-		bounds: rl.NewRectangle(
-			w.infoUserScene.unitsToAssignSlider.bounds.X,
-			w.infoUserScene.unitsToAssignSlider.bounds.Y+200,
-			(3.9/4.0)*float32(w.infoUserScene.addModal.core.Width),
-			30),
-		text: "Add to this unit",
 	}
 
-	//////
-	w.infoUserScene.removeModal = Modal{
+	w.infoUserScene.addActionSection.unitsToAssignSlider = ListSlider{
+		strings: make([]string, 0, 64),
+		bounds: rl.NewRectangle(
+			w.infoUserScene.addActionSection.addModal.core.X+4,
+			w.infoUserScene.addActionSection.addModal.core.Y+50,
+			(3.9/4.0)*float32(w.infoUserScene.addActionSection.addModal.core.Width),
+			(2.5/4.0)*float32(w.infoUserScene.addActionSection.addModal.core.Height)),
+		idxActiveElement: -1, // ?
+		focus:            0,
+		idxScroll:        0,
+	}
+
+	w.infoUserScene.addActionSection.acceptAddButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		w.infoUserScene.addActionSection.unitsToAssignSlider.bounds.X,
+		w.infoUserScene.addActionSection.unitsToAssignSlider.bounds.Y+200,
+		(3.9/4.0)*float32(w.infoUserScene.addActionSection.addModal.core.Width),
+		30), "Add to this unit", false)
+
+	w.infoUserScene.removeActionSection.removeModal = Modal{
 		background: rl.NewRectangle(0, 0, float32(w.width), float32(w.height)),
 		bgColor:    rl.Fade(rl.Gray, 0.3),
 		core:       rl.NewRectangle(float32(w.width/2-150.0), float32(w.height/2-150.0), 300, 300),
 	}
-	w.infoUserScene.usersUnitsSlider = ListSlider{
+	w.infoUserScene.removeActionSection.usersUnitsSlider = ListSlider{
 		strings: make([]string, 0, 64),
 		bounds: rl.NewRectangle(
-			w.infoUserScene.removeModal.core.X+4,
-			w.infoUserScene.removeModal.core.Y+50,
-			(3.9/4.0)*float32(w.infoUserScene.removeModal.core.Width),
-			(2.5/4.0)*float32(w.infoUserScene.removeModal.core.Height)),
-		idxActiveElement: -1,
+			w.infoUserScene.removeActionSection.removeModal.core.X+4,
+			w.infoUserScene.removeActionSection.removeModal.core.Y+50,
+			(3.9/4.0)*float32(w.infoUserScene.removeActionSection.removeModal.core.Width),
+			(2.5/4.0)*float32(w.infoUserScene.removeActionSection.removeModal.core.Height)),
+		idxActiveElement: -1, // ?
 		focus:            0,
 		idxScroll:        0,
 	}
-	w.infoUserScene.acceptRemoveButton = Button{
-		bounds: rl.NewRectangle(
-			w.infoUserScene.usersUnitsSlider.bounds.X,
-			w.infoUserScene.usersUnitsSlider.bounds.Y+200,
-			(3.9/4.0)*float32(w.infoUserScene.removeModal.core.Width),
-			30),
-		text: "Remove from  this unit",
-	}
-	w.infoUserScene.inboxModal = Modal{
+	w.infoUserScene.removeActionSection.acceptRemoveButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		w.infoUserScene.removeActionSection.usersUnitsSlider.bounds.X,
+		w.infoUserScene.removeActionSection.usersUnitsSlider.bounds.Y+200,
+		(3.9/4.0)*float32(w.infoUserScene.removeActionSection.removeModal.core.Width),
+		30), "Remove from unit", false)
+
+	w.infoUserScene.sendMessageSection.inboxModal = Modal{
 		background: rl.NewRectangle(0, 0, float32(w.width), float32(w.height)),
 		bgColor:    rl.Fade(rl.Gray, 0.3),
 		core:       rl.NewRectangle(float32(w.width/2-150.0), float32(w.height/2-150.0), 400, 200),
 	}
 
-	w.infoUserScene.inboxInput = *component.NewInputBox(
+	w.infoUserScene.sendMessageSection.inboxInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
-			w.infoUserScene.inboxModal.core.X+10,
-			w.infoUserScene.inboxModal.core.Y+100,
+			w.infoUserScene.sendMessageSection.inboxModal.core.X+10,
+			w.infoUserScene.sendMessageSection.inboxModal.core.Y+100,
 			300,
-			40),
-		false)
+			40))
 
-	w.infoUserScene.sendMessage = Button{
-		bounds: rl.NewRectangle(w.infoUserScene.inboxInput.Bounds.X+w.infoUserScene.inboxInput.Bounds.Width+10,
-			w.infoUserScene.inboxInput.Bounds.Y,
-			50, 50),
-		text: "Send!",
-	}
+	w.infoUserScene.sendMessageSection.sendMessage = *component.NewButton(component.NewButtonConfig(),
+		rl.NewRectangle(
+			w.infoUserScene.sendMessageSection.inboxInput.Bounds.X+w.infoUserScene.sendMessageSection.inboxInput.Bounds.Width+10,
+			w.infoUserScene.sendMessageSection.inboxInput.Bounds.Y,
+			50,
+			50),
+		"Send!", false)
 
-	w.infoUserScene.activeUserCircle = Circle{
-		x:      int32(w.infoUserScene.inboxModal.core.X + 10),
-		y:      int32(w.infoUserScene.inboxModal.core.Y),
+	w.infoUserScene.sendMessageSection.activeUserCircle = Circle{
+		x:      int32(w.infoUserScene.sendMessageSection.inboxModal.core.X + 10),
+		y:      int32(w.infoUserScene.sendMessageSection.inboxModal.core.Y),
 		radius: 10,
 	}
+
+	w.infoUserScene.backButton = *component.NewButton(
+		component.NewButtonConfig(),
+		rl.NewRectangle(
+			float32(w.width-100),
+			float32(w.height-50),
+			100,
+			50,
+		),
+		"Go back",
+		false)
 
 }
 
 func (w *Window) updateInfoUserState() {
-	w.infoUserScene.inboxInput.Update()
+	//TODO Maybe add some control to slider etc their focus
+	modalAddOpen := w.infoUserScene.actionSection.showAddModal
+	modalRemoveOpen := w.infoUserScene.actionSection.showRemoveModal
+	modalSendOpen := w.infoUserScene.actionSection.showInboxModal
+	cond := !modalAddOpen && !modalRemoveOpen && !modalSendOpen
+	w.infoUserScene.sendMessageSection.inboxInput.SetActive(cond)
+	w.infoUserScene.actionSection.addButton.SetActive(cond)
+	w.infoUserScene.actionSection.removeButton.SetActive(cond)
+	w.infoUserScene.actionSection.inboxButton.SetActive(cond)
+	w.infoUserScene.addActionSection.acceptAddButton.SetActive(cond)
+	w.infoUserScene.removeActionSection.acceptRemoveButton.SetActive(cond)
+	w.infoUserScene.sendMessageSection.sendMessage.SetActive(cond)
+	w.infoUserScene.backButton.SetActive(cond)
 
-	currentUserIdx := w.infoUserScene.usersList.idxActiveElement
-	if currentUserIdx != -1 && currentUserIdx != w.infoUserScene.lastProcessedUserIdx {
-		//
-		user := w.infoUserScene.users[w.infoUserScene.usersList.idxActiveElement]
-		w.infoUserScene.currSelectedUserID = user.Id
-		//TODO in the v2 version we need to track more than
-		// one unit ID
-		if _, ok := w.infoUserScene.userToUnitCache[user.Id]; ok {
-			w.infoUserScene.isInUnit = true
-		} else {
-			w.infoUserScene.isInUnit = false
-		}
-		//
-		w.infoUserScene.descriptionName = user.Personal.Name
-		w.infoUserScene.descriptionSurname = user.Personal.Surname
-		w.infoUserScene.descriptionLVL = strconv.Itoa(int(user.RuleLvl))
-		w.infoUserScene.lastProcessedUserIdx = currentUserIdx
+	w.infoUserScene.sendMessageSection.inboxInput.Update()
+
+	if w.infoUserScene.actionSection.addButton.Update() {
+		w.infoUserScene.actionSection.showAddModal = true
 	}
+	if w.infoUserScene.actionSection.removeButton.Update() {
+		w.infoUserScene.actionSection.showRemoveModal = true
+	}
+	if w.infoUserScene.actionSection.inboxButton.Update() {
+		w.infoUserScene.actionSection.showInboxModal = true
+	}
+
+	w.infoUserScene.addActionSection.isConfirmAddButtonPressed = w.infoUserScene.addActionSection.acceptAddButton.Update()
+	w.infoUserScene.removeActionSection.isConfirmRemoveButtonPressed = w.infoUserScene.removeActionSection.acceptRemoveButton.Update()
+	w.infoUserScene.sendMessageSection.isSendMessageButtonPressed = w.infoUserScene.sendMessageSection.sendMessage.Update()
+	if w.infoUserScene.backButton.Update() {
+		w.goSceneBack()
+		return
+	}
+
+	w.UpdateDescription()
 	//TODO in v2 version add ability to have more than one unit by commanders type
 	//and here change layout when he has more than one unit modal shows up with all units
 	//and we have to choose unit to perform chose action
-	if !w.infoUserScene.isInUnit { // shows add to unit
-		//fil userUnits ( TODO in v2 for loop through many units)
-		if gui.Button(w.infoUserScene.addButton.bounds, w.infoUserScene.addButton.text) {
-			for _, unit := range w.infoUserScene.units {
-				w.infoUserScene.unitsToAssignSlider.strings = append(w.infoUserScene.unitsToAssignSlider.strings, unit.Id)
-				/*
-					cacheUnit := w.infoUserScene.userToUnitCache[w.infoUserScene.currSelectedUserID]
-					if cacheUnit == unit.Id {
-						continue
-					}
-					in v2 version. we dont need to show units that we are already enrolled in
-				*/
-
-			}
-			w.infoUserScene.showAddModal = true
-
-		}
-		if w.infoUserScene.isConfirmAddButtonPressed {
-			if w.infoUserScene.unitsToAssignSlider.idxActiveElement >= 0 {
-				unit := w.infoUserScene.units[w.infoUserScene.unitsToAssignSlider.idxActiveElement]
-				resp := w.ctx.Request(w.serverPID, &proto.AssignUserToUnit{
-					UserID: w.infoUserScene.currSelectedUserID,
-					UnitID: unit.Id,
-				}, utils.WaitTime)
-				val, err := resp.Result()
-				if _, ok := val.(*proto.FailureOfAssign); ok || err != nil {
-					// TODO failure
-				}
-				if _, ok := val.(*proto.SuccessOfAssign); ok {
-					//TODO success
-					w.infoUserScene.userToUnitCache[w.infoUserScene.currSelectedUserID] = unit.Id
-					w.infoUserScene.isInUnit = true
-
-				}
-			}
-
-		}
-	} else {
-		rl.DrawRectangle(int32(w.infoUserScene.inUnitBackground.X),
-			int32(w.infoUserScene.inUnitBackground.Y),
-			int32(w.infoUserScene.inUnitBackground.Width),
-			int32(w.infoUserScene.inUnitBackground.Height),
-			rl.Gray)
-		rl.DrawText("User is \n in unit", int32(w.infoUserScene.inUnitBackground.X), int32(w.infoUserScene.inUnitBackground.Y), 16, rl.White)
-
-	}
-	if w.infoUserScene.isInUnit { // shows remove  unit
-		if gui.Button(w.infoUserScene.removeButton.bounds, w.infoUserScene.removeButton.text) {
-			w.infoUserScene.usersUnitsSlider.strings = append(w.infoUserScene.usersUnitsSlider.strings, w.infoUserScene.userToUnitCache[w.infoUserScene.currSelectedUserID])
-			w.infoUserScene.showRemoveModal = true
-		}
-		if w.infoUserScene.isConfirmRemoveButtonPressed {
-			if w.infoUserScene.usersUnitsSlider.idxActiveElement >= 0 {
-				unit := w.infoUserScene.units[w.infoUserScene.usersUnitsSlider.idxActiveElement]
-				resp := w.ctx.Request(w.serverPID, &proto.DeleteUserFromUnit{
-					UserID: w.infoUserScene.currSelectedUserID,
-					UnitID: unit.Id,
-				}, utils.WaitTime)
-				val, err := resp.Result()
-				if _, ok := val.(*proto.FailureOfDelete); ok || err != nil {
-					// TODO failure
-				}
-				if _, ok := val.(*proto.SuccessOfDelete); ok {
-					//TODO success
-
-					//TODO in v2 map str->[]str and then we have to iterate through
-					// this slice and delete exact unit
-					delete(w.infoUserScene.userToUnitCache, w.infoUserScene.currSelectedUserID)
-					w.infoUserScene.isInUnit = false
-
-				}
-			}
-
-		}
-	} else {
-		rl.DrawRectangle(int32(w.infoUserScene.notInUnitBackground.X),
-			int32(w.infoUserScene.notInUnitBackground.Y),
-			int32(w.infoUserScene.notInUnitBackground.Width),
-			int32(w.infoUserScene.notInUnitBackground.Height),
-			rl.Gray)
-		rl.DrawText("User is not \n in unit", int32(w.infoUserScene.notInUnitBackground.X), int32(w.infoUserScene.notInUnitBackground.Y), 16, rl.White)
-
-	}
-
-	if gui.Button(w.infoUserScene.inboxButton.bounds, w.infoUserScene.inboxButton.text) {
-		resp := w.ctx.Request(w.serverPID, &proto.IsOnline{Uuid: w.infoUserScene.currSelectedUserID}, utils.WaitTime)
-		res, err := resp.Result()
-		_, ok := res.(*proto.Online)
-		if !ok || err != nil {
-			w.infoUserScene.activeUserCircle.color = rl.Red
-		} else {
-			w.infoUserScene.activeUserCircle.color = rl.Green
-		}
-		w.infoUserScene.showInboxModal = true
-	}
-	if w.infoUserScene.isSendMessageButtonPressed {
-		message := w.infoUserScene.inboxInput.GetText()
-		resp := w.ctx.Request(w.serverPID,
-			&proto.GetLoggedInUUID{
-				Pid: &proto.PID{
-					Address: w.ctx.PID().Address,
-					Id:      w.ctx.PID().ID}},
-			utils.WaitTime)
-		res, err := resp.Result()
-		v, ok := res.(*proto.LoggedInUUID)
-		if !ok || err != nil {
-			//TODO error
-		}
-
-		sender := v.Id
-
-		resp = w.ctx.Request(w.messageServicePID, &proto.FillConversationID{
-			SenderID:   sender,
-			ReceiverID: w.infoUserScene.currSelectedUserID,
-		}, utils.WaitTime)
-		res, err = resp.Result()
-		//TOOD finish the err handling sth like messenger type of send error some maybe red circle idk
-		if err != nil {
-			fmt.Println("TUTUAJ")
-			panic(err.Error())
-		}
-		var cnvID string
-		if v, ok := res.(*proto.SuccessOfFillConversationID); ok {
-			cnvID = v.Id
-		} else {
-			panic("ERROR CNV ID")
-		}
-		n := time.Now()
-		resp = w.ctx.Request(w.messageServicePID, &proto.SendMessage{
-			Receiver: w.infoUserScene.currSelectedUserID,
-			Message: &proto.Message{
-				Id:             uuid.New().String(),
-				SenderID:       sender,
-				ConversationID: cnvID,
-				Content:        message,
-				SentAt:         timestamppb.Now(),
-			}}, utils.WaitTime)
-		_, err = resp.Result()
-		//TOOD finish the err handling sth like messenger type of send error some maybe red circle idk
-		if err != nil {
-			panic(err.Error())
-		}
-		//reset
-		fmt.Println("CZAS SENDINGu", time.Since(n))
-		w.infoUserScene.inboxInput.Clear()
-	}
-
+	w.AddToUnit()
+	w.RemoveFromUnit()
+	w.SendMessage()
 }
 
+//goback
+// add to unit
+// remove from unit
+// send message
+
+// modal remove
+// modal add
+// modal send
+
+// slider one
+// slider two
+// input box
 func (w *Window) renderInfoUserState() {
-	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
-		mousePos := rl.GetMousePosition()
-		if rl.CheckCollisionPointRec(mousePos, w.infoUserScene.usersList.bounds) {
-			w.infoUserScene.usersList.focus = 1
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.infoUserScene.unitsToAssignSlider.bounds) {
-			w.infoUserScene.usersList.focus = 0
-			w.infoUserScene.unitsToAssignSlider.focus = 1
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.infoUserScene.inboxInput.Bounds) {
-			w.infoUserScene.inboxInput.Active()
-		} else {
-			w.infoUserScene.inboxInput.Deactivate()
-		}
-		if w.infoUserScene.showAddModal || w.infoUserScene.showRemoveModal || w.infoUserScene.showInboxModal {
-			w.infoUserScene.usersList.focus = 0
-		}
+	w.infoUserScene.backButton.Render()
+	w.infoUserScene.actionSection.addButton.Render()
+	w.infoUserScene.actionSection.removeButton.Render()
+	w.infoUserScene.actionSection.inboxButton.Render()
 
-	}
-	gui.ListViewEx(w.infoUserScene.usersList.bounds, w.infoUserScene.usersList.strings, &w.infoUserScene.usersList.idxScroll, &w.infoUserScene.usersList.idxActiveElement, w.infoUserScene.usersList.focus)
-	rl.DrawRectangle(int32(w.infoUserScene.descriptionBounds.X), int32(w.infoUserScene.descriptionBounds.Y), int32(w.infoUserScene.descriptionBounds.Width), int32(w.infoUserScene.descriptionBounds.Height), rl.White)
+	gui.ListViewEx(
+		w.infoUserScene.userListSection.usersList.bounds,
+		w.infoUserScene.userListSection.usersList.strings,
+		&w.infoUserScene.userListSection.usersList.idxScroll,
+		&w.infoUserScene.userListSection.usersList.idxActiveElement,
+		w.infoUserScene.userListSection.usersList.focus)
+	rl.DrawRectangle(
+		int32(w.infoUserScene.descriptionSection.descriptionBounds.X),
+		int32(w.infoUserScene.descriptionSection.descriptionBounds.Y),
+		int32(w.infoUserScene.descriptionSection.descriptionBounds.Width),
+		int32(w.infoUserScene.descriptionSection.descriptionBounds.Height),
+		rl.White)
+
 	rl.DrawText(
-		w.infoUserScene.descriptionName+"\n"+
-			w.infoUserScene.descriptionSurname+"\n"+
-			w.infoUserScene.descriptionLVL+"\n", int32(w.infoUserScene.descriptionBounds.X), int32(w.infoUserScene.descriptionBounds.Y), 43, rl.Yellow)
-	if w.infoUserScene.showAddModal {
+		w.infoUserScene.descriptionSection.descriptionName+"\n"+
+			w.infoUserScene.descriptionSection.descriptionSurname+"\n"+
+			w.infoUserScene.descriptionSection.descriptionLVL+"\n",
+		int32(w.infoUserScene.descriptionSection.descriptionBounds.X),
+		int32(w.infoUserScene.descriptionSection.descriptionBounds.Y),
+		43, rl.Yellow)
+
+	if w.infoUserScene.actionSection.showAddModal {
 		rl.DrawRectangle(
-			int32(w.infoUserScene.addModal.background.X),
-			int32(w.infoUserScene.addModal.background.Y),
-			int32(w.infoUserScene.addModal.background.Width),
-			int32(w.infoUserScene.addModal.background.Height),
-			w.infoUserScene.addModal.bgColor)
-		if gui.WindowBox(w.infoUserScene.addModal.core, "TITLE") {
-			w.infoUserScene.showAddModal = false
-			w.infoUserScene.unitsToAssignSlider.strings = w.infoUserScene.unitsToAssignSlider.strings[:0]
+			int32(w.infoUserScene.addActionSection.addModal.background.X),
+			int32(w.infoUserScene.addActionSection.addModal.background.Y),
+			int32(w.infoUserScene.addActionSection.addModal.background.Width),
+			int32(w.infoUserScene.addActionSection.addModal.background.Height),
+			w.infoUserScene.addActionSection.addModal.bgColor)
+		if gui.WindowBox(w.infoUserScene.addActionSection.addModal.core, "TITLE") {
+			w.infoUserScene.actionSection.showAddModal = false
+			w.infoUserScene.addActionSection.unitsToAssignSlider.strings = w.infoUserScene.addActionSection.unitsToAssignSlider.strings[:0]
 		}
-		gui.ListViewEx(w.infoUserScene.unitsToAssignSlider.bounds,
-			w.infoUserScene.unitsToAssignSlider.strings,
-			&w.infoUserScene.unitsToAssignSlider.idxScroll,
-			&w.infoUserScene.unitsToAssignSlider.idxActiveElement,
-			w.infoUserScene.unitsToAssignSlider.focus)
+		gui.ListViewEx(
+			w.infoUserScene.addActionSection.unitsToAssignSlider.bounds,
+			w.infoUserScene.addActionSection.unitsToAssignSlider.strings,
+			&w.infoUserScene.addActionSection.unitsToAssignSlider.idxScroll,
+			&w.infoUserScene.addActionSection.unitsToAssignSlider.idxActiveElement,
+			w.infoUserScene.addActionSection.unitsToAssignSlider.focus)
+		w.infoUserScene.addActionSection.acceptAddButton.Render()
 
-		w.infoUserScene.isConfirmAddButtonPressed = gui.Button(w.infoUserScene.acceptAddButton.bounds, w.infoUserScene.acceptAddButton.text)
 	}
-	if w.infoUserScene.showRemoveModal {
+	if w.infoUserScene.actionSection.showRemoveModal {
 		rl.DrawRectangle(
-			int32(w.infoUserScene.removeModal.background.X),
-			int32(w.infoUserScene.removeModal.background.Y),
-			int32(w.infoUserScene.removeModal.background.Width),
-			int32(w.infoUserScene.removeModal.background.Height),
-			w.infoUserScene.removeModal.bgColor)
-		if gui.WindowBox(w.infoUserScene.removeModal.core, "TITLE") {
-			w.infoUserScene.showRemoveModal = false
-			w.infoUserScene.usersUnitsSlider.strings = w.infoUserScene.usersUnitsSlider.strings[:0]
+			int32(w.infoUserScene.removeActionSection.removeModal.background.X),
+			int32(w.infoUserScene.removeActionSection.removeModal.background.Y),
+			int32(w.infoUserScene.removeActionSection.removeModal.background.Width),
+			int32(w.infoUserScene.removeActionSection.removeModal.background.Height),
+			w.infoUserScene.removeActionSection.removeModal.bgColor)
+		if gui.WindowBox(w.infoUserScene.removeActionSection.removeModal.core, "TITLE") {
+			w.infoUserScene.actionSection.showRemoveModal = false
+			w.infoUserScene.removeActionSection.usersUnitsSlider.strings = w.infoUserScene.removeActionSection.usersUnitsSlider.strings[:0]
 		}
-		gui.ListViewEx(w.infoUserScene.usersUnitsSlider.bounds,
-			w.infoUserScene.usersUnitsSlider.strings,
-			&w.infoUserScene.usersUnitsSlider.idxScroll,
-			&w.infoUserScene.usersUnitsSlider.idxActiveElement,
-			w.infoUserScene.usersUnitsSlider.focus)
 
-		w.infoUserScene.isConfirmRemoveButtonPressed = gui.Button(w.infoUserScene.acceptRemoveButton.bounds, w.infoUserScene.acceptRemoveButton.text)
+		gui.ListViewEx(w.infoUserScene.removeActionSection.usersUnitsSlider.bounds,
+			w.infoUserScene.removeActionSection.usersUnitsSlider.strings,
+			&w.infoUserScene.removeActionSection.usersUnitsSlider.idxScroll,
+			&w.infoUserScene.removeActionSection.usersUnitsSlider.idxActiveElement,
+			w.infoUserScene.removeActionSection.usersUnitsSlider.focus)
+		w.infoUserScene.removeActionSection.acceptRemoveButton.Render()
+
 	}
 
-	if w.infoUserScene.showInboxModal {
-		if gui.WindowBox(w.infoUserScene.inboxModal.core, "TITLE") {
-			w.infoUserScene.showInboxModal = false
+	if w.infoUserScene.actionSection.showInboxModal {
+		if gui.WindowBox(w.infoUserScene.sendMessageSection.inboxModal.core, "TITLE") {
+			w.infoUserScene.actionSection.showInboxModal = false
 		}
 		rl.DrawCircle(
-			w.infoUserScene.activeUserCircle.x,
-			w.infoUserScene.activeUserCircle.y,
-			w.infoUserScene.activeUserCircle.radius,
-			w.infoUserScene.activeUserCircle.color)
-		w.infoUserScene.inboxInput.Render()
-		w.infoUserScene.isSendMessageButtonPressed = gui.Button(w.infoUserScene.sendMessage.bounds, w.infoUserScene.sendMessage.text)
+			w.infoUserScene.sendMessageSection.activeUserCircle.x,
+			w.infoUserScene.sendMessageSection.activeUserCircle.y,
+			w.infoUserScene.sendMessageSection.activeUserCircle.radius,
+			w.infoUserScene.sendMessageSection.activeUserCircle.color)
+
+		w.infoUserScene.sendMessageSection.sendMessage.Render()
+		w.infoUserScene.sendMessageSection.inboxInput.Render()
 
 	}
 
