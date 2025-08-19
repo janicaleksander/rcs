@@ -1,207 +1,149 @@
 package application
 
 import (
-	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"github.com/janicaleksander/bcs/User"
 	"github.com/janicaleksander/bcs/application/component"
-	"github.com/janicaleksander/bcs/proto"
 	"github.com/janicaleksander/bcs/utils"
-
-	"strconv"
 )
 
 type CreateUserScene struct {
+	scheduler      utils.Scheduler
+	backButton     component.Button
+	newUserSection NewUserSection
+	errorSection   ErrorSection3
+	infoSection    InfoSection2
+}
+type NewUserSection struct {
 	emailInput      component.InputBox
 	passwordInput   component.InputBox
 	rePasswordInput component.InputBox
 	ruleLevelInput  component.InputBox
 	nameInput       component.InputBox
 	surnameInput    component.InputBox
-	isError         bool
-	errorMessage    string
-	acceptButton    Button
-
-	isAccept      bool
-	acceptMessage string
-	//maybe sobe checkbox
+	acceptButton    component.Button
+	isAcceptPressed bool
 }
-
-func (s *CreateUserScene) Reset() {
-	s.isError = false
-	s.errorMessage = ""
-
-	s.isAccept = false
-	s.acceptMessage = ""
+type ErrorSection3 struct {
+	errorPopup   component.Popup
+	errorMessage string
+}
+type InfoSection2 struct {
+	infoPopup     component.Popup
+	acceptMessage string
 }
 
 func (w *Window) createUserSceneSetup() {
 	w.createUserScene.Reset()
+	w.createUserScene.scheduler.Update(float64(rl.GetFrameTime()))
+
 	//set constse.g maxLength
-	w.createUserScene.emailInput = *component.NewInputBox(
+	w.createUserScene.newUserSection.emailInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2-300),
 			200,
 			60,
-		), false)
+		))
 
-	w.createUserScene.passwordInput = *component.NewInputBox(
+	w.createUserScene.newUserSection.passwordInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)-200,
 			200,
-			60), false)
+			60))
 
-	w.createUserScene.rePasswordInput = *component.NewInputBox(
+	w.createUserScene.newUserSection.rePasswordInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)-100,
 			200,
-			60), false)
+			60))
 
-	w.createUserScene.ruleLevelInput = *component.NewInputBox(
+	w.createUserScene.newUserSection.ruleLevelInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2),
 			200,
 			60,
-		), false)
+		))
 
-	w.createUserScene.nameInput = *component.NewInputBox(
+	w.createUserScene.newUserSection.nameInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)+100,
 			200,
-			60), false)
+			60))
 
-	w.createUserScene.surnameInput = *component.NewInputBox(
+	w.createUserScene.newUserSection.surnameInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(w.width/2)-100,
 			float32(w.height/2)+200,
 			200,
 			60,
-		), false)
+		))
 
-	w.createUserScene.acceptButton = Button{
-		bounds: rl.NewRectangle(
-			float32(w.width/2)-100,
-			float32(w.height/2+280),
+	w.createUserScene.newUserSection.acceptButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		float32(w.width/2)-100,
+		float32(w.height/2+280),
+		200,
+		60), "Accept", false)
+
+	w.createUserScene.backButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+		float32(w.width/2)-150,
+		float32(w.height/2+380),
+		200,
+		60), "Go back", false)
+
+	w.createUserScene.errorSection.errorPopup = *component.NewPopup(
+		component.NewPopupConfig(),
+		rl.NewRectangle(float32(w.width/2)-150,
+			float32(w.height/2+480),
 			200,
 			60),
-		text: "ACCEPT",
-	}
+		&w.createUserScene.errorSection.errorMessage)
+	w.createUserScene.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(),
+		rl.NewRectangle(float32(w.width/2)-150,
+			float32(w.height/2+480),
+			200,
+			60),
+		&w.createUserScene.infoSection.acceptMessage)
 }
 
 func (w *Window) updateCreateUserState() {
-	w.createUserScene.emailInput.Update()
-	w.createUserScene.passwordInput.Update()
-	w.createUserScene.rePasswordInput.Update()
-	w.createUserScene.ruleLevelInput.Update()
-	w.createUserScene.nameInput.Update()
-	w.createUserScene.surnameInput.Update()
-	if gui.Button(w.createUserScene.acceptButton.bounds, w.createUserScene.acceptButton.text) {
-		w.createUserScene.Reset()
-		email := w.createUserScene.emailInput.GetText()
-		password := w.createUserScene.passwordInput.GetText()
-		rePassword := w.createUserScene.rePasswordInput.GetText()
-		ruleLevel := w.createUserScene.ruleLevelInput.GetText()
-		name := w.createUserScene.nameInput.GetText()
-		surname := w.createUserScene.surnameInput.GetText()
 
-		//check inboxInput
-		if len(email) <= 0 || len(password) <= 0 ||
-			len(rePassword) <= 0 || len(ruleLevel) <= 0 ||
-			len(name) <= 0 || len(surname) <= 0 {
-			w.createUserScene.isError = true
-			w.createUserScene.errorMessage = "Zero length error"
-			return
-		}
-		lvl, err := strconv.Atoi(ruleLevel)
-		// TODO curr max lvl
-		if lvl > 5 || err != nil {
-			w.createUserScene.isError = true
-			w.createUserScene.errorMessage = "Bad ruleLVL inboxInput"
-			return
-		}
-		newUser := user.NewUser(email, password, int32(lvl), name, surname)
-		resp := w.ctx.Request(w.serverPID, &proto.CreateUser{User: newUser}, utils.WaitTime)
-		val, err := resp.Result()
-		if err != nil {
+	w.createUserScene.newUserSection.emailInput.Update()
+	w.createUserScene.newUserSection.passwordInput.Update()
+	w.createUserScene.newUserSection.rePasswordInput.Update()
+	w.createUserScene.newUserSection.ruleLevelInput.Update()
+	w.createUserScene.newUserSection.nameInput.Update()
+	w.createUserScene.newUserSection.surnameInput.Update()
+	w.createUserScene.newUserSection.isAcceptPressed = w.createUserScene.newUserSection.acceptButton.Update()
 
-			w.createUserScene.isError = true
-			w.createUserScene.errorMessage = "Actor ctx error"
-		}
-		if _, ok := val.(*proto.AcceptCreateUser); ok {
-			w.createUserScene.isAccept = true
-			w.createUserScene.acceptMessage = "Created successfully"
-			w.createUserScene.emailInput.Clear()
-			w.createUserScene.passwordInput.Clear()
-			w.createUserScene.rePasswordInput.Clear()
-			w.createUserScene.ruleLevelInput.Clear()
-			w.createUserScene.nameInput.Clear()
-			w.createUserScene.surnameInput.Clear()
-		}
-		if _, ok := val.(*proto.DenyCreateUser); ok {
-			w.createUserScene.isError = true
-			w.createUserScene.errorMessage = "DB deny!"
-		}
+	if w.createUserScene.backButton.Update() {
+		w.goSceneBack()
+		return
+	}
+
+	if w.createUserScene.newUserSection.isAcceptPressed {
+		w.CreateUser()
 	}
 
 }
 
 func (w *Window) renderCreateUserState() {
-	//error
-	if w.createUserScene.isError {
-		rl.DrawText(w.createUserScene.errorMessage, 0, 0, 32, rl.Red)
-	}
-	if w.createUserScene.isAccept {
-		rl.DrawText(w.createUserScene.acceptMessage, 0, 0, 32, rl.Green)
 
-	}
-
-	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
-		mousePos := rl.GetMousePosition()
-		w.createUserScene.emailInput.Deactivate()
-		w.createUserScene.passwordInput.Deactivate()
-		w.createUserScene.rePasswordInput.Deactivate()
-		w.createUserScene.ruleLevelInput.Deactivate()
-		w.createUserScene.nameInput.Deactivate()
-		w.createUserScene.surnameInput.Deactivate()
-
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.emailInput.Bounds) {
-			w.createUserScene.emailInput.Active()
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.passwordInput.Bounds) {
-			w.createUserScene.passwordInput.Active()
-
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.rePasswordInput.Bounds) {
-			w.createUserScene.rePasswordInput.Active()
-
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.ruleLevelInput.Bounds) {
-			w.createUserScene.ruleLevelInput.Active()
-
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.nameInput.Bounds) {
-			w.createUserScene.nameInput.Active()
-
-		}
-		if rl.CheckCollisionPointRec(mousePos, w.createUserScene.surnameInput.Bounds) {
-			w.createUserScene.surnameInput.Active()
-		}
-	}
-	w.createUserScene.emailInput.Render()
-	w.createUserScene.passwordInput.Render()
-	w.createUserScene.rePasswordInput.Render()
-	w.createUserScene.ruleLevelInput.Render()
-	w.createUserScene.nameInput.Render()
-	w.createUserScene.surnameInput.Render()
+	w.createUserScene.newUserSection.emailInput.Render()
+	w.createUserScene.newUserSection.passwordInput.Render()
+	w.createUserScene.newUserSection.rePasswordInput.Render()
+	w.createUserScene.newUserSection.ruleLevelInput.Render()
+	w.createUserScene.newUserSection.nameInput.Render()
+	w.createUserScene.newUserSection.surnameInput.Render()
+	w.createUserScene.newUserSection.acceptButton.Render()
+	w.createUserScene.backButton.Render()
 }
