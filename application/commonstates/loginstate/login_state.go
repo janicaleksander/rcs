@@ -1,64 +1,69 @@
-package application
+package loginstate
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"github.com/janicaleksander/bcs/application/component"
+	"github.com/janicaleksander/bcs/application/statesmanager"
+	component2 "github.com/janicaleksander/bcs/component"
 	"github.com/janicaleksander/bcs/utils"
 )
 
 // LOGIN STATE
 type LoginScene struct {
+	cfg                  *utils.SharedConfig
+	stateManager         *statesmanager.StateManager
 	scheduler            utils.Scheduler
-	loginButton          component.Button
-	emailInput           component.InputBox
-	passwordInput        component.InputBox
+	loginButton          component2.Button
+	emailInput           component2.InputBox
+	passwordInput        component2.InputBox
 	isLoginButtonPressed bool
 	errorSection         ErrorSection
 }
 type ErrorSection struct {
-	errorPopup        component.Popup
+	errorPopup        component2.Popup
 	loginErrorMessage string
 }
 
-func (w *Window) loginSceneSetup() {
-	w.loginScene.Reset()
+func (l *LoginScene) LoginSceneSetup(state *statesmanager.StateManager, cfg *utils.SharedConfig) {
+	l.cfg = cfg
+	l.stateManager = state
+	l.Reset()
 
-	w.loginScene.loginButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+	l.loginButton = *component2.NewButton(component2.NewButtonConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2),
 		200, 40,
 	), "Login", false)
 
-	w.loginScene.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
+	l.emailInput = *component2.NewInputBox(component2.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-140),
 		200, 30,
 	))
 
-	w.loginScene.passwordInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
+	l.passwordInput = *component2.NewInputBox(component2.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-80),
 		200, 30,
 	))
-	w.loginScene.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
+	l.errorSection.errorPopup = *component2.NewPopup(component2.NewPopupConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2.0-100.0),
 		float32(rl.GetScreenHeight()/2.0+40.0),
 		200,
-		100), &w.loginScene.errorSection.loginErrorMessage)
+		100), &l.errorSection.loginErrorMessage)
 }
 
-func (w *Window) updateLoginState() {
-	w.loginScene.scheduler.Update(float64(rl.GetFrameTime()))
-	w.loginScene.emailInput.Update()
-	w.loginScene.passwordInput.Update()
-	w.loginScene.isLoginButtonPressed = w.loginScene.loginButton.Update()
+func (l *LoginScene) UpdateLoginState() {
+	l.scheduler.Update(float64(rl.GetFrameTime()))
+	l.emailInput.Update()
+	l.passwordInput.Update()
+	l.isLoginButtonPressed = l.loginButton.Update()
 
-	if w.loginScene.isLoginButtonPressed {
+	if l.isLoginButtonPressed {
 		//i have to do check services and then mark this somehow to show that user can use it
 
 		//and maybe use this to not make other request we have to wait if goruitne change this var to false and then???
 		//thiis is to set own presence to cut all messsage service from app
-		w.Login()
+		l.Login()
 	}
 
 }
@@ -69,14 +74,14 @@ func (w *Window) updateLoginState() {
 
 // TODO (user can be offline but also error with messageSrvies is reason to set his status to offline
 // even he is logged in
-func (w *Window) renderLoginState() {
+func (l *LoginScene) RenderLoginState() {
 
 	rl.DrawText("Login Page", 50, 50, 20, rl.DarkGray)
 
-	w.loginScene.errorSection.errorPopup.Render()
+	l.errorSection.errorPopup.Render()
 	//TODO: secret password inboxInput box
-	w.loginScene.emailInput.Render()
-	w.loginScene.passwordInput.Render()
-	w.loginScene.loginButton.Render()
+	l.emailInput.Render()
+	l.passwordInput.Render()
+	l.loginButton.Render()
 
 }
