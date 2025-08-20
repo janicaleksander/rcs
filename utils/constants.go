@@ -80,3 +80,9 @@ func (s *Scheduler) Update(dt float64) {
 	}
 	s.tasks = remaining
 }
+
+type SharedConfig struct {
+	ServerPID         *actor.PID
+	MessageServicePID *actor.PID
+	Ctx               *actor.Context
+}
