@@ -7,6 +7,7 @@ type InputBox struct {
 	text    []rune
 	length  int32
 	enabled bool
+	focused bool
 	scrollX int32
 	//appearance config
 	cfg InputBoxConfig
@@ -86,11 +87,22 @@ func NewInputBox(cfg *InputBoxConfig, bounds rl.Rectangle) *InputBox {
 		cfg:     *cfg,
 	}
 }
-
 func (i *InputBox) Update() {
 	mouse := rl.GetMousePosition()
-	if i.enabled && rl.CheckCollisionPointRec(mouse, i.Bounds) {
-		rl.SetMouseCursor(rl.MouseCursorIBeam)
+
+	if rl.CheckCollisionPointRec(mouse, i.Bounds) {
+		if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
+			i.focused = true
+			rl.SetMouseCursor(rl.MouseCursorIBeam)
+		}
+	} else if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
+		// Click outside this input box - remove focus
+		i.focused = false
+	}
+
+	// Only process input if this input box is focused
+	if i.enabled && i.focused {
+		// Process text input
 		for {
 			key := rl.GetCharPressed()
 			if key == 0 {
@@ -106,7 +118,9 @@ func (i *InputBox) Update() {
 				}
 			}
 		}
-		if (rl.IsKeyPressed(rl.KeyBackspace)) && i.length > 0 {
+
+		// Handle backspace
+		if rl.IsKeyPressed(rl.KeyBackspace) && i.length > 0 {
 			i.text = i.text[:len(i.text)-1]
 			i.length--
 
@@ -118,14 +132,25 @@ func (i *InputBox) Update() {
 			}
 		}
 
-	} else {
-		rl.SetMouseCursor(rl.MouseCursorDefault)
+		// Show cursor for focused field
+		if rl.CheckCollisionPointRec(mouse, i.Bounds) {
+			rl.SetMouseCursor(rl.MouseCursorIBeam)
+		} else {
+			rl.SetMouseCursor(rl.MouseCursorDefault)
+
+		}
+
 	}
 }
 
 func (i *InputBox) Render() {
 	rl.DrawRectangleRec(i.Bounds, rl.White)
-	rl.DrawRectangleLinesEx(i.Bounds, i.cfg.lineThick, i.cfg.lineColor)
+
+	if i.focused {
+		rl.DrawRectangleLinesEx(i.Bounds, i.cfg.lineThick, rl.Blue) // Highlight focused input
+	} else {
+		rl.DrawRectangleLinesEx(i.Bounds, i.cfg.lineThick, i.cfg.lineColor)
+	}
 
 	rl.BeginScissorMode(int32(i.Bounds.X), int32(i.Bounds.Y), int32(i.Bounds.Width), int32(i.Bounds.Height))
 
@@ -134,18 +159,18 @@ func (i *InputBox) Render() {
 		int32(i.Bounds.Y+8),
 		i.cfg.fontsize,
 		i.cfg.textColor)
-	if i.enabled {
+
+	if i.enabled && i.focused {
 		cursorX := int32(i.Bounds.X) + i.cfg.leftMargin + int32(rl.MeasureText(string(i.text), i.cfg.fontsize)) - i.scrollX
 		cursorY1 := int32(i.Bounds.Y + 3)
 		cursorY2 := int32(i.Bounds.Y + i.Bounds.Height - 3)
 
 		if int32(rl.GetTime()*2)%2 == 0 {
-			rl.DrawRectangle(cursorX, cursorY1, 2, cursorY2, i.cfg.textColor)
+			rl.DrawRectangle(cursorX, cursorY1, 2, cursorY2-cursorY1, i.cfg.textColor)
 		}
 	}
 	rl.EndScissorMode()
 }
-
 func (i *InputBox) GetText() string {
 	return string(i.text)
 }
