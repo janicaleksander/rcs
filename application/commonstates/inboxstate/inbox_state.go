@@ -6,18 +6,18 @@ import (
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/google/uuid"
+	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/application/statesmanager"
-	component2 "github.com/janicaleksander/bcs/component"
-	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ToolboxSection struct {
-	toolboxArea                rl.Rectangle      // area with navigation buttons
-	backButton                 component2.Button // go back button
-	addConversationButton      component2.Button // button to add new conversation
-	refreshConversationsButton component2.Button // button to refresh users conversation
+	toolboxArea                rl.Rectangle     // area with navigation buttons
+	backButton                 component.Button // go back button
+	addConversationButton      component.Button // button to add new conversation
+	refreshConversationsButton component.Button // button to refresh users conversation
 
 	isGoBackButtonPressed        bool
 	showAddConversationModal     bool // if we want to show window to add new conversation
@@ -25,10 +25,10 @@ type ToolboxSection struct {
 }
 
 type ModalSection struct { // Modal add conversation
-	addConversationModal           component2.Modal
-	usersSlider                    component2.ListSlider // user slider inside modals
-	users                          []*proto.User         // users from DB without logged in user
-	acceptAddConversationButton    component2.Button     // button inside modal to confirm
+	addConversationModal           component.Modal
+	usersSlider                    component.ListSlider // user slider inside modals
+	users                          []*proto.User        // users from DB without logged in user
+	acceptAddConversationButton    component.Button     // button inside modal to confirm
 	isAcceptAddConversationPressed bool
 	//error inside modal
 	errorBoxModal  rl.Rectangle
@@ -37,21 +37,21 @@ type ModalSection struct { // Modal add conversation
 }
 
 type MessageSection struct {
-	textInput           component2.InputBox
-	sendButton          component2.Button
+	textInput           component.InputBox
+	sendButton          component.Button
 	isSendButtonPressed bool
 
-	MessageChan        chan *proto.Message    //chan to transport messages from window actor
-	messages           []component2.Message   // messages for current conversation
-	messagePanel       component2.ScrollPanel //slider with all messages
-	messagePanelLayout messagePanelLayout     // messagePanel configuration
+	MessageChan        chan *proto.Message   //chan to transport messages from window actor
+	messages           []component.Message   // messages for current conversation
+	messagePanel       component.ScrollPanel //slider with all messages
+	messagePanelLayout messagePanelLayout    // messagePanel configuration
 	nameOnTheWindow    string
 }
 type ConversationSection struct {
 	usersConversations      []*proto.ConversationSummary
 	conversationPanelLayout conversationPanelLayout
-	conversationPanel       component2.ScrollPanel
-	conversationsTabs       []component2.ConversationTab
+	conversationPanel       component.ScrollPanel
+	conversationsTabs       []component.ConversationTab
 	isConversationSelected  bool
 	activeConversation      int32
 	activeConversationID    string
@@ -108,8 +108,8 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 	var toolBoxButtonWidth float32 = 150
 	var toolBoxButtonHeight float32 = 50
 
-	i.toolboxSection.backButton = *component2.NewButton(
-		component2.NewButtonConfig(),
+	i.toolboxSection.backButton = *component.NewButton(
+		component.NewButtonConfig(),
 		rl.NewRectangle(
 			i.toolboxSection.toolboxArea.X+toolboxButtonPadding,
 			i.toolboxSection.toolboxArea.Y+toolboxButtonPadding,
@@ -118,8 +118,8 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 		"GO BACK",
 		false)
 
-	i.toolboxSection.addConversationButton = *component2.NewButton(
-		component2.NewButtonConfig(),
+	i.toolboxSection.addConversationButton = *component.NewButton(
+		component.NewButtonConfig(),
 		rl.NewRectangle(
 			i.toolboxSection.backButton.Bounds.X+i.toolboxSection.backButton.Bounds.Width+toolboxButtonPadding,
 			i.toolboxSection.toolboxArea.Y+toolboxButtonPadding,
@@ -128,7 +128,7 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 		"Add \n conversation",
 		false)
 
-	i.modalSection.addConversationModal = component2.Modal{
+	i.modalSection.addConversationModal = component.Modal{
 		Background: rl.NewRectangle(
 			0,
 			0,
@@ -138,7 +138,7 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 		Core:    rl.NewRectangle(float32(rl.GetScreenWidth()/2-150.0), float32(rl.GetScreenHeight()/2-150.0), 300, 280),
 	}
 	var addConversationModalPadding float32 = 20
-	i.modalSection.usersSlider = component2.ListSlider{
+	i.modalSection.usersSlider = component.ListSlider{
 		Strings: make([]string, 0, 64),
 		Bounds: rl.NewRectangle(
 			i.modalSection.addConversationModal.Core.X+i.modalSection.addConversationModal.Core.Width/2-(i.modalSection.addConversationModal.Core.Width/2)/2,
@@ -155,8 +155,8 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 			user.Email+"\n"+user.Personal.Name+user.Personal.Name)
 	}
 
-	i.modalSection.acceptAddConversationButton = *component2.NewButton(
-		component2.NewButtonConfig(),
+	i.modalSection.acceptAddConversationButton = *component.NewButton(
+		component.NewButtonConfig(),
 		rl.NewRectangle(
 			i.modalSection.usersSlider.Bounds.X,
 			i.modalSection.usersSlider.Bounds.Y+5*addConversationModalPadding,
@@ -170,8 +170,8 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 		i.modalSection.usersSlider.Bounds.Width,
 		75)
 
-	i.toolboxSection.refreshConversationsButton = *component2.NewButton(
-		component2.NewButtonConfig(),
+	i.toolboxSection.refreshConversationsButton = *component.NewButton(
+		component.NewButtonConfig(),
 		rl.NewRectangle(
 			i.toolboxSection.addConversationButton.Bounds.X+i.toolboxSection.addConversationButton.Bounds.Width+toolboxButtonPadding,
 			i.toolboxSection.toolboxArea.Y+toolboxButtonPadding,
@@ -220,16 +220,16 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 	i.MessageSection.messagePanelLayout.leftSide = i.MessageSection.messagePanel.Bounds.X + i.MessageSection.messagePanelLayout.padding
 	i.MessageSection.messagePanelLayout.rightSide = i.MessageSection.messagePanelLayout.middle + i.MessageSection.messagePanelLayout.padding
 
-	i.MessageSection.textInput = *component2.NewInputBox(
-		component2.NewInputBoxConfig(),
+	i.MessageSection.textInput = *component.NewInputBox(
+		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			i.MessageSection.messagePanel.Bounds.X,
 			i.MessageSection.messagePanel.Bounds.Height-30, //height
 			i.MessageSection.messagePanel.Bounds.Width-70,  //for button// TODO vars
 			30))
 
-	i.MessageSection.sendButton = *component2.NewButton(
-		component2.NewButtonConfig(),
+	i.MessageSection.sendButton = *component.NewButton(
+		component.NewButtonConfig(),
 		rl.NewRectangle(
 			i.MessageSection.messagePanel.Bounds.X+i.MessageSection.textInput.Bounds.Width,
 			i.MessageSection.messagePanel.Bounds.Height-30,

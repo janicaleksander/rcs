@@ -15,7 +15,7 @@ import (
 	"github.com/janicaleksander/bcs/application/hcstates/infounitstate"
 	"github.com/janicaleksander/bcs/application/hcstates/infouserstate"
 	"github.com/janicaleksander/bcs/application/statesmanager"
-	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
 

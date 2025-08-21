@@ -2,8 +2,8 @@ package hcmenustate
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/application/statesmanager"
-	"github.com/janicaleksander/bcs/component"
 	"github.com/janicaleksander/bcs/utils"
 )
 

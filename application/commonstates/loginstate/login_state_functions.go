@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/janicaleksander/bcs/application/statesmanager"
-	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
 

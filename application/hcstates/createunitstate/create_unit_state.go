@@ -3,8 +3,8 @@ package createunitstate
 import (
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/application/statesmanager"
-	component2 "github.com/janicaleksander/bcs/component"
 	"github.com/janicaleksander/bcs/utils"
 )
 
@@ -13,7 +13,7 @@ type CreateUnitScene struct {
 	cfg            *utils.SharedConfig
 	stateManager   *statesmanager.StateManager
 	scheduler      utils.Scheduler
-	backButton     component2.Button
+	backButton     component.Button
 	newUnitSection NewUnitSection
 	errorSection   ErrorSection
 	infoSection    InfoSection
@@ -24,19 +24,19 @@ type ErrorSection struct {
 	isSetupError  bool
 	isCreateError bool
 	errorMessage  string
-	errorPopup    component2.Popup
+	errorPopup    component.Popup
 }
 type InfoSection struct {
 	isInfoMessage bool
 	infoMessage   string
-	infoPopup     component2.Popup
+	infoPopup     component.Popup
 }
 
 type NewUnitSection struct {
-	acceptButton    component2.Button
+	acceptButton    component.Button
 	isAcceptPressed bool
-	nameInput       component2.InputBox
-	usersDropdown   component2.ListSlider
+	nameInput       component.InputBox
+	usersDropdown   component.ListSlider
 }
 
 func (c *CreateUnitScene) CreateUnitSceneSetup(state *statesmanager.StateManager, cfg *utils.SharedConfig) {
@@ -45,7 +45,7 @@ func (c *CreateUnitScene) CreateUnitSceneSetup(state *statesmanager.StateManager
 	c.Reset()
 	c.FetchUsers()
 	//name of unit
-	c.newUnitSection.nameInput = *component2.NewInputBox(component2.NewInputBoxConfig(), rl.NewRectangle(
+	c.newUnitSection.nameInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-100),
 		200, 40,
@@ -59,25 +59,25 @@ func (c *CreateUnitScene) CreateUnitSceneSetup(state *statesmanager.StateManager
 		float32(rl.GetScreenHeight()/2-60),
 		240, 80,
 	)
-	c.errorSection.errorPopup = *component2.NewPopup(component2.NewPopupConfig(), rl.NewRectangle(
+	c.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2),
 		float32(rl.GetScreenHeight()-20),
 		100, 20), &c.errorSection.errorMessage)
 
-	c.infoSection.infoPopup = *component2.NewPopup(component2.NewPopupConfig(), rl.NewRectangle(
+	c.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2),
 		float32(rl.GetScreenHeight()-20),
 		100, 20), &c.infoSection.infoMessage)
 
 	//accept button
-	c.newUnitSection.acceptButton = *component2.NewButton(component2.NewButtonConfig(), rl.NewRectangle(
+	c.newUnitSection.acceptButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2+50),
 		200, 40,
 	), "Accept", false)
 
 	//go back from creating unit
-	c.backButton = *component2.NewButton(component2.NewButtonConfig(), rl.NewRectangle(
+	c.backButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 		10,
 		float32(rl.GetScreenHeight()-50),
 		150,

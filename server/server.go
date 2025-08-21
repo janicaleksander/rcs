@@ -8,7 +8,7 @@ import (
 
 	"github.com/anthdm/hollywood/actor"
 	db "github.com/janicaleksander/bcs/database"
-	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
 
