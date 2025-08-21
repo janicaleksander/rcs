@@ -6,8 +6,8 @@ import (
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/google/uuid"
-	component2 "github.com/janicaleksander/bcs/component"
-	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/application/component"
+	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
 
@@ -90,7 +90,7 @@ func (i *InboxScene) AppendMessage(msg *proto.Message) {
 	currHeight := i.MessageSection.messagePanelLayout.currHeight
 	i.MessageSection.messagePanelLayout.mu.Unlock()
 
-	i.MessageSection.messages = append(i.MessageSection.messages, component2.Message{
+	i.MessageSection.messages = append(i.MessageSection.messages, component.Message{
 		Bounds: rl.NewRectangle(
 			xPosition,
 			currHeight,
@@ -158,7 +158,7 @@ func (i *InboxScene) refreshConversationsPanel() {
 
 	i.conversationSection.conversationPanelLayout.currHeight = i.conversationSection.conversationPanelLayout.startHeight
 	for k, conversation := range i.conversationSection.usersConversations {
-		i.conversationSection.conversationsTabs = append(i.conversationSection.conversationsTabs, component2.ConversationTab{
+		i.conversationSection.conversationsTabs = append(i.conversationSection.conversationsTabs, component.ConversationTab{
 			ID:             int32(k),
 			WithID:         conversation.WithID,
 			ConversationID: conversation.ConversationId,
@@ -170,7 +170,7 @@ func (i *InboxScene) refreshConversationsPanel() {
 			),
 			OriginalY: i.conversationSection.conversationPanelLayout.currHeight,
 			Nametag:   conversation.Nametag,
-			EnterConversation: *component2.NewButton(component2.NewButtonConfig(), rl.NewRectangle(
+			EnterConversation: *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 				(3.0/4.0)*i.toolboxSection.toolboxArea.Width,
 				i.conversationSection.conversationPanelLayout.currHeight,
 				80,

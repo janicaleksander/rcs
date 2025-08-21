@@ -2,8 +2,8 @@ package loginstate
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/application/statesmanager"
-	component2 "github.com/janicaleksander/bcs/component"
 	"github.com/janicaleksander/bcs/utils"
 )
 
@@ -12,14 +12,14 @@ type LoginScene struct {
 	cfg                  *utils.SharedConfig
 	stateManager         *statesmanager.StateManager
 	scheduler            utils.Scheduler
-	loginButton          component2.Button
-	emailInput           component2.InputBox
-	passwordInput        component2.InputBox
+	loginButton          component.Button
+	emailInput           component.InputBox
+	passwordInput        component.InputBox
 	isLoginButtonPressed bool
 	errorSection         ErrorSection
 }
 type ErrorSection struct {
-	errorPopup        component2.Popup
+	errorPopup        component.Popup
 	loginErrorMessage string
 }
 
@@ -28,24 +28,24 @@ func (l *LoginScene) LoginSceneSetup(state *statesmanager.StateManager, cfg *uti
 	l.stateManager = state
 	l.Reset()
 
-	l.loginButton = *component2.NewButton(component2.NewButtonConfig(), rl.NewRectangle(
+	l.loginButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2),
 		200, 40,
 	), "Login", false)
 
-	l.emailInput = *component2.NewInputBox(component2.NewInputBoxConfig(), rl.NewRectangle(
+	l.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-140),
 		200, 30,
 	))
 
-	l.passwordInput = *component2.NewInputBox(component2.NewInputBoxConfig(), rl.NewRectangle(
+	l.passwordInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-80),
 		200, 30,
 	))
-	l.errorSection.errorPopup = *component2.NewPopup(component2.NewPopupConfig(), rl.NewRectangle(
+	l.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2.0-100.0),
 		float32(rl.GetScreenHeight()/2.0+40.0),
 		200,

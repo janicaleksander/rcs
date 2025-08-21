@@ -2,7 +2,7 @@ package user
 
 import (
 	"github.com/google/uuid"
-	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/types/proto"
 	"golang.org/x/crypto/bcrypt"
 )
 

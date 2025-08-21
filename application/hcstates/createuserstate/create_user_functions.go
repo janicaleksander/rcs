@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/janicaleksander/bcs/proto"
-	"github.com/janicaleksander/bcs/user"
+	"github.com/janicaleksander/bcs/types/proto"
+	"github.com/janicaleksander/bcs/types/user"
 	"github.com/janicaleksander/bcs/utils"
 )
 

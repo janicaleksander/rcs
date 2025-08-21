@@ -1,26 +1,26 @@
 package unit
 
 import (
+	"reflect"
+
 	"github.com/anthdm/hollywood/actor"
-	"github.com/janicaleksander/bcs/external"
 	"github.com/janicaleksander/bcs/proto"
 	"github.com/janicaleksander/bcs/server"
-	"reflect"
+	proto2 "github.com/janicaleksander/bcs/types/proto"
 )
 
 type Unit struct {
 	id        string // uuid
 	serverPID *actor.PID
-	external  *external.External
-	users     []*proto.User
+	devices   []*proto.Device
+	users     []*proto2.User
 }
 
-func NewUnit(serverPID *actor.PID, ext *external.External) actor.Producer {
+func NewUnit(serverPID *actor.PID) actor.Producer {
 	return func() actor.Receiver {
 		return &Unit{
 			serverPID: serverPID,
-			external:  ext,
-			users:     make([]*proto.User, 1024),
+			users:     make([]*proto2.User, 1024),
 		}
 	}
 }

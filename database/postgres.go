@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/janicaleksander/bcs/User"
-	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/types/User"
+	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 	_ "github.com/lib/pq"
 	"google.golang.org/protobuf/types/known/timestamppb"

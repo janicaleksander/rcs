@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/joho/godotenv"
 )
 

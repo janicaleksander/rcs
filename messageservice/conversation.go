@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/anthdm/hollywood/actor"
-	"github.com/janicaleksander/bcs/proto"
+	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
 
