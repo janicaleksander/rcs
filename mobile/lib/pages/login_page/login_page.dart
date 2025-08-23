@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/pages/login_page/login_internal.dart';
 import 'package:mobile/themes/login_page/colors.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
@@ -10,40 +11,14 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
-  }
-  void _onLoginPressed() {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-
-    debugPrint("Email: $email, Password: $password");
-
-    final snackBar = SnackBar(
-      elevation: 0,
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: Colors.transparent,
-      content: SizedBox(
-        height: 100,
-        child: AwesomeSnackbarContent(
-          title: 'Login Failed!',
-          message: 'Invalid email or password. Please try again.',
-          contentType: ContentType.failure,
-        ),
-      )
-
-
-    );
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(snackBar);
   }
 
   @override
@@ -99,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 // Email Field
                 TextField(
-                  controller: _emailController,
+                  controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     hintText: "Email",
@@ -131,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 // Password Field
                 TextField(
-                  controller: _passwordController,
+                  controller: passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     hintText: "Password",
@@ -167,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: _onLoginPressed,
+                    onPressed: () => onLoginPressed(context,emailController,passwordController),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: LoginColors.buttonBackgroundColor,
                       shape: RoundedRectangleBorder(
