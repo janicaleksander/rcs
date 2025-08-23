@@ -13,7 +13,6 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp.router(
     routerConfig: router,
     theme: LoginTheme.light,
-    darkTheme: LoginTheme.dark,
     themeMode: ThemeMode.system,
     debugShowCheckedModeBanner: false,
   );
