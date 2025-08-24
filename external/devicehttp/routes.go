@@ -5,6 +5,13 @@ import (
 )
 
 func (d *DeviceHTTP) loadRoutes() {
+	/*
+		d.router.Group(func(r chi.Router) {
+			d.router.Route("/", d.loadHomeRoutes)
+			d.router.Route("/login", d.loadLoginRoutes)
+		})
+	*/
+
 	d.router.Route("/", d.loadHomeRoutes)
 	d.router.Route("/login", d.loadLoginRoutes)
 }
