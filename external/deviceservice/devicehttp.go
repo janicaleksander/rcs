@@ -1,4 +1,4 @@
-package devicehttp
+package deviceservice
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/anthdm/hollywood/actor"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -13,15 +14,21 @@ import (
 )
 
 type DeviceHTTP struct {
+	ctx        *actor.Context
+	serverPID  *actor.PID
 	listenAddr string
 	router     *chi.Mux
+	//devicePID  *actor.PID
 	//parent PID in the future
 }
 
-func New(addr string) *DeviceHTTP {
+func NewHTTPDevice(addr string, ctx *actor.Context, pid *actor.PID) *DeviceHTTP {
 	return &DeviceHTTP{
+		serverPID:  pid,
+		ctx:        ctx,
 		listenAddr: addr,
 		router:     nil,
+		//devicePID:  pid,
 	}
 }
 
@@ -58,8 +65,6 @@ func (d *DeviceHTTP) RunHTTPServer() {
 
 	// load routes
 	d.loadRoutes()
-
-	//run
 	log.Printf("Server is runnig on: %v \n", d.listenAddr)
 	log.Fatalln(http.ListenAndServe(d.listenAddr, router))
 }

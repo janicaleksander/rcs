@@ -104,6 +104,7 @@ message AllUnits {
 }
 
 message LoginUnit {
+  PID pid = 1;
   string id = 2;
 }
 
@@ -291,3 +292,64 @@ message SuccessUsersToNewConversation{
   repeated User users = 1;
 }
 message FailureUsersToNewConversation{}
+
+
+
+message Device {
+  string id =1;
+  string name = 2;
+  string owner =3;
+  google.protobuf.Timestamp last_time_online = 5;
+  string type = 4;
+}
+
+
+message HTTPSpawnDevice{
+  string email = 1; //we have to check based on this is user is in unit -> success
+  string password = 2;
+}
+
+message SpawnAndRunDevice {
+  Device device =1;
+}
+message SuccessSpawnDevice{
+  string userID =1;
+  PID devicePID  =2;
+}
+message FailureSpawnDevice{
+
+}
+
+message ConnectHDeviceToADevice{
+  string id =1;
+  PID devicePID =2;
+}
+message SuccessConnectHtoA{}
+message FailureConnectHtoA{}
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+/////////////////////////////HTTP PART//////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+message LoginUserReq {
+  string email = 1;
+  string password =2;
+}
+
+message UserRes{
+  string name = 1;
+  string surname = 2;
+}
+
+
+message LoginUserRes{
+  string accessToken = 1;
+}

@@ -98,6 +98,7 @@ func (d *DBManager) GetDB() *sql.DB {
 // database interface that is used in application
 type Storage interface {
 	InsertUser(context.Context, *proto.User) error
+	GetUser(ctx context.Context, id string) (*proto.User, error)
 	LoginUser(ctx context.Context, email, password string) (string, int, error)
 	GetUsersWithLVL(ctx context.Context, lvl int) ([]*proto.User, error)
 	//TODO maybe in the future also role to this
@@ -114,4 +115,5 @@ type Storage interface {
 	GetUserConversations(ctx context.Context, id string) ([]*proto.ConversationSummary, error)
 	LoadConversation(ctx context.Context, id string) ([]*proto.Message, error)
 	SelectUsersToNewConversation(ctx context.Context, id string) ([]*proto.User, error)
+	DoUserHaveDevice(ctx context.Context, userID, unitID string) (bool, *proto.Device, error)
 }

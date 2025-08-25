@@ -16,10 +16,12 @@ require (
 
 require (
 	github.com/DataDog/gostackparse v0.7.0 // indirect
+	github.com/ajg/form v1.5.1 // indirect
 	github.com/ebitengine/purego v0.8.2 // indirect
 	github.com/go-chi/chi/v5 v5.2.2 // indirect
 	github.com/go-chi/cors v1.2.2 // indirect
 	github.com/go-chi/httprate v0.15.0 // indirect
+	github.com/go-chi/render v1.0.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/gorilla/csrf v1.7.3 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect

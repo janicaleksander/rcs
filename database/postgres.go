@@ -14,11 +14,21 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+//TODO
+/*
+Usuń nieużywane kolumny lub dodaj ich obsługę w kodzie
+Napraw błąd w UPDATE w funkcji InsertMessage
+Dodaj obsługę last_time_online jeśli ma być używane
+Rozważ dodanie ON DELETE CASCADE dla niektórych relacji
+Dodaj walidację czy wszystkie wymagane pola są wypełnione przed INSERT
+*/
 // Struct that is made to implement Storage interface
 // It holds connection to make queries to PostgreSQL.
 type Postgres struct {
 	Conn *sql.DB
 }
+
+// TODO repair users lasttime
 
 // Implemented function from Storage interface.
 // It takes context (e.g. to set max time for query), User and if no errors insert into database.
@@ -42,7 +52,33 @@ func (p *Postgres) InsertUser(ctx context.Context, user *proto.User) error {
 	}
 	return nil
 }
+func (p *Postgres) GetUser(ctx context.Context, id string) (*proto.User, error) {
+	row := p.Conn.QueryRow(
+		`SELECT
+    				u.id,u.email,u.rule_level,
+    				p.name,p.surname
+				FROM users u 
+				INNER JOIN personal  p
+				ON u.id = p.user_id
+				WHERE (u.id = $1);
+    `, id)
 
+	u := &proto.User{
+		Id:       "",
+		Email:    "",
+		Password: "",
+		RuleLvl:  0,
+		Personal: &proto.Personal{
+			Name:    "",
+			Surname: "",
+		},
+	}
+	if err := row.Scan(&u.Id, &u.Email, &u.RuleLvl, &u.Personal.Name, &u.Personal.Surname); err != nil {
+		return nil, err
+	}
+	return u, nil
+
+}
 func (p *Postgres) LoginUser(ctx context.Context, email, password string) (string, int, error) {
 	rows, err := p.Conn.Query(`SELECT id, password,rule_level FROM users WHERE (email=$1)`, email)
 	if err != nil {
@@ -276,7 +312,7 @@ func (p *Postgres) InsertMessage(ctx context.Context, msg *proto.Message) error 
 	_, err = tx.ExecContext(ctx,
 		`UPDATE user_conversation 
 				SET last_seen_message_id=$1
-				WHERE (conversation_id=$1) `, msg.Id)
+				WHERE (conversation_id=$2) `, msg.Id, msg.ConversationID)
 	if err != nil {
 		return err
 	}
@@ -421,4 +457,27 @@ func (p *Postgres) SelectUsersToNewConversation(ctx context.Context, userID stri
 		users = append(users, usr)
 	}
 	return users, nil
+}
+
+func (p *Postgres) DoUserHaveDevice(ctx context.Context, userID, unitID string) (bool, *proto.Device, error) {
+	row := p.Conn.QueryRow(`SELECT d.id,d.name,d.last_time_online,d.owner,d.type FROM device d 
+						    INNER JOIN device_to_unit dtu 
+						    ON d.id = dtu.device_id
+						    WHERE (dtu.unit_id=$1 AND d.owner = $2);`, unitID, userID)
+	d := &proto.Device{
+		Id:             "",
+		Name:           "",
+		Owner:          "",
+		LastTimeOnline: nil,
+		Type:           "",
+	}
+	var lastTimeOnline sql.NullTime
+	err := row.Scan(&d.Id, &d.Name, &lastTimeOnline, &d.Owner, &d.Type)
+	if err != nil {
+		return false, nil, err
+	}
+	if lastTimeOnline.Valid {
+		d.LastTimeOnline = timestamppb.New(lastTimeOnline.Time)
+	}
+	return true, d, nil
 }

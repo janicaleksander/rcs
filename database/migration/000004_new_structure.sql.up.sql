@@ -18,12 +18,22 @@ CREATE TABLE IF NOT EXISTS unit
     name VARCHAR(255) NOT NULL UNIQUE,
     is_configured BOOLEAN NOT NULL
 );
-CREATE TABLE IF NOT EXISTS device
+
+CREATE TABLE IF NOT EXISTS device_type
 (
-    id INT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+    type VARCHAR(255) PRIMARY KEY
 );
 
+CREATE TABLE IF NOT EXISTS device
+(
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    last_time_online TIMESTAMP,
+    owner UUID REFERENCES users(id) ON DELETE SET NULL,
+    type VARCHAR(255) REFERENCES device_type(type) NOT NULL
+
+
+);
 
 CREATE TABLE IF NOT EXISTS user_to_unit
 (
@@ -35,7 +45,9 @@ CREATE TABLE IF NOT EXISTS user_to_unit
 CREATE TABLE IF NOT EXISTS device_to_unit
 (
     unit_id UUID REFERENCES unit(id) NOT NULL,
-    device_id INT REFERENCES device(id) NOT NULL
+    device_id UUID REFERENCES device(id) NOT NULL,
+    PRIMARY KEY(unit_id, device_id)
+
 );
 
 CREATE TABLE IF NOT EXISTS conversation
@@ -61,11 +73,15 @@ CREATE TABLE IF NOT EXISTS user_conversation
 );
 
 
-/*
-id uuid
-user_id uuid (ref) who sent
-conversation_id uuid (ref) to which conv sent
-content varchar
-sent_at timestamp
-seen_at timestamp
-*/
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_unit_name ON unit(name);
+CREATE INDEX IF NOT EXISTS idx_device_name ON device(name);
+CREATE INDEX IF NOT EXISTS idx_device_owner ON device(owner);
+CREATE INDEX IF NOT EXISTS idx_user_to_unit_unit ON user_to_unit(unit_id);
+CREATE INDEX IF NOT EXISTS idx_device_to_unit_device ON device_to_unit(device_id);
+CREATE INDEX IF NOT EXISTS idx_message_conversation_sent
+    ON message(conversation_id, sent_at);
+CREATE INDEX IF NOT EXISTS idx_user_conversation_user ON user_conversation(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_conversation_conv ON user_conversation(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_user_conversation_last_seen ON user_conversation(last_seen_message_id);
+

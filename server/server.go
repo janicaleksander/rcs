@@ -8,6 +8,7 @@ import (
 
 	"github.com/anthdm/hollywood/actor"
 	db "github.com/janicaleksander/bcs/database"
+	"github.com/janicaleksander/bcs/external/unit"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
@@ -15,11 +16,6 @@ import (
 const (
 	PingPongTime = 3 * time.Second
 )
-
-type Session struct {
-	userID string
-	//presenceplace?
-}
 
 // TODO make a two maybe maps one for connected by app commander lvl person
 // and second to 0 1 2 users/soldiers connected by device->unit->server
@@ -49,10 +45,27 @@ func (s *Server) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
 		utils.Logger.Info("server initialized")
-
 	case actor.Started:
 		utils.Logger.Info("server has started")
 		ctx.SendRepeat(ctx.PID(), &proto.HeartbeatTick{}, 10*time.Second)
+
+		//spawn units as a child
+		c := context.Background()
+		units, err := s.storage.GetAllUnits(c)
+		if err != nil {
+			//TODO
+		}
+		for _, u := range units {
+			pid := ctx.SpawnChild(unit.NewUnit(u.Id), "unit", actor.WithID(u.Id))
+			ctx.Send(ctx.PID(), &proto.LoginUnit{
+				Pid: &proto.PID{
+					Address: pid.Address,
+					Id:      pid.ID,
+				},
+				Id: u.Id,
+			})
+			//TODO deal with disconnect
+		}
 	case actor.Stopped:
 		utils.Logger.Info("server has stopped")
 	case *proto.HeartbeatTick:
@@ -73,13 +86,12 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.Offline{})
 		}
 	case *proto.LoginUnit:
-		//update use map
-		//id, err := s.loginUnit(ctx, msg.Email, msg.Password)
-		//if err == nil {
-		//	s.clients[id] = ctx.Sender().GetAddress()
-		//}
+		pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //unit PID
+		s.connections[msg.Id] = pid                      //pid to uuid
+		s.reverseConnections[pid.String()] = msg.Id
 	case *proto.LoginUser:
-		id, role, err := s.loginUser(msg.Email, msg.Password)
+		c := context.Background()
+		id, role, err := s.storage.LoginUser(c, msg.Email, msg.Password)
 		if err != nil {
 			ctx.Respond(&proto.DenyLogin{Info: err.Error()})
 		} else {
@@ -158,6 +170,44 @@ func (s *Server) Receive(ctx *actor.Context) {
 		} else {
 			ctx.Respond(&proto.SuccessOfDelete{})
 		}
+	case *proto.HTTPSpawnDevice:
+		c := context.Background()
+		userID, _, err := s.storage.LoginUser(c, msg.Email, msg.Password)
+		if err != nil {
+			ctx.Respond(&proto.FailureSpawnDevice{})
+			utils.Logger.Error(err.Error())
+		} else {
+			ok, unitID, err := s.storage.IsUserInUnit(c, userID)
+			if err != nil {
+				utils.Logger.Error(err.Error())
+				//TODO
+			} else {
+				if ok {
+					ok, device, err := s.storage.DoUserHaveDevice(c, userID, unitID)
+					if err != nil {
+						utils.Logger.Error(err.Error())
+						//TODO
+					} else {
+						if ok {
+							res, err := utils.MakeRequest(
+								utils.NewRequest(
+									ctx,
+									s.connections[unitID],
+									&proto.SpawnAndRunDevice{Device: device}),
+							)
+							if err != nil {
+								//TODO
+								utils.Logger.Error(err.Error())
+
+							}
+							ctx.Respond(res)
+						}
+					}
+				}
+				//this unit need to have a device with owner of this id user
+				// units needs to spawn a child ->get this PID and respond
+			}
+		}
 
 	default:
 		utils.Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())
@@ -177,14 +227,4 @@ func (s *Server) startHeartbeat(ctx *actor.Context) {
 			}
 		}(PID, ID)
 	}
-}
-
-func (s *Server) loginUser(email, password string) (string, int, error) {
-	// TODO: add jwt to login
-	c := context.Background()
-	id, role, err := s.storage.LoginUser(c, email, password)
-	if err != nil {
-		return "", -1, err
-	}
-	return id, role, nil
 }

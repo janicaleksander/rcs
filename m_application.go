@@ -32,7 +32,7 @@ func main() {
 		return
 	}
 
-	utils.Logger.Info("application is running on:", "Addr:", os.Getenv("APP_ADDR"))
+	utils.Logger.Info("application is running on:", "Addr:", *appAddrFlag)
 	messageServicePID := actor.NewPID(os.Getenv("MESSAGE_SERVICE_ADDR"), "messageService/primary")
 	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
 	//ping server

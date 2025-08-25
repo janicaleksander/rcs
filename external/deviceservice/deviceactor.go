@@ -1,0 +1,43 @@
+package deviceservice
+
+import (
+	"github.com/anthdm/hollywood/actor"
+	"github.com/janicaleksander/bcs/types/proto"
+	"github.com/janicaleksander/bcs/utils"
+)
+
+type DeviceActor struct {
+	ctx         *actor.Context
+	connections map[string]*actor.PID //userID who is using particular device to device PID
+}
+
+func NewDeviceActor() actor.Producer {
+	return func() actor.Receiver {
+		return &DeviceActor{
+			connections: make(map[string]*actor.PID, 64),
+		}
+	}
+}
+
+func (d *DeviceActor) Receive(ctx *actor.Context) {
+	d.ctx = ctx
+	switch msg := ctx.Message().(type) {
+	case actor.Initialized:
+		utils.Logger.Info("Device actor initialized")
+	case actor.Started:
+		utils.Logger.Info("Device actor started")
+	case actor.Stopped:
+		utils.Logger.Info("Device actor stopped")
+	case actor.Context:
+		ctx.Respond(ctx)
+	case *proto.ConnectHDeviceToADevice:
+		d.connections[msg.Id] = actor.NewPID(msg.DevicePID.Address, msg.DevicePID.Id)
+	default:
+		utils.Logger.Info("Unrecognized message!")
+		_ = msg
+	}
+
+}
+
+//FLOW: device is pinging server during login to spawn new child od Device actor and
+//return unit PID and this child PID
