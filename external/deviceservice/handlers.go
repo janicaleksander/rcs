@@ -28,12 +28,12 @@ func (d *DeviceHTTP) Login(w http.ResponseWriter, r *http.Request) {
 	var userID string
 	if v, ok := res.(*proto.SuccessSpawnDevice); !ok {
 		render.Render(w, r, ErrInvalidRespondMessage(errors.New("type is other than:  proto.SuccessSpawnDevice")))
+		return
+	} else {
 		d.ctx.Send(d.ctx.PID(), &proto.ConnectHDeviceToADevice{
 			Id:        v.UserID,
 			DevicePID: v.DevicePID,
 		})
-		return
-	} else {
 		userID = v.UserID
 	}
 
