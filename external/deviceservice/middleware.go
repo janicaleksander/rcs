@@ -3,6 +3,7 @@ package deviceservice
 import (
 	"context"
 	"fmt"
+	"github.com/go-chi/render"
 	"github.com/janicaleksander/bcs/token"
 	"net/http"
 	"strings"
@@ -15,10 +16,9 @@ func GetAuthMiddlewareFunc() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims, err := verifyClaimsFromAuthHeader(r)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("error verifying token: %v", err), http.StatusUnauthorized)
+				render.Render(w, r, ErrJwtMiddleware(err))
 				return
 			}
-
 			ctx := context.WithValue(r.Context(), authKey{}, claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

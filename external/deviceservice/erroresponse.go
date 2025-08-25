@@ -47,3 +47,10 @@ func ErrCreateJWT(err error) render.Renderer {
 		Message:        err.Error(),
 	}
 }
+func ErrJwtMiddleware(err error) render.Renderer {
+	return &ErrorResponse{
+		HTTPStatusCode: 401,
+		Title:          "JWT middleware error",
+		Message:        err.Error(),
+	}
+}
