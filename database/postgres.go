@@ -492,3 +492,19 @@ func (p *Postgres) DoUserHaveDevice(ctx context.Context, userID string) (bool, [
 
 	return true, devices, nil
 }
+
+func (p *Postgres) UpdateLocation(ctx context.Context, data *proto.UpdateLocationReq) error {
+	_, err := p.Conn.Exec(`     
+        INSERT INTO device_location (device_id, location, created_at)
+        VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326),$4)`,
+		data.DeviceID,
+		data.Location.Longitude,
+		data.Location.Latitude,
+		time.Now(),
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}

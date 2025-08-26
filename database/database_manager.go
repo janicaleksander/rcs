@@ -116,4 +116,7 @@ type Storage interface {
 	LoadConversation(ctx context.Context, id string) ([]*proto.Message, error)
 	SelectUsersToNewConversation(ctx context.Context, id string) ([]*proto.User, error)
 	DoUserHaveDevice(ctx context.Context, userID string) (bool, []*proto.Device, error)
+
+	//location
+	UpdateLocation(ctx context.Context, data *proto.UpdateLocationReq) error
 }

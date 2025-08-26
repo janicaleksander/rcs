@@ -354,3 +354,11 @@ message UserRes{
 message LoginUserRes{
   string accessToken = 1;
 }
+message Location{
+  double latitude =1;
+  double longitude =2;
+}
+message UpdateLocationReq{
+  Location location =1;
+  string deviceID = 2;
+}

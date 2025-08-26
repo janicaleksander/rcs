@@ -64,6 +64,16 @@ CREATE TABLE IF NOT EXISTS user_conversation
 
 );
 
+CREATE TABLE IF NOT EXISTS device_location
+(
+    device_id UUID REFERENCES device(id) NOT NULL,
+    location GEOGRAPHY(Point, 4326) NOT NULL,
+    created_at TIMESTAMP NOT NULL
+
+);
+
+
+
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_unit_name ON unit(name);

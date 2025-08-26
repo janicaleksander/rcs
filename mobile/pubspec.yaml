@@ -42,6 +42,7 @@ dependencies:
   dio: ^5.9.0
   flutter_dotenv: ^6.0.0
   get_it: ^8.2.0
+  location: ^8.0.1
 
 dev_dependencies:
   flutter_test:

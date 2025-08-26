@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/anthdm/hollywood/actor"
@@ -28,6 +29,13 @@ func NewHandler(addr string, ctx *actor.Context, serverPID *actor.PID) *Handler 
 	}
 }
 
+/*
+POST req:
+{
+email:" ",
+password: ""
+}
+*/
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var u *proto.LoginUserReq
 	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
@@ -71,4 +79,25 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Nice work"))
+}
+
+/*
+POST req
+{
+location:{
+			 latitude:" "
+			 longitude:" "
+		 },
+
+device_id: " "
+}
+*/
+
+func (h *Handler) updateLocation(w http.ResponseWriter, r *http.Request) {
+	var l *proto.UpdateLocationReq
+	err := json.NewDecoder(r.Body).Decode(&l)
+	if err != nil {
+		return
+	}
+	fmt.Println(l)
 }

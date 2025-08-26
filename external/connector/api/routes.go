@@ -48,6 +48,7 @@ func (h *Handler) loadRoutes() {
 	h.router.Group(func(r chi.Router) {
 		r.Use(GetAuthMiddlewareFunc())
 		r.Get("/home", h.Home)
+		r.Post("/location", h.updateLocation)
 	})
 }
 
@@ -56,3 +57,8 @@ func (h *Handler) RunHTTP() {
 	log.Printf("Server is runnig on: %v \n", h.listenAddr)
 	log.Fatalln(http.ListenAndServe(h.listenAddr, h.router))
 }
+
+//TODO maybe add to user table kind: website/mobile or etc
+
+//and block e.g. lvl3->mobile user
+//and window app only for 4,5 lvl
