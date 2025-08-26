@@ -1,12 +1,13 @@
-package deviceservice
+package api
 
 import (
 	"context"
 	"fmt"
-	"github.com/go-chi/render"
-	"github.com/janicaleksander/bcs/token"
 	"net/http"
 	"strings"
+
+	"github.com/go-chi/render"
+	"github.com/janicaleksander/bcs/token"
 )
 
 type authKey struct{}

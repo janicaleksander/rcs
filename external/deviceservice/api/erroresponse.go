@@ -1,4 +1,4 @@
-package deviceservice
+package api
 
 import (
 	"net/http"

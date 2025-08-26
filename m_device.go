@@ -7,6 +7,7 @@ import (
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
 	"github.com/janicaleksander/bcs/external/deviceservice"
+	"github.com/janicaleksander/bcs/external/deviceservice/api"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 	"github.com/joho/godotenv"
@@ -46,7 +47,8 @@ func main() {
 	if v, ok := res.(*actor.Context); ok {
 		ctx = v
 	}
-	hActor := deviceservice.NewHTTPDevice(os.Getenv("HTTP_ADDR"), ctx, serverPID)
-	go hActor.RunHTTPServer()
+	httpHandler := api.NewHandler(os.Getenv("HTTP_ADDR"), ctx, serverPID)
+	hhttp := deviceservice.NewHTTPDevice(httpHandler)
+	go hhttp.RunHTTPServer()
 	select {}
 }
