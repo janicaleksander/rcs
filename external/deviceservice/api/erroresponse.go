@@ -6,51 +6,68 @@ import (
 	"github.com/go-chi/render"
 )
 
+// ErrorResponse defines a standard JSON error payload
+// that your API returns when something goes wrong.
 type ErrorResponse struct {
-	HTTPStatusCode int    `json:"statuscode"` // status code of request
-	Title          string `json:"title"`      // user-level error
-	Message        string `json:"message"`    // user-level error
+	HTTPStatusCode int    `json:"statusCode"` // HTTP status code
+	Title          string `json:"title"`      // Short, human-readable title
+	Message        string `json:"message"`    // Detailed description of the error
 }
 
+// Render implements the render.Renderer interface.
+// It sets the appropriate HTTP status code before sending the response.
 func (e *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
 }
 
-func ErrInvalidRequest(err error) render.Renderer {
+// NewErrorResponse is a helper to quickly build an ErrorResponse.
+func NewErrorResponse(status int, title, message string) render.Renderer {
 	return &ErrorResponse{
-		HTTPStatusCode: 400,
-		Title:          "Invalid request",
-		Message:        err.Error(),
-	}
-}
-func ErrMakeRequest(err error) render.Renderer {
-	return &ErrorResponse{
-		HTTPStatusCode: 404,
-		Title:          "Can't make request",
-		Message:        err.Error(),
+		HTTPStatusCode: status,
+		Title:          title,
+		Message:        message,
 	}
 }
 
-func ErrInvalidRespondMessage(err error) render.Renderer {
-	return &ErrorResponse{
-		HTTPStatusCode: 404,
-		Title:          "Invalid respond message",
-		Message:        err.Error(),
-	}
+// Predefined error response helpers:
+
+func ErrInvalidRequestBody(err error) render.Renderer {
+	return NewErrorResponse(
+		http.StatusBadRequest,
+		"Invalid request body",
+		err.Error(),
+	)
+}
+
+func ErrActorMakeRequest(err error) render.Renderer {
+	return NewErrorResponse(
+		http.StatusInternalServerError,
+		"Actor request failed",
+		err.Error(),
+	)
+}
+
+func ErrInvalidCredentials(err error) render.Renderer {
+	return NewErrorResponse(
+		http.StatusUnauthorized,
+		"Invalid credentials",
+		err.Error(),
+	)
 }
 
 func ErrCreateJWT(err error) render.Renderer {
-	return &ErrorResponse{
-		HTTPStatusCode: 400,
-		Title:          "JWT error",
-		Message:        err.Error(),
-	}
+	return NewErrorResponse(
+		http.StatusInternalServerError,
+		"JWT creation failed",
+		err.Error(),
+	)
 }
+
 func ErrJwtMiddleware(err error) render.Renderer {
-	return &ErrorResponse{
-		HTTPStatusCode: 401,
-		Title:          "JWT middleware error",
-		Message:        err.Error(),
-	}
+	return NewErrorResponse(
+		http.StatusUnauthorized,
+		"JWT validation failed",
+		err.Error(),
+	)
 }

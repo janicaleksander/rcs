@@ -31,7 +31,7 @@ func NewHandler(addr string, ctx *actor.Context, serverPID *actor.PID) *Handler 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var u *proto.LoginUserReq
 	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
-		render.Render(w, r, ErrInvalidRequest(err))
+		render.Render(w, r, ErrInvalidRequestBody(err))
 		return
 	}
 	res, err := utils.MakeRequest(utils.NewRequest(h.ctx, h.serverPID, &proto.HTTPSpawnDevice{
@@ -39,12 +39,12 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		Password: u.Password,
 	}))
 	if err != nil { //error context deadline
-		render.Render(w, r, ErrMakeRequest(err))
+		render.Render(w, r, ErrActorMakeRequest(err))
 		return
 	}
 	var userID string
 	if v, ok := res.(*proto.SuccessSpawnDevice); !ok {
-		render.Render(w, r, ErrInvalidRespondMessage(errors.New("type is other than:  proto.SuccessSpawnDevice")))
+		render.Render(w, r, ErrInvalidCredentials(errors.New("invalid credentials")))
 		return
 	} else {
 		h.ctx.Send(h.ctx.PID(), &proto.ConnectHDeviceToADevice{
