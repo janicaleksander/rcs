@@ -9,6 +9,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  //0 -> tasks
+  //1-> home
+  //2->messages
   int _selectedIndex = 1; // HOME is selected by default
 
   void _onItemTapped(int index) {

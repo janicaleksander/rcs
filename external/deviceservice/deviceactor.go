@@ -6,6 +6,7 @@ import (
 	"github.com/janicaleksander/bcs/utils"
 )
 
+// TODO 025/08/26 12:23:28 ERROR Actor name already claimed pid=server/primary/unit/f3dcdf75-7555-40b1-8e00-5b5be0a2e039/device/2aef0730-1ccd-487d-add3-27ddb1660a41
 type DeviceActor struct {
 	ctx         *actor.Context
 	connections map[string]*actor.PID //userID who is using particular device to device PID
