@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/api/service_locator.dart';
 import 'package:mobile/router/router.dart';
-import 'package:mobile/themes/login_page/login_theme.dart';
 import 'package:mobile/pages/login_page/login_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -25,7 +24,6 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp.router(
     routerConfig: router,
-    theme: LoginTheme.light,
     themeMode: ThemeMode.system,
     debugShowCheckedModeBanner: false,
   );

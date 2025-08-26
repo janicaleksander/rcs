@@ -4,17 +4,18 @@ import 'package:mobile/pages/home_page/home_page.dart';
 import 'package:mobile/pages/login_page/login_page.dart';
 
 final GoRouter router = GoRouter(
-  routes: <RouteBase>[
+  initialLocation: '/login',
+    routes: <RouteBase>[
     GoRoute(
-      path: '/',
+      path: '/login',
       builder: (BuildContext context,GoRouterState state){
         return const LoginPage();
       },
     ),
     GoRoute(  
-        path: '/',
+        path: '/home',
         builder: (BuildContext context,GoRouterState state){
-          return const LoginPage();
+          return const HomePage();
         },
     ),
   ]

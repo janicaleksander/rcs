@@ -32,10 +32,7 @@ Future<void> onLoginPressed(BuildContext ctx,TextEditingController email, TextEd
   
   result.fold(
       (ok) {
-        SnackBar error = createError("Login error","SUCCESS");
-        ScaffoldMessenger.of(ctx)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(error);
+        ctx.go('/home');
       },
       (error){
         SnackBar err = createError(error.title,error.message);
