@@ -1,4 +1,4 @@
-package deviceservice
+package connector
 
 import (
 	"github.com/anthdm/hollywood/actor"
@@ -9,10 +9,10 @@ import (
 // TODO 025/08/26 12:23:28 ERROR Actor name already claimed pid=server/primary/unit/f3dcdf75-7555-40b1-8e00-5b5be0a2e039/device/2aef0730-1ccd-487d-add3-27ddb1660a41
 type DeviceActor struct {
 	ctx         *actor.Context
-	connections map[string]*actor.PID //userID who is using particular device to device PID
+	connections map[string]*actor.PID // device  who is using particular device to device PID
 }
 
-func NewDeviceActor() actor.Producer {
+func NewServiceDeviceActor() actor.Producer {
 	return func() actor.Receiver {
 		return &DeviceActor{
 			connections: make(map[string]*actor.PID, 64),
@@ -32,7 +32,7 @@ func (d *DeviceActor) Receive(ctx *actor.Context) {
 	case actor.Context:
 		ctx.Respond(ctx)
 	case *proto.ConnectHDeviceToADevice:
-		d.connections[msg.Id] = actor.NewPID(msg.DevicePID.Address, msg.DevicePID.Id)
+		d.connections[msg.DeviceID] = actor.NewPID(msg.DevicePID.Address, msg.DevicePID.Id)
 	default:
 		utils.Logger.Info("Unrecognized message!")
 		_ = msg

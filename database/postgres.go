@@ -459,25 +459,36 @@ func (p *Postgres) SelectUsersToNewConversation(ctx context.Context, userID stri
 	return users, nil
 }
 
-func (p *Postgres) DoUserHaveDevice(ctx context.Context, userID, unitID string) (bool, *proto.Device, error) {
-	row := p.Conn.QueryRow(`SELECT d.id,d.name,d.last_time_online,d.owner,d.type FROM device d 
-						    INNER JOIN device_to_unit dtu 
-						    ON d.id = dtu.device_id
-						    WHERE (dtu.unit_id=$1 AND d.owner = $2);`, unitID, userID)
-	d := &proto.Device{
-		Id:             "",
-		Name:           "",
-		Owner:          "",
-		LastTimeOnline: nil,
-		Type:           "",
+// THIS IS ONLY WHEN users is in one unit
+func (p *Postgres) DoUserHaveDevice(ctx context.Context, userID string) (bool, []*proto.Device, error) {
+	rows, err := p.Conn.Query(`SELECT d.id,d.name,d.last_time_online,d.owner,d.type FROM device d 
+						    INNER JOIN users u 
+						    ON d.owner = u.id
+						    WHERE (u.id = $1);`, userID)
+
+	devices := make([]*proto.Device, 0, 8)
+	for rows.Next() {
+		d := &proto.Device{
+			Id:             "",
+			Name:           "",
+			Owner:          "",
+			LastTimeOnline: nil,
+			Type:           "",
+		}
+		var lastTimeOnline sql.NullTime
+		err := rows.Scan(&d.Id, &d.Name, &lastTimeOnline, &d.Owner, &d.Type)
+		if err != nil {
+			//TODO
+		}
+		if lastTimeOnline.Valid {
+			d.LastTimeOnline = timestamppb.New(lastTimeOnline.Time)
+		}
+		devices = append(devices, d)
 	}
-	var lastTimeOnline sql.NullTime
-	err := row.Scan(&d.Id, &d.Name, &lastTimeOnline, &d.Owner, &d.Type)
+
 	if err != nil {
 		return false, nil, err
 	}
-	if lastTimeOnline.Valid {
-		d.LastTimeOnline = timestamppb.New(lastTimeOnline.Time)
-	}
-	return true, d, nil
+
+	return true, devices, nil
 }

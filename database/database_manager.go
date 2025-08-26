@@ -115,5 +115,5 @@ type Storage interface {
 	GetUserConversations(ctx context.Context, id string) ([]*proto.ConversationSummary, error)
 	LoadConversation(ctx context.Context, id string) ([]*proto.Message, error)
 	SelectUsersToNewConversation(ctx context.Context, id string) ([]*proto.User, error)
-	DoUserHaveDevice(ctx context.Context, userID, unitID string) (bool, *proto.Device, error)
+	DoUserHaveDevice(ctx context.Context, userID string) (bool, []*proto.Device, error)
 }

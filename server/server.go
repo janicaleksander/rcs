@@ -183,24 +183,26 @@ func (s *Server) Receive(ctx *actor.Context) {
 				//TODO
 			} else {
 				if ok {
-					ok, device, err := s.storage.DoUserHaveDevice(c, userID, unitID)
+					ok, devices, err := s.storage.DoUserHaveDevice(c, userID)
 					if err != nil {
 						utils.Logger.Error(err.Error())
 						//TODO
 					} else {
 						if ok {
-							res, err := utils.MakeRequest(
-								utils.NewRequest(
-									ctx,
-									s.connections[unitID],
-									&proto.SpawnAndRunDevice{Device: device}),
-							)
-							if err != nil {
-								//TODO
-								utils.Logger.Error(err.Error())
+							for _, device := range devices {
+								res, err := utils.MakeRequest(
+									utils.NewRequest(
+										ctx,
+										s.connections[unitID],
+										&proto.SpawnAndRunDevice{Device: device}),
+								)
+								if err != nil {
+									//TODO
+									utils.Logger.Error(err.Error())
 
+								}
+								ctx.Respond(res)
 							}
-							ctx.Respond(res)
 						}
 					}
 				}

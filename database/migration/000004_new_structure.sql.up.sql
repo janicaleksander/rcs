@@ -42,14 +42,6 @@ CREATE TABLE IF NOT EXISTS user_to_unit
 );
 
 
-CREATE TABLE IF NOT EXISTS device_to_unit
-(
-    unit_id UUID REFERENCES unit(id) NOT NULL,
-    device_id UUID REFERENCES device(id) NOT NULL,
-    PRIMARY KEY(unit_id, device_id)
-
-);
-
 CREATE TABLE IF NOT EXISTS conversation
 (
     id UUID PRIMARY KEY
@@ -78,7 +70,6 @@ CREATE INDEX IF NOT EXISTS idx_unit_name ON unit(name);
 CREATE INDEX IF NOT EXISTS idx_device_name ON device(name);
 CREATE INDEX IF NOT EXISTS idx_device_owner ON device(owner);
 CREATE INDEX IF NOT EXISTS idx_user_to_unit_unit ON user_to_unit(unit_id);
-CREATE INDEX IF NOT EXISTS idx_device_to_unit_device ON device_to_unit(device_id);
 CREATE INDEX IF NOT EXISTS idx_message_conversation_sent
     ON message(conversation_id, sent_at);
 CREATE INDEX IF NOT EXISTS idx_user_conversation_user ON user_conversation(user_id);

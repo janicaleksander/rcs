@@ -6,8 +6,8 @@ import (
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
-	"github.com/janicaleksander/bcs/external/deviceservice"
-	"github.com/janicaleksander/bcs/external/deviceservice/api"
+	"github.com/janicaleksander/bcs/external/connector"
+	"github.com/janicaleksander/bcs/external/connector/api"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 	"github.com/joho/godotenv"
@@ -35,7 +35,7 @@ func main() {
 		utils.Logger.Error("server is not running", "err: ", err)
 		return
 	}
-	dActor := deviceservice.NewDeviceActor()
+	dActor := connector.NewServiceDeviceActor()
 	pid := e.Spawn(dActor, "device")
 	resp = e.Request(pid, actor.Context{}, utils.WaitTime)
 	res, err := resp.Result()
@@ -48,7 +48,7 @@ func main() {
 		ctx = v
 	}
 	httpHandler := api.NewHandler(os.Getenv("HTTP_ADDR"), ctx, serverPID)
-	hhttp := deviceservice.NewHTTPDevice(httpHandler)
+	hhttp := connector.NewServiceHTTPDevice(httpHandler)
 	go hhttp.RunHTTPServer()
 	select {}
 }

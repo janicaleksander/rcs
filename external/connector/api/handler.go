@@ -48,10 +48,11 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		h.ctx.Send(h.ctx.PID(), &proto.ConnectHDeviceToADevice{
-			Id:        v.UserID,
+			DeviceID:  v.DeviceID,
 			DevicePID: v.DevicePID,
 		})
 		userID = v.UserID
+
 	}
 
 	token, err := token.CreateToken(userID, u.Email)

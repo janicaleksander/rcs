@@ -314,14 +314,15 @@ message SpawnAndRunDevice {
 }
 message SuccessSpawnDevice{
   string userID =1;
-  PID devicePID  =2;
+  string deviceID =2;
+  PID devicePID  =3;
 }
 message FailureSpawnDevice{
 
 }
 
 message ConnectHDeviceToADevice{
-  string id =1;
+  string deviceID =1;
   PID devicePID =2;
 }
 message SuccessConnectHtoA{}

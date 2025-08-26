@@ -3838,7 +3838,8 @@ func (x *SpawnAndRunDevice) GetDevice() *Device {
 type SuccessSpawnDevice struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserID        string                 `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty"`
-	DevicePID     *PID                   `protobuf:"bytes,2,opt,name=devicePID,proto3" json:"devicePID,omitempty"`
+	DeviceID      string                 `protobuf:"bytes,2,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
+	DevicePID     *PID                   `protobuf:"bytes,3,opt,name=devicePID,proto3" json:"devicePID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3876,6 +3877,13 @@ func (*SuccessSpawnDevice) Descriptor() ([]byte, []int) {
 func (x *SuccessSpawnDevice) GetUserID() string {
 	if x != nil {
 		return x.UserID
+	}
+	return ""
+}
+
+func (x *SuccessSpawnDevice) GetDeviceID() string {
+	if x != nil {
+		return x.DeviceID
 	}
 	return ""
 }
@@ -3925,7 +3933,7 @@ func (*FailureSpawnDevice) Descriptor() ([]byte, []int) {
 
 type ConnectHDeviceToADevice struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	DeviceID      string                 `protobuf:"bytes,1,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
 	DevicePID     *PID                   `protobuf:"bytes,2,opt,name=devicePID,proto3" json:"devicePID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3961,9 +3969,9 @@ func (*ConnectHDeviceToADevice) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{86}
 }
 
-func (x *ConnectHDeviceToADevice) GetId() string {
+func (x *ConnectHDeviceToADevice) GetDeviceID() string {
 	if x != nil {
-		return x.Id
+		return x.DeviceID
 	}
 	return ""
 }
@@ -4397,14 +4405,15 @@ const file_types_proto_rawDesc = "" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\":\n" +
 	"\x11SpawnAndRunDevice\x12%\n" +
-	"\x06device\x18\x01 \x01(\v2\r.types.DeviceR\x06device\"V\n" +
+	"\x06device\x18\x01 \x01(\v2\r.types.DeviceR\x06device\"r\n" +
 	"\x12SuccessSpawnDevice\x12\x16\n" +
-	"\x06userID\x18\x01 \x01(\tR\x06userID\x12(\n" +
-	"\tdevicePID\x18\x02 \x01(\v2\n" +
+	"\x06userID\x18\x01 \x01(\tR\x06userID\x12\x1a\n" +
+	"\bdeviceID\x18\x02 \x01(\tR\bdeviceID\x12(\n" +
+	"\tdevicePID\x18\x03 \x01(\v2\n" +
 	".types.PIDR\tdevicePID\"\x14\n" +
-	"\x12FailureSpawnDevice\"S\n" +
-	"\x17ConnectHDeviceToADevice\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12(\n" +
+	"\x12FailureSpawnDevice\"_\n" +
+	"\x17ConnectHDeviceToADevice\x12\x1a\n" +
+	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\x12(\n" +
 	"\tdevicePID\x18\x02 \x01(\v2\n" +
 	".types.PIDR\tdevicePID\"\x14\n" +
 	"\x12SuccessConnectHtoA\"\x14\n" +

@@ -4,7 +4,7 @@ import (
 	"reflect"
 
 	"github.com/anthdm/hollywood/actor"
-	"github.com/janicaleksander/bcs/external/deviceservice"
+	"github.com/janicaleksander/bcs/external/device"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
@@ -15,15 +15,15 @@ import (
 
 // if we delete user, we have to think what to do with assign device(maybe move somewhere?)
 type Unit struct {
-	id      string // uuid
-	devices []*proto.Device
+	id      string                // uuid
+	devices map[string]*actor.PID //device id to his PID
 }
 
 func NewUnit(id string) actor.Producer {
 	return func() actor.Receiver {
 		return &Unit{
 			id:      id,
-			devices: make([]*proto.Device, 0, 64),
+			devices: make(map[string]*actor.PID, 64),
 		}
 	}
 }
@@ -40,10 +40,11 @@ func (u *Unit) Receive(ctx *actor.Context) {
 	case *proto.Ping:
 		ctx.Respond(&proto.Pong{})
 	case *proto.SpawnAndRunDevice:
-		u.devices = append(u.devices, msg.Device)
-		pid := ctx.SpawnChild(deviceservice.NewDeviceActor(), "device", actor.WithID(msg.Device.Id))
+		pid := ctx.SpawnChild(device.NewDevice(msg.Device.Id), "device", actor.WithID(msg.Device.Id))
+		u.devices[msg.Device.Id] = pid
 		ctx.Respond(&proto.SuccessSpawnDevice{
-			UserID: msg.Device.Owner,
+			UserID:   msg.Device.Owner,
+			DeviceID: msg.Device.Id,
 			DevicePID: &proto.PID{
 				Address: pid.Address,
 				Id:      pid.ID,
