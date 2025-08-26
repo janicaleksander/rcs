@@ -26,7 +26,7 @@ func ErrInvalidRequest(err error) render.Renderer {
 }
 func ErrMakeRequest(err error) render.Renderer {
 	return &ErrorResponse{
-		HTTPStatusCode: 501,
+		HTTPStatusCode: 404,
 		Title:          "Can't make request",
 		Message:        err.Error(),
 	}
@@ -34,7 +34,7 @@ func ErrMakeRequest(err error) render.Renderer {
 
 func ErrInvalidRespondMessage(err error) render.Renderer {
 	return &ErrorResponse{
-		HTTPStatusCode: 501,
+		HTTPStatusCode: 404,
 		Title:          "Invalid respond message",
 		Message:        err.Error(),
 	}
@@ -42,7 +42,7 @@ func ErrInvalidRespondMessage(err error) render.Renderer {
 
 func ErrCreateJWT(err error) render.Renderer {
 	return &ErrorResponse{
-		HTTPStatusCode: 501,
+		HTTPStatusCode: 400,
 		Title:          "JWT error",
 		Message:        err.Error(),
 	}

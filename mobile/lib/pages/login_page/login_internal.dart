@@ -28,18 +28,24 @@ Future<void> onLoginPressed(BuildContext ctx,TextEditingController email, TextEd
   final passwordText = password.text.trim();
   final result = await AuthService().login(emailText, passwordText);
   if (!ctx.mounted) return;
+  
+  
+  result.fold(
+      (ok) {
+        SnackBar error = createError("Login error","SUCCESS");
+        ScaffoldMessenger.of(ctx)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(error);
+      },
+      (error){
+        SnackBar err = createError(error.title,error.message);
+        ScaffoldMessenger.of(ctx)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(err);
+      },
+  );
+  
 
-  if(result  == true) {
-    SnackBar error = createError("Login error","SUCCESS");
-    ScaffoldMessenger.of(ctx)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(error);
-  }else{
-    SnackBar error = createError("Login error","Cant error");
-    ScaffoldMessenger.of(ctx)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(error);
-  }
   /*
   result.fold(
       (response){
