@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/anthdm/hollywood/actor"
@@ -78,7 +77,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(res)
+	json.NewEncoder(w).Encode(&res)
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
@@ -101,10 +100,22 @@ func (h *Handler) updateLocation(w http.ResponseWriter, r *http.Request) {
 	var l *proto.UpdateLocationReq
 	err := json.NewDecoder(r.Body).Decode(&l)
 	if err != nil {
+		render.Render(w, r, ErrInvalidRequestBody(err))
 		return
 	}
-	fmt.Println(l)
+	res, err := utils.MakeRequest(utils.NewRequest(h.ctx, h.ctx.PID(), l))
+	if err != nil {
+		render.Render(w, r, ErrActorMakeRequest(err))
+		return
+	}
+	if _, ok := res.(*proto.FailureUpdateLocationReq); ok {
+		render.Render(w, r, ErrUpdateLocation(errors.ErrUnsupported))
+		return
+	}
+	resp := &proto.UpdateLocationRes{
+		Message: "Updated",
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(l)
+	json.NewEncoder(w).Encode(&resp)
 }

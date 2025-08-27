@@ -56,7 +56,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 			//TODO
 		}
 		for _, u := range units {
-			pid := ctx.SpawnChild(unit.NewUnit(u.Id), "unit", actor.WithID(u.Id))
+			pid := ctx.SpawnChild(unit.NewUnit(u.Id, s.storage), "unit", actor.WithID(u.Id))
 			ctx.Send(ctx.PID(), &proto.LoginUnit{
 				Pid: &proto.PID{
 					Address: pid.Address,

@@ -71,3 +71,10 @@ func ErrJwtMiddleware(err error) render.Renderer {
 		err.Error(),
 	)
 }
+func ErrUpdateLocation(err error) render.Renderer {
+	return NewErrorResponse(
+		http.StatusBadRequest,
+		"Can't update location",
+		err.Error(),
+	)
+}

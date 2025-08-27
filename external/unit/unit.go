@@ -1,9 +1,12 @@
 package unit
 
 import (
+	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/anthdm/hollywood/actor"
+	"github.com/janicaleksander/bcs/database"
 	"github.com/janicaleksander/bcs/external/device"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
@@ -17,13 +20,15 @@ import (
 type Unit struct {
 	id      string                // uuid
 	devices map[string]*actor.PID //device id to his PID
+	storage database.Storage
 }
 
-func NewUnit(id string) actor.Producer {
+func NewUnit(id string, storage database.Storage) actor.Producer {
 	return func() actor.Receiver {
 		return &Unit{
 			id:      id,
 			devices: make(map[string]*actor.PID, 64),
+			storage: storage,
 		}
 	}
 }
@@ -40,7 +45,7 @@ func (u *Unit) Receive(ctx *actor.Context) {
 	case *proto.Ping:
 		ctx.Respond(&proto.Pong{})
 	case *proto.SpawnAndRunDevice:
-		pid := ctx.SpawnChild(device.NewDevice(msg.Device.Id), "device", actor.WithID(msg.Device.Id))
+		pid := ctx.SpawnChild(device.NewDevice(msg.Device.Id, ctx.PID()), "device", actor.WithID(msg.Device.Id))
 		u.devices[msg.Device.Id] = pid
 		ctx.Respond(&proto.SuccessSpawnDevice{
 			UserID:   msg.Device.Owner,
@@ -50,6 +55,18 @@ func (u *Unit) Receive(ctx *actor.Context) {
 				Id:      pid.ID,
 			},
 		})
+
+	case *proto.UpdateLocationReq:
+		fmt.Println("Dostalem od device")
+		c := context.Background()
+		err := u.storage.UpdateLocation(c, msg)
+		if err != nil {
+			fmt.Println("error w unit")
+			ctx.Respond(&proto.FailureUpdateLocationReq{})
+		} else {
+			ctx.Respond(&proto.SuccessUpdateLocationReq{})
+		}
+
 	default:
 		utils.Logger.Warn("Unit got unknown message", "Type", reflect.TypeOf(msg).String())
 		_ = msg

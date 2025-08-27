@@ -4323,6 +4323,122 @@ func (x *UpdateLocationReq) GetDeviceID() string {
 	return ""
 }
 
+type SuccessUpdateLocationReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessUpdateLocationReq) Reset() {
+	*x = SuccessUpdateLocationReq{}
+	mi := &file_types_proto_msgTypes[94]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessUpdateLocationReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessUpdateLocationReq) ProtoMessage() {}
+
+func (x *SuccessUpdateLocationReq) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[94]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessUpdateLocationReq.ProtoReflect.Descriptor instead.
+func (*SuccessUpdateLocationReq) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{94}
+}
+
+type FailureUpdateLocationReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FailureUpdateLocationReq) Reset() {
+	*x = FailureUpdateLocationReq{}
+	mi := &file_types_proto_msgTypes[95]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FailureUpdateLocationReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FailureUpdateLocationReq) ProtoMessage() {}
+
+func (x *FailureUpdateLocationReq) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[95]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FailureUpdateLocationReq.ProtoReflect.Descriptor instead.
+func (*FailureUpdateLocationReq) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{95}
+}
+
+type UpdateLocationRes struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateLocationRes) Reset() {
+	*x = UpdateLocationRes{}
+	mi := &file_types_proto_msgTypes[96]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateLocationRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateLocationRes) ProtoMessage() {}
+
+func (x *UpdateLocationRes) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[96]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateLocationRes.ProtoReflect.Descriptor instead.
+func (*UpdateLocationRes) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{96}
+}
+
+func (x *UpdateLocationRes) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
@@ -4553,7 +4669,11 @@ const file_types_proto_rawDesc = "" +
 	"\tlongitude\x18\x02 \x01(\x01R\tlongitude\"\\\n" +
 	"\x11UpdateLocationReq\x12+\n" +
 	"\blocation\x18\x01 \x01(\v2\x0f.types.LocationR\blocation\x12\x1a\n" +
-	"\bdeviceID\x18\x02 \x01(\tR\bdeviceIDB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
+	"\bdeviceID\x18\x02 \x01(\tR\bdeviceID\"\x1a\n" +
+	"\x18SuccessUpdateLocationReq\"\x1a\n" +
+	"\x18FailureUpdateLocationReq\"-\n" +
+	"\x11UpdateLocationRes\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessageB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -4567,7 +4687,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 94)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 97)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                           // 0: types.Role
 	(*Personal)(nil),                       // 1: types.Personal
@@ -4663,7 +4783,10 @@ var file_types_proto_goTypes = []any{
 	(*LoginUserRes)(nil),                   // 91: types.LoginUserRes
 	(*Location)(nil),                       // 92: types.Location
 	(*UpdateLocationReq)(nil),              // 93: types.UpdateLocationReq
-	(*timestamppb.Timestamp)(nil),          // 94: google.protobuf.Timestamp
+	(*SuccessUpdateLocationReq)(nil),       // 94: types.SuccessUpdateLocationReq
+	(*FailureUpdateLocationReq)(nil),       // 95: types.FailureUpdateLocationReq
+	(*UpdateLocationRes)(nil),              // 96: types.UpdateLocationRes
+	(*timestamppb.Timestamp)(nil),          // 97: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
 	1,  // 0: types.User.personal:type_name -> types.Personal
@@ -4678,7 +4801,7 @@ var file_types_proto_depIdxs = []int32{
 	4,  // 9: types.RegisterClient.pid:type_name -> types.PID
 	49, // 10: types.ConversationSummary.last_message:type_name -> types.Message
 	45, // 11: types.SuccessGetUserConversation.convSummary:type_name -> types.ConversationSummary
-	94, // 12: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	97, // 12: types.Message.sent_at:type_name -> google.protobuf.Timestamp
 	49, // 13: types.SendMessage.message:type_name -> types.Message
 	49, // 14: types.DeliverMessage.message:type_name -> types.Message
 	49, // 15: types.StoreMessage.message:type_name -> types.Message
@@ -4689,7 +4812,7 @@ var file_types_proto_depIdxs = []int32{
 	49, // 20: types.SuccessOpenAndLoadConversation.messages:type_name -> types.Message
 	49, // 21: types.SuccessLoadConversation.messages:type_name -> types.Message
 	2,  // 22: types.SuccessUsersToNewConversation.users:type_name -> types.User
-	94, // 23: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
+	97, // 23: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
 	81, // 24: types.SpawnAndRunDevice.device:type_name -> types.Device
 	4,  // 25: types.SuccessSpawnDevice.devicePID:type_name -> types.PID
 	4,  // 26: types.ConnectHDeviceToADevice.devicePID:type_name -> types.PID
@@ -4717,7 +4840,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   94,
+			NumMessages:   97,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

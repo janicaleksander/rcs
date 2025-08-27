@@ -364,3 +364,9 @@ message UpdateLocationReq{
   Location location =1;
   string deviceID = 2;
 }
+
+message SuccessUpdateLocationReq{}
+message FailureUpdateLocationReq{}
+message UpdateLocationRes{//this can be a response in actor when i refactor it
+  string message =1;
+}
