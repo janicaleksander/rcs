@@ -5,10 +5,12 @@ import 'package:mobile/api/api_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mobile/api/token_service.dart';
 import 'package:mobile/api/err_response.dart';
+import 'package:mobile/storage/storage_service.dart';
 
 
 class AuthService {
-  final TokenService _storage = GetIt.instance<TokenService>();
+  final TokenService _tokenService = GetIt.instance<TokenService>();
+  final StorageService _storage = GetIt.instance<StorageService>();
   Future<Either<bool,ErrResponse>> login(String email, password) async {
     try {
       final response = await ApiClient().dio.post(
@@ -22,7 +24,9 @@ class AuthService {
       switch (responseCode){
         case 200:
           final token = response.data['accessToken'];
-          await _storage.saveToken(token);
+          await _tokenService.saveToken(token);
+          await _storage.save('userID', response.data['userID']);
+          await _storage.save('deviceID', response.data['deviceID']);
           return Left(true);
         default:
           return Right(ErrResponse(response.data['title'], response.data['message']));
@@ -40,7 +44,7 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    await _storage.deleteToken();
+    await _tokenService.deleteToken();
   }
 
 }

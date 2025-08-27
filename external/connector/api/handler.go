@@ -51,6 +51,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var userID string
+	var deviceID string
 	if v, ok := res.(*proto.SuccessSpawnDevice); !ok {
 		render.Render(w, r, ErrInvalidCredentials(errors.New("invalid credentials")))
 		return
@@ -60,6 +61,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 			DevicePID: v.DevicePID,
 		})
 		userID = v.UserID
+		deviceID = v.DeviceID
 
 	}
 
@@ -69,6 +71,8 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res = &proto.LoginUserRes{
+		UserID:      userID,
+		DeviceID:    deviceID,
 		AccessToken: token,
 	}
 
@@ -89,7 +93,7 @@ location:{
 			 longitude:" "
 		 },
 
-device_id: " "
+deviceID: " "
 }
 */
 
@@ -100,4 +104,7 @@ func (h *Handler) updateLocation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(l)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(l)
 }

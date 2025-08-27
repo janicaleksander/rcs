@@ -4162,6 +4162,8 @@ func (x *UserRes) GetSurname() string {
 type LoginUserRes struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccessToken   string                 `protobuf:"bytes,1,opt,name=accessToken,proto3" json:"accessToken,omitempty"`
+	UserID        string                 `protobuf:"bytes,2,opt,name=userID,proto3" json:"userID,omitempty"`
+	DeviceID      string                 `protobuf:"bytes,3,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4199,6 +4201,20 @@ func (*LoginUserRes) Descriptor() ([]byte, []int) {
 func (x *LoginUserRes) GetAccessToken() string {
 	if x != nil {
 		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *LoginUserRes) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+func (x *LoginUserRes) GetDeviceID() string {
+	if x != nil {
+		return x.DeviceID
 	}
 	return ""
 }
@@ -4527,9 +4543,11 @@ const file_types_proto_rawDesc = "" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"7\n" +
 	"\aUserRes\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
-	"\asurname\x18\x02 \x01(\tR\asurname\"0\n" +
+	"\asurname\x18\x02 \x01(\tR\asurname\"d\n" +
 	"\fLoginUserRes\x12 \n" +
-	"\vaccessToken\x18\x01 \x01(\tR\vaccessToken\"D\n" +
+	"\vaccessToken\x18\x01 \x01(\tR\vaccessToken\x12\x16\n" +
+	"\x06userID\x18\x02 \x01(\tR\x06userID\x12\x1a\n" +
+	"\bdeviceID\x18\x03 \x01(\tR\bdeviceID\"D\n" +
 	"\bLocation\x12\x1a\n" +
 	"\blatitude\x18\x01 \x01(\x01R\blatitude\x12\x1c\n" +
 	"\tlongitude\x18\x02 \x01(\x01R\tlongitude\"\\\n" +

@@ -5,7 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:mobile/api/token_service.dart';
 
 class ApiClient {
-  final TokenService _storage = GetIt.instance<TokenService>();
+  final TokenService _tokenService = GetIt.instance<TokenService>();
   late final Dio dio;
 
   ApiClient() {
@@ -21,14 +21,14 @@ class ApiClient {
     )..interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await _storage.getToken();
+          final token = await _tokenService.getToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
           return handler.next(options);
         },
         onError: (DioException e,handler) async{
-          if(e.response?.statusCode == 401){
+          if(e.response?.statusCode == 401){ // but idk watch out on status code and errors
             //TODO refresg token
           }
           return handler.next(e);

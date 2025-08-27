@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/location/location_service.dart';
 import 'package:mobile/themes/home_page/colors.dart';
+import 'package:get_it/get_it.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,7 +15,6 @@ class _HomePageState extends State<HomePage> {
   //1-> home
   //2->messages
   int _selectedIndex = 1; // HOME is selected by default
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;

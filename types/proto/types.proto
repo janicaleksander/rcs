@@ -353,6 +353,8 @@ message UserRes{
 
 message LoginUserRes{
   string accessToken = 1;
+  string userID = 2;
+  string deviceID =3;
 }
 message Location{
   double latitude =1;
