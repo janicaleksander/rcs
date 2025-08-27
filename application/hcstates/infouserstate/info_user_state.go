@@ -13,14 +13,15 @@ type InfoUserScene struct {
 	cfg          *utils.SharedConfig
 	stateManager *statesmanager.StateManager
 	//scheduler TODO
-	backButton          component.Button
-	unitListSection     UnitListSection
-	userListSection     UserListSection
-	descriptionSection  DescriptionSection
-	actionSection       ActionSection
-	addActionSection    AddActionSection
-	removeActionSection RemoveActionSection
-	sendMessageSection  SendMessageSection
+	backButton               component.Button
+	unitListSection          UnitListSection
+	userListSection          UserListSection
+	descriptionSection       DescriptionSection
+	actionSection            ActionSection
+	addActionSection         AddActionSection
+	removeActionSection      RemoveActionSection
+	sendMessageSection       SendMessageSection
+	trackUserLocationSection TrackUserLocationSection
 }
 
 type UnitListSection struct {
@@ -51,6 +52,8 @@ type ActionSection struct {
 	showRemoveModal     bool
 	inboxButton         component.Button
 	showInboxModal      bool
+	trackLocation       component.Button
+	showLocationModal   bool
 }
 
 type AddActionSection struct {
@@ -71,6 +74,10 @@ type SendMessageSection struct {
 	sendMessage                component.Button
 	activeUserCircle           component.Circle
 	isSendMessageButtonPressed bool
+}
+
+type TrackUserLocationSection struct {
+	mapModal component.Modal
 }
 
 func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cfg *utils.SharedConfig) {
@@ -141,6 +148,13 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 		i.actionSection.removeButton.Bounds.Width,
 		i.actionSection.removeButton.Bounds.Height), "Send message!", false)
 
+	i.actionSection.trackLocation = *component.NewButton(component.NewButtonConfig(),
+		rl.NewRectangle(
+			i.actionSection.inboxButton.Bounds.X+i.actionSection.inboxButton.Bounds.Width+10,
+			i.actionSection.inboxButton.Bounds.Y,
+			i.actionSection.inboxButton.Bounds.Width,
+			i.actionSection.inboxButton.Bounds.Height),
+		"Location", false)
 	if len(i.userListSection.users) > 0 {
 		i.userListSection.usersList.IdxActiveElement = 0
 	} else {
@@ -226,6 +240,12 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 		Radius: 10,
 	}
 
+	i.trackUserLocationSection.mapModal = component.Modal{
+		Background: rl.NewRectangle(0, 0, float32(rl.GetScreenWidth()), float32(rl.GetScreenHeight())),
+		BgColor:    rl.Fade(rl.Gray, 0.3),
+		Core:       rl.NewRectangle(float32(rl.GetScreenWidth()/2-150.0), float32(rl.GetScreenHeight()/2-150.0), 400, 200),
+	}
+	//TODO
 	i.backButton = *component.NewButton(
 		component.NewButtonConfig(),
 		rl.NewRectangle(
@@ -244,7 +264,8 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 	modalAddOpen := i.actionSection.showAddModal
 	modalRemoveOpen := i.actionSection.showRemoveModal
 	modalSendOpen := i.actionSection.showInboxModal
-	cond := !modalAddOpen && !modalRemoveOpen && !modalSendOpen
+	modalLocationOpen := i.actionSection.showLocationModal
+	cond := !modalAddOpen && !modalRemoveOpen && !modalSendOpen && !modalLocationOpen
 	i.sendMessageSection.inboxInput.SetActive(cond)
 	i.actionSection.addButton.SetActive(cond)
 	i.actionSection.removeButton.SetActive(cond)
@@ -252,6 +273,7 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 	i.addActionSection.acceptAddButton.SetActive(cond)
 	i.removeActionSection.acceptRemoveButton.SetActive(cond)
 	i.sendMessageSection.sendMessage.SetActive(cond)
+	i.actionSection.trackLocation.SetActive(cond)
 	i.backButton.SetActive(cond)
 
 	i.sendMessageSection.inboxInput.Update()
@@ -264,6 +286,9 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 	}
 	if i.actionSection.inboxButton.Update() {
 		i.actionSection.showInboxModal = true
+	}
+	if i.actionSection.trackLocation.Update() {
+		i.actionSection.showLocationModal = true
 	}
 
 	i.addActionSection.isConfirmAddButtonPressed = i.addActionSection.acceptAddButton.Update()
@@ -300,6 +325,7 @@ func (i *InfoUserScene) RenderInfoUserState() {
 	i.actionSection.addButton.Render()
 	i.actionSection.removeButton.Render()
 	i.actionSection.inboxButton.Render()
+	i.actionSection.trackLocation.Render()
 
 	gui.ListViewEx(
 		i.userListSection.usersList.Bounds,
@@ -376,6 +402,12 @@ func (i *InfoUserScene) RenderInfoUserState() {
 		i.sendMessageSection.sendMessage.Render()
 		i.sendMessageSection.inboxInput.Render()
 
+	}
+
+	if i.actionSection.showLocationModal {
+		if gui.WindowBox(i.trackUserLocationSection.mapModal.Core, "TITLE") {
+			i.actionSection.showLocationModal = false
+		}
 	}
 
 }
