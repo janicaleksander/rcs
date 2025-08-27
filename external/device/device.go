@@ -1,8 +1,6 @@
 package device
 
 import (
-	"fmt"
-
 	"github.com/anthdm/hollywood/actor"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
@@ -31,10 +29,8 @@ func (d *Device) Receive(ctx *actor.Context) {
 	case actor.Stopped:
 		utils.Logger.Info("Device", d.id, " stopped")
 	case *proto.UpdateLocationReq:
-		fmt.Println("Dostalem od conectora")
 		res, err := utils.MakeRequest(utils.NewRequest(ctx, d.unitPID, msg))
 		if err != nil {
-			fmt.Println("Error w device", err)
 			ctx.Respond(&proto.FailureUpdateLocationReq{})
 		} else {
 			ctx.Respond(res)

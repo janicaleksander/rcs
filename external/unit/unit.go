@@ -2,7 +2,6 @@ package unit
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"github.com/anthdm/hollywood/actor"
@@ -57,11 +56,9 @@ func (u *Unit) Receive(ctx *actor.Context) {
 		})
 
 	case *proto.UpdateLocationReq:
-		fmt.Println("Dostalem od device")
 		c := context.Background()
 		err := u.storage.UpdateLocation(c, msg)
 		if err != nil {
-			fmt.Println("error w unit")
 			ctx.Respond(&proto.FailureUpdateLocationReq{})
 		} else {
 			ctx.Respond(&proto.SuccessUpdateLocationReq{})

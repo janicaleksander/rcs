@@ -1,8 +1,6 @@
 package connector
 
 import (
-	"fmt"
-
 	"github.com/anthdm/hollywood/actor"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
@@ -36,10 +34,8 @@ func (d *DeviceActor) Receive(ctx *actor.Context) {
 	case *proto.ConnectHDeviceToADevice:
 		d.connections[msg.DeviceID] = actor.NewPID(msg.DevicePID.Address, msg.DevicePID.Id)
 	case *proto.UpdateLocationReq:
-		fmt.Println("dostalem od hamdlers")
 		res, err := utils.MakeRequest(utils.NewRequest(ctx, d.connections[msg.DeviceID], msg))
 		if err != nil {
-			fmt.Println("Error w connector", err)
 			d.ctx.Respond(&proto.FailureUpdateLocationReq{})
 		} else {
 			d.ctx.Respond(res)
