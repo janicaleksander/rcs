@@ -37,3 +37,7 @@ tmp
 m_app.exe
 external/unit/conf
 static
+osm/
+osm
+.venv
+bcs-pin
