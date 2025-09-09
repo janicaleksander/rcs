@@ -2,7 +2,6 @@ package infouserstate
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -303,16 +302,15 @@ func (i *InfoUserScene) FetchUsers() {
 }
 
 // TODO add start point
+// this is going to fetch from some kind of cfg when we have to set a default city (now is only WRO)
 func (i *InfoUserScene) prepareMap() {
-	centerLat := (minLat + maxLat) / 2
-	centerLon := (minLon + maxLon) / 2
-	centerXTile, centerYTile := deg2tile(centerLat, centerLon, ZOOM)
-	mapX, mapY := float32(centerXTile*TILESIZE), float32(centerYTile*TILESIZE)
-
+	centerLat := 51.11080123267171
+	centerLon := 17.018041879680265
+	mapX, mapY := latLonToPixel(centerLat, centerLon, ZOOM)
 	i.trackUserLocationSection.LocationMap.camera = rl.Camera2D{
 		Offset: rl.Vector2{
-			X: (i.trackUserLocationSection.LocationMap.width) / 2,
-			Y: (i.trackUserLocationSection.LocationMap.height) / 2,
+			X: i.trackUserLocationSection.mapModal.Core.Width/2 + (i.trackUserLocationSection.LocationMap.width)/2,
+			Y: i.trackUserLocationSection.mapModal.Core.Height/2 + (i.trackUserLocationSection.LocationMap.height)/2,
 		},
 		Target: rl.Vector2{
 			X: mapX,
@@ -322,8 +320,8 @@ func (i *InfoUserScene) prepareMap() {
 		Zoom:     1,
 	}
 	i.trackUserLocationSection.LocationMap.tm.preloadNearbyTiles(
-		i.trackUserLocationSection.LocationMap.camera.Target.X,
-		i.trackUserLocationSection.LocationMap.camera.Target.Y,
+		mapX,
+		mapY,
 	)
 
 }
@@ -345,16 +343,17 @@ func (i *InfoUserScene) updateMap() {
 		tile.loadTextureNow()
 	default:
 	}
-	i.trackUserLocationSection.LocationMap.tm.cleanupDistantTiles(
-		i.trackUserLocationSection.LocationMap.camera.Target.X,
-		i.trackUserLocationSection.LocationMap.camera.Target.Y,
-	)
+
 	i.trackUserLocationSection.LocationMap.tm.setVisibleTiles(
 		i.trackUserLocationSection.LocationMap.camera.Target.X,
 		i.trackUserLocationSection.LocationMap.camera.Target.Y,
 		int(i.trackUserLocationSection.LocationMap.width),
 		int(i.trackUserLocationSection.LocationMap.height))
 	i.trackUserLocationSection.LocationMap.tm.preloadNearbyTiles(
+		i.trackUserLocationSection.LocationMap.camera.Target.X,
+		i.trackUserLocationSection.LocationMap.camera.Target.Y,
+	)
+	i.trackUserLocationSection.LocationMap.tm.cleanupDistantTiles(
 		i.trackUserLocationSection.LocationMap.camera.Target.X,
 		i.trackUserLocationSection.LocationMap.camera.Target.Y,
 	)
@@ -379,55 +378,35 @@ func (i *InfoUserScene) drawMap() {
 				rl.White)
 		}
 	}
-	mapX, mapY := latLonToPixel(51.008056510784286, 16.254980596758454, ZOOM)
-	texture := rl.LoadTexture("osm/output.png")
-	rl.DrawTexture(texture, int32(mapX), int32(mapY), rl.White)
+
+	//drawPins()
+	if !i.trackUserLocationSection.LocationMap.isPinLoaded {
+		i.trackUserLocationSection.LocationMap.pinTexture = rl.LoadTexture("osm/output.png")
+		i.trackUserLocationSection.LocationMap.isPinLoaded = true
+	}
+
 	scale := float32(rl.GetRenderWidth()) / float32(rl.GetScreenWidth())
 	mouse := rl.GetMousePosition()
 	mouse.X *= scale
 	mouse.Y *= scale
-
-	mouseWorldPos := rl.GetScreenToWorld2D(mouse, i.trackUserLocationSection.LocationMap.camera)
-	pin := rl.NewVector2(mapX, mapY)
-	fmt.Println(mouseWorldPos.X - pin.X)
-	fmt.Println(mouseWorldPos.Y - pin.Y)
-	rl.DrawCircleV(mouseWorldPos, 10, rl.Red) // mysz w świecie
-	rl.DrawCircleV(pin, 10, rl.Green)         // pin w świecie
+	//	mouseWorldPos := rl.GetScreenToWorld2D(mouse, i.trackUserLocationSection.LocationMap.camera)
 	rl.EndMode2D()
-	fmt.Println(rl.GetRenderWidth() / rl.GetScreenWidth())
-
 }
 
-func distance(pos1, pos2 rl.Vector2) float64 {
-	return math.Sqrt(float64((pos1.X-pos2.X)*(pos1.X-pos2.X)) + float64((pos1.Y-pos2.Y)*(pos1.Y-pos2.Y)))
-
-}
-func isOnPin(camera rl.Camera2D, posX, posY float32) bool {
+func isOnPin(mousePos, pinPos rl.Vector2) bool {
 	pinBox := rl.NewRectangle(
-		posX,
-		posY,
+		pinPos.X,
+		pinPos.Y,
 		64,
 		64,
 	)
 
-	mouseWorldPos := rl.GetScreenToWorld2D(rl.GetMousePosition(), camera)
-
-	fmt.Printf("Mouse World Pos: (%.2f, %.2f)\n", mouseWorldPos.X, mouseWorldPos.Y)
-	fmt.Printf("Pin Box: (%.2f, %.2f, %.2f, %.2f)\n", pinBox.X, pinBox.Y, pinBox.Width, pinBox.Height)
-
-	rl.DrawRectangle(
-		int32(pinBox.X),
-		int32(pinBox.Y),
-		int32(pinBox.Width),
-		int32(pinBox.Height),
-		rl.Red)
-
-	isColliding := rl.CheckCollisionPointRec(mouseWorldPos, pinBox)
+	isColliding := rl.CheckCollisionPointRec(mousePos, pinBox)
 	if isColliding {
 		rl.SetMouseCursor(rl.MouseCursorPointingHand)
 		notificationBox := rl.NewRectangle(
-			posX,
-			posY-64,
+			pinPos.X-64,
+			pinPos.Y-64,
 			200,
 			64)
 

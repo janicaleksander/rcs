@@ -14,6 +14,8 @@ type LocationMap struct {
 	tm               *TileManager
 	camera           rl.Camera2D
 	isDraggingCamera bool
+	isPinLoaded      bool
+	pinTexture       rl.Texture2D
 }
 
 // bounds of dolnyslask area
@@ -28,7 +30,7 @@ const (
 	TILESIZE        = 256
 	ZOOM            = 14
 	LOADDISTANCE    = 10
-	PRELOADDISTANCE = 10
+	PRELOADDISTANCE = 7
 	CLEANUPDISTANCE = 20
 	CLEANUPTIME     = time.Second * 2
 )

@@ -244,10 +244,10 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 	i.trackUserLocationSection.mapModal = component.Modal{
 		Background: rl.NewRectangle(0, 0, float32(rl.GetScreenWidth()), float32(rl.GetScreenHeight())),
 		BgColor:    rl.Fade(rl.Gray, 0.3),
-		Core:       rl.NewRectangle(float32(rl.GetScreenWidth()/2-500.0), float32(rl.GetScreenHeight()/2-225.0), 1000, 450),
+		Core:       rl.NewRectangle(float32(rl.GetScreenWidth()/2-400.0), float32(rl.GetScreenHeight()/2-225.0), 800, 450),
 	}
 	i.trackUserLocationSection.LocationMap = LocationMap{
-		width:  1000,
+		width:  800,
 		height: 450,
 		tm:     NewTileManager(),
 	}
