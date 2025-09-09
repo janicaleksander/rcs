@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/joho/godotenv"
@@ -97,6 +98,7 @@ func (d *DBManager) GetDB() *sql.DB {
 
 // database interface that is used in application
 type Storage interface {
+	UpdateUserOnline(ctx context.Context, id string, time time.Time) error
 	InsertUser(context.Context, *proto.User) error
 	GetUser(ctx context.Context, id string) (*proto.User, error)
 	LoginUser(ctx context.Context, email, password string) (string, int, error)
@@ -119,4 +121,5 @@ type Storage interface {
 
 	//location
 	UpdateLocation(ctx context.Context, data *proto.UpdateLocationReq) error
+	FetchPins(ctx context.Context) ([]*proto.Pin, error)
 }

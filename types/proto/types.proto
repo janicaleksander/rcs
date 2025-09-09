@@ -370,3 +370,27 @@ message FailureUpdateLocationReq{}
 message UpdateLocationRes{//this can be a response in actor when i refactor it
   string message =1;
 }
+message Task {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int32 state =4;
+  google.protobuf.Timestamp completionDate = 5;
+
+}
+message Pin {
+  string deviceID = 1;
+  string ownerNS =2;
+  Location location = 3;
+  google.protobuf.Timestamp last_online = 4;
+}
+
+message FetchPins{
+
+}
+message SuccessFetchPins{
+  repeated Pin pins = 1;
+}
+message FailureFetchPins{
+
+}

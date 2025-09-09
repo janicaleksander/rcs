@@ -33,6 +33,23 @@ type Postgres struct {
 // Implemented function from Storage interface.
 // It takes context (e.g. to set max time for query), User and if no errors insert into database.
 // If error occurs -> return it, and rollback transaction.
+
+func (p *Postgres) UpdateUserOnline(ctx context.Context, id string, t time.Time) error {
+	tx, err := p.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, `UPDATE users SET last_time_online = $1 WHERE (id = $2);`, t, id)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p *Postgres) InsertUser(ctx context.Context, user *proto.User) error {
 	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
@@ -507,4 +524,42 @@ func (p *Postgres) UpdateLocation(ctx context.Context, data *proto.UpdateLocatio
 		return err
 	}
 	return nil
+}
+
+func (p *Postgres) FetchPins(ctx context.Context) ([]*proto.Pin, error) {
+	rows, err := p.Conn.QueryContext(ctx, `SELECT DISTINCT ON (device_id) p.name,p.surname, device_id, 
+    								ST_Y(location::geometry) as lat,
+    								ST_X(location::geometry) as lng, 
+                               		created_at
+									FROM device_location
+									INNER JOIN device d ON d.id = device_id
+									INNER JOIN users u ON d.owner = u.id
+									INNER JOIN personal p on u.id = p.user_id
+									ORDER BY device_id, created_at DESC;`)
+	if err != nil {
+		return nil, err
+	}
+	pins := make([]*proto.Pin, 0, 32)
+	for rows.Next() {
+		pin := &proto.Pin{
+			DeviceID: "",
+			OwnerNS:  "",
+			Location: &proto.Location{
+				Latitude:  0,
+				Longitude: 0,
+			},
+			LastOnline: nil,
+		}
+		var tmp time.Time
+		var name, surname string
+		err = rows.Scan(&name, &surname, &pin.DeviceID, &pin.Location.Latitude, &pin.Location.Longitude, &tmp)
+		pin.LastOnline = timestamppb.New(tmp)
+		pin.OwnerNS = name + " " + surname
+		if err != nil {
+			//err
+			continue
+		}
+		pins = append(pins, pin)
+	}
+	return pins, nil
 }

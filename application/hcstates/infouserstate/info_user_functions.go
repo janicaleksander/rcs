@@ -8,6 +8,7 @@ import (
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/google/uuid"
+	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -367,6 +368,35 @@ func (i *InfoUserScene) updateMap() {
 	*/
 
 }
+
+func (i *InfoUserScene) FetchPins() {
+	i.trackUserLocationSection.pinsInfo = i.trackUserLocationSection.pinsInfo[:0]
+	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.FetchPins{}))
+	if err != nil {
+		//TODO
+	}
+	if v, ok := res.(*proto.SuccessFetchPins); !ok {
+		//error
+	} else {
+		for _, p := range v.Pins {
+			x, y := latLonToPixel(p.Location.Latitude, p.Location.Longitude, ZOOM)
+			i.trackUserLocationSection.pinsInfo = append(i.trackUserLocationSection.pinsInfo,
+				&component.PinInfo{
+					Position: rl.NewVector2(x, y),
+					Owner:    p.OwnerNS,
+					Time:     p.LastOnline.AsTime(),
+				})
+		}
+
+	}
+}
+
+func (i *InfoUserScene) drawPins() {
+	for _, p := range i.trackUserLocationSection.pinsInfo {
+		rl.DrawTexture(i.trackUserLocationSection.LocationMap.pinTexture, int32(p.Position.X), int32(p.Position.Y), rl.White)
+	}
+
+}
 func (i *InfoUserScene) drawMap() {
 	rl.BeginMode2D(i.trackUserLocationSection.LocationMap.camera)
 	tiles := i.trackUserLocationSection.LocationMap.tm.getLoadedTiles()
@@ -379,7 +409,6 @@ func (i *InfoUserScene) drawMap() {
 		}
 	}
 
-	//drawPins()
 	if !i.trackUserLocationSection.LocationMap.isPinLoaded {
 		i.trackUserLocationSection.LocationMap.pinTexture = rl.LoadTexture("osm/output.png")
 		i.trackUserLocationSection.LocationMap.isPinLoaded = true
@@ -389,42 +418,50 @@ func (i *InfoUserScene) drawMap() {
 	mouse := rl.GetMousePosition()
 	mouse.X *= scale
 	mouse.Y *= scale
-	//	mouseWorldPos := rl.GetScreenToWorld2D(mouse, i.trackUserLocationSection.LocationMap.camera)
+	mouseWorldPos := rl.GetScreenToWorld2D(mouse, i.trackUserLocationSection.LocationMap.camera)
+	i.drawPins()
+	i.checkMousePinCollision(mouseWorldPos)
 	rl.EndMode2D()
 }
 
-func isOnPin(mousePos, pinPos rl.Vector2) bool {
-	pinBox := rl.NewRectangle(
-		pinPos.X,
-		pinPos.Y,
-		64,
-		64,
-	)
-
-	isColliding := rl.CheckCollisionPointRec(mousePos, pinBox)
-	if isColliding {
-		rl.SetMouseCursor(rl.MouseCursorPointingHand)
-		notificationBox := rl.NewRectangle(
-			pinPos.X-64,
-			pinPos.Y-64,
-			200,
-			64)
-
-		rl.DrawRectangle(
-			int32(notificationBox.X),
-			int32(notificationBox.Y),
-			int32(notificationBox.Width),
-			int32(notificationBox.Height),
-			rl.Blue)
-
-		rl.DrawText(
-			"Pin Location",
-			int32(notificationBox.X+5),
-			int32(notificationBox.Y+20),
-			20,
-			rl.White)
-	} else {
-		rl.SetMouseCursor(rl.MouseCursorDefault)
+func (i *InfoUserScene) checkMousePinCollision(mousePos rl.Vector2) {
+	for _, p := range i.trackUserLocationSection.pinsInfo {
+		pinBox := rl.NewRectangle(
+			p.Position.X,
+			p.Position.Y,
+			64,
+			64,
+		)
+		isColliding := rl.CheckCollisionPointRec(mousePos, pinBox)
+		if isColliding {
+			drawInfoBox(p)
+		} else {
+			rl.SetMouseCursor(rl.MouseCursorDefault)
+		}
 	}
-	return isColliding
+
+}
+
+// TODO refacotr pin info -> slice with pin + pinInfo
+func drawInfoBox(pin *component.PinInfo) {
+	rl.SetMouseCursor(rl.MouseCursorPointingHand)
+	notificationBox := rl.NewRectangle(
+		pin.Position.X-64,
+		pin.Position.Y-64,
+		300,
+		64)
+
+	rl.DrawRectangle(
+		int32(notificationBox.X),
+		int32(notificationBox.Y),
+		int32(notificationBox.Width),
+		int32(notificationBox.Height),
+		rl.White)
+
+	rl.DrawText(
+		pin.Owner+"\n"+pin.Time.Format("2006 01 02 15:04"),
+		int32(notificationBox.X+5),
+		int32(notificationBox.Y+20),
+		20,
+		rl.Black)
 }

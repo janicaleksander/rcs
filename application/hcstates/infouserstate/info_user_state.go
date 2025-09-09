@@ -77,8 +77,14 @@ type SendMessageSection struct {
 }
 
 type TrackUserLocationSection struct {
-	LocationMap LocationMap
-	mapModal    component.Modal
+	LocationMap  LocationMap
+	mapModal     component.Modal
+	pinsInfo     []*component.PinInfo // a graphical presentation of this pins
+	currentTasks []*proto.Task
+	// there is current task of each user
+	//and here we have to filter if he is in work or no
+
+	//or for now we can leave only a timestamp
 }
 
 func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cfg *utils.SharedConfig) {
@@ -240,7 +246,8 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 		Y:      int32(i.sendMessageSection.inboxModal.Core.Y),
 		Radius: 10,
 	}
-
+	i.trackUserLocationSection.pinsInfo = make([]*component.PinInfo, 0, 64)
+	i.trackUserLocationSection.currentTasks = make([]*proto.Task, 0, 64)
 	i.trackUserLocationSection.mapModal = component.Modal{
 		Background: rl.NewRectangle(0, 0, float32(rl.GetScreenWidth()), float32(rl.GetScreenHeight())),
 		BgColor:    rl.Fade(rl.Gray, 0.3),
@@ -295,6 +302,7 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 		i.actionSection.showInboxModal = true
 	}
 	if i.actionSection.trackLocation.Update() {
+		i.FetchPins()
 		i.actionSection.showLocationModal = true
 	}
 

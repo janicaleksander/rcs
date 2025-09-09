@@ -4439,6 +4439,266 @@ func (x *UpdateLocationRes) GetMessage() string {
 	return ""
 }
 
+type Task struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description    string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	State          int32                  `protobuf:"varint,4,opt,name=state,proto3" json:"state,omitempty"`
+	CompletionDate *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=completionDate,proto3" json:"completionDate,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Task) Reset() {
+	*x = Task{}
+	mi := &file_types_proto_msgTypes[97]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Task) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Task) ProtoMessage() {}
+
+func (x *Task) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[97]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Task.ProtoReflect.Descriptor instead.
+func (*Task) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{97}
+}
+
+func (x *Task) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Task) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Task) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *Task) GetState() int32 {
+	if x != nil {
+		return x.State
+	}
+	return 0
+}
+
+func (x *Task) GetCompletionDate() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CompletionDate
+	}
+	return nil
+}
+
+type Pin struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DeviceID      string                 `protobuf:"bytes,1,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
+	OwnerNS       string                 `protobuf:"bytes,2,opt,name=ownerNS,proto3" json:"ownerNS,omitempty"`
+	Location      *Location              `protobuf:"bytes,3,opt,name=location,proto3" json:"location,omitempty"`
+	LastOnline    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=last_online,json=lastOnline,proto3" json:"last_online,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Pin) Reset() {
+	*x = Pin{}
+	mi := &file_types_proto_msgTypes[98]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Pin) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Pin) ProtoMessage() {}
+
+func (x *Pin) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[98]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Pin.ProtoReflect.Descriptor instead.
+func (*Pin) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{98}
+}
+
+func (x *Pin) GetDeviceID() string {
+	if x != nil {
+		return x.DeviceID
+	}
+	return ""
+}
+
+func (x *Pin) GetOwnerNS() string {
+	if x != nil {
+		return x.OwnerNS
+	}
+	return ""
+}
+
+func (x *Pin) GetLocation() *Location {
+	if x != nil {
+		return x.Location
+	}
+	return nil
+}
+
+func (x *Pin) GetLastOnline() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastOnline
+	}
+	return nil
+}
+
+type FetchPins struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FetchPins) Reset() {
+	*x = FetchPins{}
+	mi := &file_types_proto_msgTypes[99]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FetchPins) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FetchPins) ProtoMessage() {}
+
+func (x *FetchPins) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[99]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FetchPins.ProtoReflect.Descriptor instead.
+func (*FetchPins) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{99}
+}
+
+type SuccessFetchPins struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pins          []*Pin                 `protobuf:"bytes,1,rep,name=pins,proto3" json:"pins,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessFetchPins) Reset() {
+	*x = SuccessFetchPins{}
+	mi := &file_types_proto_msgTypes[100]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessFetchPins) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessFetchPins) ProtoMessage() {}
+
+func (x *SuccessFetchPins) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[100]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessFetchPins.ProtoReflect.Descriptor instead.
+func (*SuccessFetchPins) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{100}
+}
+
+func (x *SuccessFetchPins) GetPins() []*Pin {
+	if x != nil {
+		return x.Pins
+	}
+	return nil
+}
+
+type FailureFetchPins struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FailureFetchPins) Reset() {
+	*x = FailureFetchPins{}
+	mi := &file_types_proto_msgTypes[101]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FailureFetchPins) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FailureFetchPins) ProtoMessage() {}
+
+func (x *FailureFetchPins) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[101]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FailureFetchPins.ProtoReflect.Descriptor instead.
+func (*FailureFetchPins) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{101}
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
@@ -4673,7 +4933,24 @@ const file_types_proto_rawDesc = "" +
 	"\x18SuccessUpdateLocationReq\"\x1a\n" +
 	"\x18FailureUpdateLocationReq\"-\n" +
 	"\x11UpdateLocationRes\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessageB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
+	"\amessage\x18\x01 \x01(\tR\amessage\"\xa6\x01\n" +
+	"\x04Task\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
+	"\x05state\x18\x04 \x01(\x05R\x05state\x12B\n" +
+	"\x0ecompletionDate\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x0ecompletionDate\"\xa5\x01\n" +
+	"\x03Pin\x12\x1a\n" +
+	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\x12\x18\n" +
+	"\aownerNS\x18\x02 \x01(\tR\aownerNS\x12+\n" +
+	"\blocation\x18\x03 \x01(\v2\x0f.types.LocationR\blocation\x12;\n" +
+	"\vlast_online\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"lastOnline\"\v\n" +
+	"\tFetchPins\"2\n" +
+	"\x10SuccessFetchPins\x12\x1e\n" +
+	"\x04pins\x18\x01 \x03(\v2\n" +
+	".types.PinR\x04pins\"\x12\n" +
+	"\x10FailureFetchPinsB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -4687,7 +4964,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 97)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 102)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                           // 0: types.Role
 	(*Personal)(nil),                       // 1: types.Personal
@@ -4786,42 +5063,51 @@ var file_types_proto_goTypes = []any{
 	(*SuccessUpdateLocationReq)(nil),       // 94: types.SuccessUpdateLocationReq
 	(*FailureUpdateLocationReq)(nil),       // 95: types.FailureUpdateLocationReq
 	(*UpdateLocationRes)(nil),              // 96: types.UpdateLocationRes
-	(*timestamppb.Timestamp)(nil),          // 97: google.protobuf.Timestamp
+	(*Task)(nil),                           // 97: types.Task
+	(*Pin)(nil),                            // 98: types.Pin
+	(*FetchPins)(nil),                      // 99: types.FetchPins
+	(*SuccessFetchPins)(nil),               // 100: types.SuccessFetchPins
+	(*FailureFetchPins)(nil),               // 101: types.FailureFetchPins
+	(*timestamppb.Timestamp)(nil),          // 102: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
-	1,  // 0: types.User.personal:type_name -> types.Personal
-	4,  // 1: types.LoginUser.pid:type_name -> types.PID
-	4,  // 2: types.GetLoggedInUUID.pid:type_name -> types.PID
-	4,  // 3: types.NeededServerConfiguration.serverPID:type_name -> types.PID
-	3,  // 4: types.AllUnits.units:type_name -> types.Unit
-	4,  // 5: types.LoginUnit.pid:type_name -> types.PID
-	2,  // 6: types.CreateUser.user:type_name -> types.User
-	2,  // 7: types.AllUsersInUnit.users:type_name -> types.User
-	2,  // 8: types.UsersAboveLVL.users:type_name -> types.User
-	4,  // 9: types.RegisterClient.pid:type_name -> types.PID
-	49, // 10: types.ConversationSummary.last_message:type_name -> types.Message
-	45, // 11: types.SuccessGetUserConversation.convSummary:type_name -> types.ConversationSummary
-	97, // 12: types.Message.sent_at:type_name -> google.protobuf.Timestamp
-	49, // 13: types.SendMessage.message:type_name -> types.Message
-	49, // 14: types.DeliverMessage.message:type_name -> types.Message
-	49, // 15: types.StoreMessage.message:type_name -> types.Message
-	66, // 16: types.PresenceType.outbox:type_name -> types.Outbox
-	67, // 17: types.PresenceType.inbox:type_name -> types.Inbox
-	68, // 18: types.Presence.presence:type_name -> types.PresenceType
-	68, // 19: types.UpdatePresence.presence:type_name -> types.PresenceType
-	49, // 20: types.SuccessOpenAndLoadConversation.messages:type_name -> types.Message
-	49, // 21: types.SuccessLoadConversation.messages:type_name -> types.Message
-	2,  // 22: types.SuccessUsersToNewConversation.users:type_name -> types.User
-	97, // 23: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
-	81, // 24: types.SpawnAndRunDevice.device:type_name -> types.Device
-	4,  // 25: types.SuccessSpawnDevice.devicePID:type_name -> types.PID
-	4,  // 26: types.ConnectHDeviceToADevice.devicePID:type_name -> types.PID
-	92, // 27: types.UpdateLocationReq.location:type_name -> types.Location
-	28, // [28:28] is the sub-list for method output_type
-	28, // [28:28] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	1,   // 0: types.User.personal:type_name -> types.Personal
+	4,   // 1: types.LoginUser.pid:type_name -> types.PID
+	4,   // 2: types.GetLoggedInUUID.pid:type_name -> types.PID
+	4,   // 3: types.NeededServerConfiguration.serverPID:type_name -> types.PID
+	3,   // 4: types.AllUnits.units:type_name -> types.Unit
+	4,   // 5: types.LoginUnit.pid:type_name -> types.PID
+	2,   // 6: types.CreateUser.user:type_name -> types.User
+	2,   // 7: types.AllUsersInUnit.users:type_name -> types.User
+	2,   // 8: types.UsersAboveLVL.users:type_name -> types.User
+	4,   // 9: types.RegisterClient.pid:type_name -> types.PID
+	49,  // 10: types.ConversationSummary.last_message:type_name -> types.Message
+	45,  // 11: types.SuccessGetUserConversation.convSummary:type_name -> types.ConversationSummary
+	102, // 12: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	49,  // 13: types.SendMessage.message:type_name -> types.Message
+	49,  // 14: types.DeliverMessage.message:type_name -> types.Message
+	49,  // 15: types.StoreMessage.message:type_name -> types.Message
+	66,  // 16: types.PresenceType.outbox:type_name -> types.Outbox
+	67,  // 17: types.PresenceType.inbox:type_name -> types.Inbox
+	68,  // 18: types.Presence.presence:type_name -> types.PresenceType
+	68,  // 19: types.UpdatePresence.presence:type_name -> types.PresenceType
+	49,  // 20: types.SuccessOpenAndLoadConversation.messages:type_name -> types.Message
+	49,  // 21: types.SuccessLoadConversation.messages:type_name -> types.Message
+	2,   // 22: types.SuccessUsersToNewConversation.users:type_name -> types.User
+	102, // 23: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
+	81,  // 24: types.SpawnAndRunDevice.device:type_name -> types.Device
+	4,   // 25: types.SuccessSpawnDevice.devicePID:type_name -> types.PID
+	4,   // 26: types.ConnectHDeviceToADevice.devicePID:type_name -> types.PID
+	92,  // 27: types.UpdateLocationReq.location:type_name -> types.Location
+	102, // 28: types.Task.completionDate:type_name -> google.protobuf.Timestamp
+	92,  // 29: types.Pin.location:type_name -> types.Location
+	102, // 30: types.Pin.last_online:type_name -> google.protobuf.Timestamp
+	98,  // 31: types.SuccessFetchPins.pins:type_name -> types.Pin
+	32,  // [32:32] is the sub-list for method output_type
+	32,  // [32:32] is the sub-list for method input_type
+	32,  // [32:32] is the sub-list for extension type_name
+	32,  // [32:32] is the sub-list for extension extendee
+	0,   // [0:32] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }
@@ -4840,7 +5126,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   97,
+			NumMessages:   102,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

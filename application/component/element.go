@@ -1,6 +1,8 @@
 package component
 
 import (
+	"time"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -49,4 +51,10 @@ type ScrollPanel struct {
 	Content rl.Rectangle
 	Scroll  rl.Vector2
 	View    rl.Rectangle
+}
+
+type PinInfo struct {
+	Position rl.Vector2
+	Owner    string
+	Time     time.Time
 }

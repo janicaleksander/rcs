@@ -20,3 +20,15 @@ CREATE TABLE IF NOT EXISTS current_user_task (
     user_id UUID REFERENCES users(id),
     PRIMARY KEY (user_id,task_id)
 )
+
+/*
+Musze tez sledzic dlugosc pracy znaczy przedzialy, np pracownik w apce kliknie koniec pracy
+i wtedy np current task jest napisane e poza praca albo cos takiego
+
+albo zrobic logera co 1minut ktory do las_time_online bedzie updatowal i wtedy jesli nie bedzie dlugo update
+to samo sie zmieni
+*/
+/*
+jesli koncze jakies zadanie w mobile app to znika z tej ostatniej tabeli ale
+nie wmoze to wplynac na pinsy wsensie pin zosatje ale jego opisy znikaja moze
+*/

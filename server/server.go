@@ -210,6 +210,14 @@ func (s *Server) Receive(ctx *actor.Context) {
 				// units needs to spawn a child ->get this PID and respond
 			}
 		}
+	case *proto.FetchPins:
+		c := context.Background()
+		pins, err := s.storage.FetchPins(c)
+		if err != nil {
+			ctx.Respond(&proto.FailureFetchPins{})
+		} else {
+			ctx.Respond(&proto.SuccessFetchPins{Pins: pins})
+		}
 
 	default:
 		utils.Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())
