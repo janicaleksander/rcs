@@ -382,26 +382,23 @@ func (i *InfoUserScene) drawMap() {
 	mapX, mapY := latLonToPixel(51.008056510784286, 16.254980596758454, ZOOM)
 	texture := rl.LoadTexture("osm/output.png")
 	rl.DrawTexture(texture, int32(mapX), int32(mapY), rl.White)
-	//isOnPin(i.trackUserLocationSection.LocationMap.camera, mapX, mapY)
-	mouseWorldPos := rl.GetScreenToWorld2D(rl.GetMousePosition(), i.trackUserLocationSection.LocationMap.camera)
+	scale := float32(rl.GetRenderWidth()) / float32(rl.GetScreenWidth())
+	mouse := rl.GetMousePosition()
+	mouse.X *= scale
+	mouse.Y *= scale
 
+	mouseWorldPos := rl.GetScreenToWorld2D(mouse, i.trackUserLocationSection.LocationMap.camera)
 	pin := rl.NewVector2(mapX, mapY)
-	dist := distanceToPin(pin, mouseWorldPos)
-	mouseWorldPos.X += float32(500) //
-	mouseWorldPos.Y += float32(225)
-	fmt.Println(mouseWorldPos)
+	fmt.Println(mouseWorldPos.X - pin.X)
+	fmt.Println(mouseWorldPos.Y - pin.Y)
 	rl.DrawCircleV(mouseWorldPos, 10, rl.Red) // mysz w świecie
 	rl.DrawCircleV(pin, 10, rl.Green)         // pin w świecie
-	fmt.Println(pin)
-	fmt.Println(mouseWorldPos)
-	if dist <= 32 {
-		panic("err")
-	}
 	rl.EndMode2D()
+	fmt.Println(rl.GetRenderWidth() / rl.GetScreenWidth())
 
 }
 
-func distanceToPin(pos1, pos2 rl.Vector2) float64 {
+func distance(pos1, pos2 rl.Vector2) float64 {
 	return math.Sqrt(float64((pos1.X-pos2.X)*(pos1.X-pos2.X)) + float64((pos1.Y-pos2.Y)*(pos1.Y-pos2.Y)))
 
 }

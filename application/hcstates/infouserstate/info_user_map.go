@@ -209,7 +209,7 @@ func latLonToPixel(lat, lon float64, zoom int) (float32, float32) {
 	xtile := (lon + 180.0) / 360.0 * n
 	ytile := (1.0 - math.Log(math.Tan(latRad)+1.0/math.Cos(latRad))/math.Pi) / 2.0 * n
 
-	mapX := float32(xtile * 256)
-	mapY := float32(ytile * 256)
+	mapX := float32(xtile * TILESIZE)
+	mapY := float32(ytile * TILESIZE)
 	return mapX, mapY
 }

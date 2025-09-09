@@ -41,3 +41,4 @@ osm/
 osm
 .venv
 bcs-pin
+map_cache/
