@@ -77,7 +77,8 @@ type SendMessageSection struct {
 }
 
 type TrackUserLocationSection struct {
-	mapModal component.Modal
+	LocationMap LocationMap
+	mapModal    component.Modal
 }
 
 func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cfg *utils.SharedConfig) {
@@ -243,9 +244,15 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 	i.trackUserLocationSection.mapModal = component.Modal{
 		Background: rl.NewRectangle(0, 0, float32(rl.GetScreenWidth()), float32(rl.GetScreenHeight())),
 		BgColor:    rl.Fade(rl.Gray, 0.3),
-		Core:       rl.NewRectangle(float32(rl.GetScreenWidth()/2-150.0), float32(rl.GetScreenHeight()/2-150.0), 400, 200),
+		Core:       rl.NewRectangle(float32(rl.GetScreenWidth()/2-500.0), float32(rl.GetScreenHeight()/2-225.0), 1000, 450),
 	}
-	//TODO
+	i.trackUserLocationSection.LocationMap = LocationMap{
+		width:  1000,
+		height: 450,
+		tm:     NewTileManager(),
+	}
+	i.prepareMap()
+
 	i.backButton = *component.NewButton(
 		component.NewButtonConfig(),
 		rl.NewRectangle(
@@ -298,7 +305,9 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 		i.stateManager.Add(statesmanager.GoBackState)
 		return
 	}
-
+	if i.actionSection.showLocationModal {
+		i.updateMap()
+	}
 	i.UpdateDescription()
 	//TODO in v2 version add ability to have more than one unit by commanders type
 	//and here change layout when he has more than one unit modal shows up with all units
@@ -405,10 +414,31 @@ func (i *InfoUserScene) RenderInfoUserState() {
 	}
 
 	if i.actionSection.showLocationModal {
-		if gui.WindowBox(i.trackUserLocationSection.mapModal.Core, "TITLE") {
-			i.actionSection.showLocationModal = false
-		}
+		rl.DrawRectangle(
+			int32(i.trackUserLocationSection.mapModal.Background.X),
+			int32(i.trackUserLocationSection.mapModal.Background.Y),
+			int32(i.trackUserLocationSection.mapModal.Background.Width),
+			int32(i.trackUserLocationSection.mapModal.Background.Height),
+			i.trackUserLocationSection.mapModal.BgColor)
+
+		rl.BeginScissorMode(
+			int32(i.trackUserLocationSection.mapModal.Core.X),
+			int32(i.trackUserLocationSection.mapModal.Core.Y),
+			int32(i.trackUserLocationSection.mapModal.Core.Width),
+			int32(i.trackUserLocationSection.mapModal.Core.Height))
+
+		i.drawMap()
+
+		rl.EndScissorMode()
+
+		rl.DrawRectangleLines(
+			int32(i.trackUserLocationSection.mapModal.Core.X),
+			int32(i.trackUserLocationSection.mapModal.Core.Y),
+			int32(i.trackUserLocationSection.mapModal.Core.Width),
+			int32(i.trackUserLocationSection.mapModal.Core.Height),
+			rl.Black)
 	}
+	//TODO add exit button
 
 }
 
