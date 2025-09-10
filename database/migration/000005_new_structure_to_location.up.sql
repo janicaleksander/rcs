@@ -11,14 +11,15 @@ CREATE TABLE IF NOT EXISTS task (
 */
 CREATE TABLE IF NOT EXISTS user_to_task (
     user_id UUID REFERENCES  users(id) NOT NULL,
-    task_id UUID REFERENCES task(id),
+    task_id UUID REFERENCES task(id) NOT NULL,
     UNIQUE(task_id)
 );
 
 CREATE TABLE IF NOT EXISTS current_user_task (
-    task_id UUID REFERENCES task(id),
-    user_id UUID REFERENCES users(id),
-    PRIMARY KEY (user_id,task_id)
+    task_id UUID REFERENCES task(id) NOT NULL,
+    user_id UUID REFERENCES users(id) NOT NULL,
+    PRIMARY KEY (task_id,user_id)
+
 )
 
 /*

@@ -77,10 +77,11 @@ type SendMessageSection struct {
 }
 
 type TrackUserLocationSection struct {
-	LocationMap  LocationMap
-	mapModal     component.Modal
-	pinsInfo     []*component.PinInfo // a graphical presentation of this pins
-	currentTasks []*proto.Task
+	LocationMap            LocationMap
+	mapModal               component.Modal
+	locationMapInformation component.LocationMapInformation
+	currentTaskTab         rl.Rectangle
+
 	// there is current task of each user
 	//and here we have to filter if he is in work or no
 
@@ -246,8 +247,10 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 		Y:      int32(i.sendMessageSection.inboxModal.Core.Y),
 		Radius: 10,
 	}
-	i.trackUserLocationSection.pinsInfo = make([]*component.PinInfo, 0, 64)
-	i.trackUserLocationSection.currentTasks = make([]*proto.Task, 0, 64)
+	i.trackUserLocationSection.locationMapInformation = component.LocationMapInformation{
+		MapCurrentTask:    make(map[string]*component.CurrentTaskTab),
+		MapPinInformation: make(map[string]*component.PinInformation),
+	}
 	i.trackUserLocationSection.mapModal = component.Modal{
 		Background: rl.NewRectangle(0, 0, float32(rl.GetScreenWidth()), float32(rl.GetScreenHeight())),
 		BgColor:    rl.Fade(rl.Gray, 0.3),
@@ -258,6 +261,14 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 		height: 450,
 		tm:     NewTileManager(),
 	}
+
+	i.trackUserLocationSection.currentTaskTab = rl.NewRectangle(
+		i.trackUserLocationSection.mapModal.Core.X,
+		i.trackUserLocationSection.mapModal.Core.Y+i.trackUserLocationSection.mapModal.Core.Height,
+		i.trackUserLocationSection.mapModal.Core.Width,
+		150,
+	)
+
 	i.prepareMap()
 
 	i.backButton = *component.NewButton(
@@ -435,10 +446,9 @@ func (i *InfoUserScene) RenderInfoUserState() {
 			int32(i.trackUserLocationSection.mapModal.Core.Width),
 			int32(i.trackUserLocationSection.mapModal.Core.Height))
 
-		i.drawMap()
-
+		mousePos := i.drawMap()
 		rl.EndScissorMode()
-
+		i.showTabInformationOnCollision(mousePos)
 		rl.DrawRectangleLines(
 			int32(i.trackUserLocationSection.mapModal.Core.X),
 			int32(i.trackUserLocationSection.mapModal.Core.Y),

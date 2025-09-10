@@ -380,9 +380,10 @@ message Task {
 }
 message Pin {
   string deviceID = 1;
-  string ownerNS =2;
-  Location location = 3;
-  google.protobuf.Timestamp last_online = 4;
+  string ownerName =2;
+  string ownerSurname =3;
+  Location location = 4;
+  google.protobuf.Timestamp last_online = 5;
 }
 
 message FetchPins{
@@ -392,5 +393,19 @@ message SuccessFetchPins{
   repeated Pin pins = 1;
 }
 message FailureFetchPins{
+
+}
+
+message CurrentTask{
+  Task task = 1;
+  string userID = 2;
+}
+message FetchCurrentTask {
+  string deviceID = 1;
+}
+message SuccessFetchCurrentTask{
+  CurrentTask lastTask = 1;
+}
+message FailureFetchCurrentTask{
 
 }

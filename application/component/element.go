@@ -4,6 +4,7 @@ import (
 	"time"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/janicaleksander/bcs/types/proto"
 )
 
 type Circle struct {
@@ -53,8 +54,23 @@ type ScrollPanel struct {
 	View    rl.Rectangle
 }
 
-type PinInfo struct {
-	Position rl.Vector2
-	Owner    string
-	Time     time.Time
+type LocationMapInformation struct {
+	MapPinInformation map[string]*PinInformation // device id to PinInformation
+	MapCurrentTask    map[string]*CurrentTaskTab // deviceID to CurrentTaskTab
+}
+type PinInformation struct {
+	Position       rl.Vector2
+	DeviceID       string
+	OwnerName      string
+	OwnerSurname   string
+	LastTimeOnline time.Time
+}
+
+type CurrentTaskTab struct {
+	OwnerID        string
+	OwnerName      string
+	OwnerSurname   string
+	DeviceID       string
+	LastTimeOnline time.Time
+	Task           *proto.Task
 }

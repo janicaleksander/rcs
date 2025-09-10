@@ -34,6 +34,7 @@ func NewMessageService(serverPID *actor.PID, db database.Storage) actor.Producer
 	}
 }
 
+// TEST delete go func from actors
 // TODO move logger to utils
 func (ms *MessageService) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
@@ -61,107 +62,93 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 			},
 		})
 	case *proto.GetPresence:
-		go func() {
-			resp := ctx.Request(ms.presenceManger, msg, utils.WaitTime)
-			res, _ := resp.Result()
-			if message, ok := res.(*proto.Presence); ok {
-				ctx.Respond(message)
-			} else {
-				ctx.Respond(message)
-			}
-		}()
+		resp := ctx.Request(ms.presenceManger, msg, utils.WaitTime)
+		res, _ := resp.Result()
+		if message, ok := res.(*proto.Presence); ok {
+			ctx.Respond(message)
+		} else {
+			ctx.Respond(message)
+		}
 	case *proto.UpdatePresence:
 		ctx.Forward(ms.presenceManger)
 		//todo idk if i have to make this type check because i never send and if error will be ctx error
 	case *proto.OpenAndLoadConversation:
-		go func() {
-			resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
-			res, err := resp.Result()
-			if message, ok := res.(*proto.SuccessOpenAndLoadConversation); ok {
-				ctx.Respond(message)
-			} else {
-				utils.Logger.Error("Error in MSSVC OpenAndLoadConversation" + err.Error())
-				ctx.Respond(message)
-			}
+		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
+		res, err := resp.Result()
+		if message, ok := res.(*proto.SuccessOpenAndLoadConversation); ok {
+			ctx.Respond(message)
+		} else {
+			utils.Logger.Error("Error in MSSVC OpenAndLoadConversation" + err.Error())
+			ctx.Respond(message)
+		}
 
-		}()
 	case *proto.GetUserConversation:
-		go func() {
-			resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
-			res, _ := resp.Result()
-			if message, ok := res.(*proto.SuccessGetUserConversation); ok {
-				ctx.Respond(message)
-			} else {
-				utils.Logger.Error("Error in MSSVC GetUserConversation")
-				ctx.Respond(message)
-			}
-		}()
+		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
+		res, _ := resp.Result()
+		if message, ok := res.(*proto.SuccessGetUserConversation); ok {
+			ctx.Respond(message)
+		} else {
+			utils.Logger.Error("Error in MSSVC GetUserConversation")
+			ctx.Respond(message)
+		}
 	case *proto.FillConversationID:
-		go func() {
-			resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
-			res, _ := resp.Result()
-			if message, ok := res.(*proto.SuccessOfFillConversationID); ok {
-				ctx.Respond(message)
-			} else {
-				utils.Logger.Error("Error in MSSVC FillConversationID")
-				ctx.Respond(message)
-			}
-		}()
+		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
+		res, _ := resp.Result()
+		if message, ok := res.(*proto.SuccessOfFillConversationID); ok {
+			ctx.Respond(message)
+		} else {
+			utils.Logger.Error("Error in MSSVC FillConversationID")
+			ctx.Respond(message)
+		}
 	case *proto.SendMessage:
 		n := time.Now()
-		go func() {
-			org := ctx.Sender()
-			resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
-			fmt.Println("PID pierwszego requesta", resp.PID())
-			res, err := resp.Result()
-			if message, ok := res.(*proto.SuccessSend); ok {
-				ctx.Send(org, message)
-			} else {
-				utils.Logger.Error("Error in MSSVC SendMessage", err)
-				ctx.Send(org, message)
-			}
-			fmt.Println("POSZŁO po ", time.Since(n))
-		}()
+		org := ctx.Sender()
+		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
+		fmt.Println("PID pierwszego requesta", resp.PID())
+		res, err := resp.Result()
+		if message, ok := res.(*proto.SuccessSend); ok {
+			ctx.Send(org, message)
+		} else {
+			utils.Logger.Error("Error in MSSVC SendMessage", err)
+			ctx.Send(org, message)
+		}
+		fmt.Println("POSZŁO po ", time.Since(n))
 	case *proto.DeliverMessage:
 		fmt.Println("odebralem od cnv manager", msg)
 		ctx.Send(ms.connections[msg.Receiver], msg)
 		fmt.Println(ms.connections[msg.Receiver])
 	case *proto.GetUsersToNewConversation:
-		go func() {
-			resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
-			res, err := resp.Result()
-			if err != nil {
-				panic(err)
-			}
-			if message, ok := res.(*proto.SuccessUsersToNewConversation); ok {
-				ctx.Respond(message)
-			} else {
+		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
+		res, err := resp.Result()
+		if err != nil {
+			panic(err)
+		}
+		if message, ok := res.(*proto.SuccessUsersToNewConversation); ok {
+			ctx.Respond(message)
+		} else {
 
-				utils.Logger.Error("Error in MSSVC GetUsersToNewConversation")
-				ctx.Respond(message)
-			}
-		}()
+			utils.Logger.Error("Error in MSSVC GetUsersToNewConversation")
+			ctx.Respond(message)
+		}
 	case *proto.CreateConversation:
-		go func() {
-			resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
-			res, err := resp.Result()
-			if err != nil {
-				utils.Logger.Error("Here x4")
+		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
+		res, err := resp.Result()
+		if err != nil {
+			utils.Logger.Error("Here x4")
 
-				ctx.Respond(&proto.FailureOfCreateConversation{})
-				return
-			}
-			if _, ok := res.(*proto.SuccessOfCreateConversation); ok {
-				ctx.Respond(&proto.SuccessOfCreateConversation{})
-				utils.Logger.Error("Here x5")
+			ctx.Respond(&proto.FailureOfCreateConversation{})
+			return
+		}
+		if _, ok := res.(*proto.SuccessOfCreateConversation); ok {
+			ctx.Respond(&proto.SuccessOfCreateConversation{})
+			utils.Logger.Error("Here x5")
 
-				return
-			} else {
-				utils.Logger.Error("Here x6")
-				ctx.Respond(&proto.FailureOfCreateConversation{})
-				return
-			}
-		}()
+			return
+		} else {
+			utils.Logger.Error("Here x6")
+			ctx.Respond(&proto.FailureOfCreateConversation{})
+			return
+		}
 
 	default:
 

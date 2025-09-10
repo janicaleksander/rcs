@@ -218,7 +218,16 @@ func (s *Server) Receive(ctx *actor.Context) {
 		} else {
 			ctx.Respond(&proto.SuccessFetchPins{Pins: pins})
 		}
-
+	case *proto.FetchCurrentTask:
+		c := context.Background()
+		lastTask, err := s.storage.FetchCurrentTask(c, msg.DeviceID)
+		if err != nil {
+			ctx.Respond(&proto.FailureFetchCurrentTask{})
+		} else {
+			ctx.Respond(&proto.SuccessFetchCurrentTask{
+				LastTask: lastTask,
+			})
+		}
 	default:
 		utils.Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())
 

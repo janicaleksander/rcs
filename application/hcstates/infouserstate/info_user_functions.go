@@ -370,80 +370,118 @@ func (i *InfoUserScene) updateMap() {
 }
 
 func (i *InfoUserScene) FetchPins() {
-	i.trackUserLocationSection.pinsInfo = i.trackUserLocationSection.pinsInfo[:0]
 	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.FetchPins{}))
 	if err != nil {
 		//TODO
 	}
 	if v, ok := res.(*proto.SuccessFetchPins); !ok {
 		//error
+		return
 	} else {
+		//map with pins information
 		for _, p := range v.Pins {
 			x, y := latLonToPixel(p.Location.Latitude, p.Location.Longitude, ZOOM)
-			i.trackUserLocationSection.pinsInfo = append(i.trackUserLocationSection.pinsInfo,
-				&component.PinInfo{
-					Position: rl.NewVector2(x, y),
-					Owner:    p.OwnerNS,
-					Time:     p.LastOnline.AsTime(),
-				})
+			i.trackUserLocationSection.locationMapInformation.MapPinInformation[p.DeviceID] = &component.PinInformation{
+				Position:       rl.Vector2{X: x, Y: y},
+				DeviceID:       p.DeviceID,
+				OwnerName:      p.OwnerName,
+				OwnerSurname:   p.OwnerSurname,
+				LastTimeOnline: p.LastOnline.AsTime(),
+			}
 		}
+		//map with last task tab information
+		var waitGroup sync.WaitGroup
+		for _, p := range v.Pins {
+			go func(wg *sync.WaitGroup) {
+				wg.Add(1)
+				defer wg.Done()
+				res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.FetchCurrentTask{DeviceID: p.DeviceID}))
+				if err != nil {
+					//todo
+				} else {
+					if v, ok := res.(*proto.SuccessFetchCurrentTask); ok {
+						i.trackUserLocationSection.locationMapInformation.MapCurrentTask[p.DeviceID] = &component.CurrentTaskTab{
+							OwnerID:        v.LastTask.UserID,
+							OwnerName:      p.OwnerName,
+							OwnerSurname:   p.OwnerSurname,
+							DeviceID:       p.DeviceID,
+							LastTimeOnline: p.LastOnline.AsTime(),
+							Task:           v.LastTask.Task,
+						}
+					}
+				}
+			}(&waitGroup)
 
+		}
+		waitGroup.Wait()
 	}
+
 }
 
 func (i *InfoUserScene) drawPins() {
-	for _, p := range i.trackUserLocationSection.pinsInfo {
+	for _, p := range i.trackUserLocationSection.locationMapInformation.MapPinInformation {
 		rl.DrawTexture(i.trackUserLocationSection.LocationMap.pinTexture, int32(p.Position.X), int32(p.Position.Y), rl.White)
 	}
 
 }
-func (i *InfoUserScene) drawMap() {
-	rl.BeginMode2D(i.trackUserLocationSection.LocationMap.camera)
-	tiles := i.trackUserLocationSection.LocationMap.tm.getLoadedTiles()
-	for _, tile := range tiles {
-		if tile.isReady() {
-			rl.DrawTexture(tile.getTexture(),
-				int32(tile.x*TILESIZE),
-				int32(tile.y*TILESIZE),
-				rl.White)
-		}
-	}
-
-	if !i.trackUserLocationSection.LocationMap.isPinLoaded {
-		i.trackUserLocationSection.LocationMap.pinTexture = rl.LoadTexture("osm/output.png")
-		i.trackUserLocationSection.LocationMap.isPinLoaded = true
-	}
-
-	scale := float32(rl.GetRenderWidth()) / float32(rl.GetScreenWidth())
-	mouse := rl.GetMousePosition()
-	mouse.X *= scale
-	mouse.Y *= scale
-	mouseWorldPos := rl.GetScreenToWorld2D(mouse, i.trackUserLocationSection.LocationMap.camera)
-	i.drawPins()
-	i.checkMousePinCollision(mouseWorldPos)
-	rl.EndMode2D()
-}
-
-func (i *InfoUserScene) checkMousePinCollision(mousePos rl.Vector2) {
-	for _, p := range i.trackUserLocationSection.pinsInfo {
-		pinBox := rl.NewRectangle(
-			p.Position.X,
-			p.Position.Y,
-			64,
-			64,
-		)
-		isColliding := rl.CheckCollisionPointRec(mousePos, pinBox)
-		if isColliding {
+func (i *InfoUserScene) showPinInformationOnCollision(mousePos rl.Vector2) {
+	for _, p := range i.trackUserLocationSection.locationMapInformation.MapPinInformation {
+		if checkMousePinCollision(p.Position, mousePos) {
 			drawInfoBox(p)
-		} else {
-			rl.SetMouseCursor(rl.MouseCursorDefault)
+		}
+	}
+
+}
+func (i *InfoUserScene) showTabInformationOnCollision(mousePos rl.Vector2) {
+	for _, p := range i.trackUserLocationSection.locationMapInformation.MapPinInformation {
+		if checkMousePinCollision(p.Position, mousePos) {
+			if _, ok := i.trackUserLocationSection.locationMapInformation.MapCurrentTask[p.DeviceID]; ok {
+				i.drawInfoTab(i.trackUserLocationSection.locationMapInformation.MapCurrentTask[p.DeviceID])
+			}
 		}
 	}
 
 }
 
-// TODO refacotr pin info -> slice with pin + pinInfo
-func drawInfoBox(pin *component.PinInfo) {
+func checkMousePinCollision(pinPos, mousePos rl.Vector2) bool {
+	pinBox := rl.NewRectangle(
+		pinPos.X,
+		pinPos.Y,
+		32,
+		32,
+	)
+	return rl.CheckCollisionPointRec(mousePos, pinBox)
+
+}
+func (i *InfoUserScene) drawInfoTab(currentTaskTab *component.CurrentTaskTab) {
+	rl.DrawRectangle(
+		int32(i.trackUserLocationSection.currentTaskTab.X),
+		int32(i.trackUserLocationSection.currentTaskTab.Y),
+		int32(i.trackUserLocationSection.currentTaskTab.Width),
+		int32(i.trackUserLocationSection.currentTaskTab.Height),
+		rl.White)
+	rl.DrawText(
+		currentTaskTab.OwnerID+" "+currentTaskTab.OwnerName+" "+currentTaskTab.OwnerSurname+"\n",
+		int32(i.trackUserLocationSection.currentTaskTab.X),
+		int32(i.trackUserLocationSection.currentTaskTab.Y),
+		20,
+		rl.Black)
+	//TODO addhere this 	func WrapText(maxWidth int32, input string, fontSize int32) string {
+	text := utils.WrapText(
+		int32(i.trackUserLocationSection.currentTaskTab.Width),
+		currentTaskTab.Task.Name+"\n"+currentTaskTab.Task.Description,
+		20)
+	rl.DrawText(
+		text,
+		int32(i.trackUserLocationSection.currentTaskTab.X),
+		int32(i.trackUserLocationSection.currentTaskTab.Y+35),
+		20,
+		rl.Black)
+}
+
+/*
+ */
+func drawInfoBox(pin *component.PinInformation) {
 	rl.SetMouseCursor(rl.MouseCursorPointingHand)
 	notificationBox := rl.NewRectangle(
 		pin.Position.X-64,
@@ -459,9 +497,36 @@ func drawInfoBox(pin *component.PinInfo) {
 		rl.White)
 
 	rl.DrawText(
-		pin.Owner+"\n"+pin.Time.Format("2006 01 02 15:04"),
+		pin.OwnerName+pin.OwnerSurname+"\n"+pin.LastTimeOnline.Format("2006 01 02 15:04"),
 		int32(notificationBox.X+5),
 		int32(notificationBox.Y+20),
 		20,
 		rl.Black)
+}
+
+func (i *InfoUserScene) drawMap() rl.Vector2 {
+	rl.BeginMode2D(i.trackUserLocationSection.LocationMap.camera)
+	tiles := i.trackUserLocationSection.LocationMap.tm.getLoadedTiles()
+	for _, tile := range tiles {
+		if tile.isReady() {
+			rl.DrawTexture(tile.getTexture(),
+				int32(tile.x*TILESIZE),
+				int32(tile.y*TILESIZE),
+				rl.White)
+		}
+	}
+
+	if !i.trackUserLocationSection.LocationMap.isPinLoaded {
+		i.trackUserLocationSection.LocationMap.pinTexture = rl.LoadTexture("osm/output.png")
+		i.trackUserLocationSection.LocationMap.isPinLoaded = true
+	}
+	i.drawPins()
+	scale := float32(rl.GetRenderWidth()) / float32(rl.GetScreenWidth())
+	mouse := rl.GetMousePosition()
+	mouse.X *= scale
+	mouse.Y *= scale
+	mousePos := rl.GetScreenToWorld2D(mouse, i.trackUserLocationSection.LocationMap.camera)
+	i.showPinInformationOnCollision(mousePos)
+	rl.EndMode2D()
+	return mousePos
 }

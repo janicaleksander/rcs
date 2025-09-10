@@ -526,6 +526,9 @@ func (p *Postgres) UpdateLocation(ctx context.Context, data *proto.UpdateLocatio
 	return nil
 }
 
+// TODO we have to limit devices tracked by location
+// eg type x can be tracked and form it we receive location
+// but from y z we dont
 func (p *Postgres) FetchPins(ctx context.Context) ([]*proto.Pin, error) {
 	rows, err := p.Conn.QueryContext(ctx, `SELECT DISTINCT ON (device_id) p.name,p.surname, device_id, 
     								ST_Y(location::geometry) as lat,
@@ -542,19 +545,15 @@ func (p *Postgres) FetchPins(ctx context.Context) ([]*proto.Pin, error) {
 	pins := make([]*proto.Pin, 0, 32)
 	for rows.Next() {
 		pin := &proto.Pin{
-			DeviceID: "",
-			OwnerNS:  "",
-			Location: &proto.Location{
-				Latitude:  0,
-				Longitude: 0,
-			},
-			LastOnline: nil,
+			DeviceID:     "",
+			OwnerName:    "",
+			OwnerSurname: "",
+			Location:     &proto.Location{},
+			LastOnline:   nil,
 		}
 		var tmp time.Time
-		var name, surname string
-		err = rows.Scan(&name, &surname, &pin.DeviceID, &pin.Location.Latitude, &pin.Location.Longitude, &tmp)
+		err = rows.Scan(&pin.OwnerName, &pin.OwnerSurname, &pin.DeviceID, &pin.Location.Latitude, &pin.Location.Longitude, &tmp)
 		pin.LastOnline = timestamppb.New(tmp)
-		pin.OwnerNS = name + " " + surname
 		if err != nil {
 			//err
 			continue
@@ -563,3 +562,30 @@ func (p *Postgres) FetchPins(ctx context.Context) ([]*proto.Pin, error) {
 	}
 	return pins, nil
 }
+
+func (p *Postgres) FetchCurrentTask(ctx context.Context, deviceID string) (*proto.CurrentTask, error) {
+	row := p.Conn.QueryRowContext(ctx,
+		`SELECT
+    					d.owner,t.id,t.name,t.description,t.state,t.completion_date
+				FROM device d
+				INNER JOIN current_user_task cut ON d.owner = cut.user_id
+				INNER JOIN task t ON t.id = cut.task_id
+				WHERE d.id = $1`, deviceID)
+	t := &proto.CurrentTask{
+		Task:   &proto.Task{},
+		UserID: "",
+	}
+	var taskCompletionDate sql.NullTime
+	err := row.Scan(&t.UserID, &t.Task.Id, &t.Task.Name, &t.Task.Description, &t.Task.State, &taskCompletionDate)
+	if taskCompletionDate.Valid {
+		t.Task.CompletionDate = timestamppb.New(taskCompletionDate.Time)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+//naprawic to ze muser moze miec wiecej niz jeden curent task niedzy innymi dlatego
+//ze moze meic weicj niz 1 urzadzenie
+///czyli tylko i wuylaczeni do deviceID to brac

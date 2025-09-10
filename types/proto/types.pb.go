@@ -4518,9 +4518,10 @@ func (x *Task) GetCompletionDate() *timestamppb.Timestamp {
 type Pin struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DeviceID      string                 `protobuf:"bytes,1,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
-	OwnerNS       string                 `protobuf:"bytes,2,opt,name=ownerNS,proto3" json:"ownerNS,omitempty"`
-	Location      *Location              `protobuf:"bytes,3,opt,name=location,proto3" json:"location,omitempty"`
-	LastOnline    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=last_online,json=lastOnline,proto3" json:"last_online,omitempty"`
+	OwnerName     string                 `protobuf:"bytes,2,opt,name=ownerName,proto3" json:"ownerName,omitempty"`
+	OwnerSurname  string                 `protobuf:"bytes,3,opt,name=ownerSurname,proto3" json:"ownerSurname,omitempty"`
+	Location      *Location              `protobuf:"bytes,4,opt,name=location,proto3" json:"location,omitempty"`
+	LastOnline    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=last_online,json=lastOnline,proto3" json:"last_online,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4562,9 +4563,16 @@ func (x *Pin) GetDeviceID() string {
 	return ""
 }
 
-func (x *Pin) GetOwnerNS() string {
+func (x *Pin) GetOwnerName() string {
 	if x != nil {
-		return x.OwnerNS
+		return x.OwnerName
+	}
+	return ""
+}
+
+func (x *Pin) GetOwnerSurname() string {
+	if x != nil {
+		return x.OwnerSurname
 	}
 	return ""
 }
@@ -4697,6 +4705,182 @@ func (x *FailureFetchPins) ProtoReflect() protoreflect.Message {
 // Deprecated: Use FailureFetchPins.ProtoReflect.Descriptor instead.
 func (*FailureFetchPins) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{101}
+}
+
+type CurrentTask struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Task          *Task                  `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
+	UserID        string                 `protobuf:"bytes,2,opt,name=userID,proto3" json:"userID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CurrentTask) Reset() {
+	*x = CurrentTask{}
+	mi := &file_types_proto_msgTypes[102]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CurrentTask) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CurrentTask) ProtoMessage() {}
+
+func (x *CurrentTask) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[102]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CurrentTask.ProtoReflect.Descriptor instead.
+func (*CurrentTask) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{102}
+}
+
+func (x *CurrentTask) GetTask() *Task {
+	if x != nil {
+		return x.Task
+	}
+	return nil
+}
+
+func (x *CurrentTask) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+type FetchCurrentTask struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DeviceID      string                 `protobuf:"bytes,1,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FetchCurrentTask) Reset() {
+	*x = FetchCurrentTask{}
+	mi := &file_types_proto_msgTypes[103]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FetchCurrentTask) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FetchCurrentTask) ProtoMessage() {}
+
+func (x *FetchCurrentTask) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[103]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FetchCurrentTask.ProtoReflect.Descriptor instead.
+func (*FetchCurrentTask) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{103}
+}
+
+func (x *FetchCurrentTask) GetDeviceID() string {
+	if x != nil {
+		return x.DeviceID
+	}
+	return ""
+}
+
+type SuccessFetchCurrentTask struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LastTask      *CurrentTask           `protobuf:"bytes,1,opt,name=lastTask,proto3" json:"lastTask,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessFetchCurrentTask) Reset() {
+	*x = SuccessFetchCurrentTask{}
+	mi := &file_types_proto_msgTypes[104]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessFetchCurrentTask) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessFetchCurrentTask) ProtoMessage() {}
+
+func (x *SuccessFetchCurrentTask) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[104]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessFetchCurrentTask.ProtoReflect.Descriptor instead.
+func (*SuccessFetchCurrentTask) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{104}
+}
+
+func (x *SuccessFetchCurrentTask) GetLastTask() *CurrentTask {
+	if x != nil {
+		return x.LastTask
+	}
+	return nil
+}
+
+type FailureFetchCurrentTask struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FailureFetchCurrentTask) Reset() {
+	*x = FailureFetchCurrentTask{}
+	mi := &file_types_proto_msgTypes[105]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FailureFetchCurrentTask) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FailureFetchCurrentTask) ProtoMessage() {}
+
+func (x *FailureFetchCurrentTask) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[105]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FailureFetchCurrentTask.ProtoReflect.Descriptor instead.
+func (*FailureFetchCurrentTask) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{105}
 }
 
 var File_types_proto protoreflect.FileDescriptor
@@ -4939,18 +5123,27 @@ const file_types_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
 	"\x05state\x18\x04 \x01(\x05R\x05state\x12B\n" +
-	"\x0ecompletionDate\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x0ecompletionDate\"\xa5\x01\n" +
+	"\x0ecompletionDate\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x0ecompletionDate\"\xcd\x01\n" +
 	"\x03Pin\x12\x1a\n" +
-	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\x12\x18\n" +
-	"\aownerNS\x18\x02 \x01(\tR\aownerNS\x12+\n" +
-	"\blocation\x18\x03 \x01(\v2\x0f.types.LocationR\blocation\x12;\n" +
-	"\vlast_online\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\x12\x1c\n" +
+	"\townerName\x18\x02 \x01(\tR\townerName\x12\"\n" +
+	"\fownerSurname\x18\x03 \x01(\tR\fownerSurname\x12+\n" +
+	"\blocation\x18\x04 \x01(\v2\x0f.types.LocationR\blocation\x12;\n" +
+	"\vlast_online\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"lastOnline\"\v\n" +
 	"\tFetchPins\"2\n" +
 	"\x10SuccessFetchPins\x12\x1e\n" +
 	"\x04pins\x18\x01 \x03(\v2\n" +
 	".types.PinR\x04pins\"\x12\n" +
-	"\x10FailureFetchPinsB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
+	"\x10FailureFetchPins\"F\n" +
+	"\vCurrentTask\x12\x1f\n" +
+	"\x04task\x18\x01 \x01(\v2\v.types.TaskR\x04task\x12\x16\n" +
+	"\x06userID\x18\x02 \x01(\tR\x06userID\".\n" +
+	"\x10FetchCurrentTask\x12\x1a\n" +
+	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\"I\n" +
+	"\x17SuccessFetchCurrentTask\x12.\n" +
+	"\blastTask\x18\x01 \x01(\v2\x12.types.CurrentTaskR\blastTask\"\x19\n" +
+	"\x17FailureFetchCurrentTaskB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -4964,7 +5157,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 102)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 106)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                           // 0: types.Role
 	(*Personal)(nil),                       // 1: types.Personal
@@ -5068,7 +5261,11 @@ var file_types_proto_goTypes = []any{
 	(*FetchPins)(nil),                      // 99: types.FetchPins
 	(*SuccessFetchPins)(nil),               // 100: types.SuccessFetchPins
 	(*FailureFetchPins)(nil),               // 101: types.FailureFetchPins
-	(*timestamppb.Timestamp)(nil),          // 102: google.protobuf.Timestamp
+	(*CurrentTask)(nil),                    // 102: types.CurrentTask
+	(*FetchCurrentTask)(nil),               // 103: types.FetchCurrentTask
+	(*SuccessFetchCurrentTask)(nil),        // 104: types.SuccessFetchCurrentTask
+	(*FailureFetchCurrentTask)(nil),        // 105: types.FailureFetchCurrentTask
+	(*timestamppb.Timestamp)(nil),          // 106: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
 	1,   // 0: types.User.personal:type_name -> types.Personal
@@ -5083,7 +5280,7 @@ var file_types_proto_depIdxs = []int32{
 	4,   // 9: types.RegisterClient.pid:type_name -> types.PID
 	49,  // 10: types.ConversationSummary.last_message:type_name -> types.Message
 	45,  // 11: types.SuccessGetUserConversation.convSummary:type_name -> types.ConversationSummary
-	102, // 12: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	106, // 12: types.Message.sent_at:type_name -> google.protobuf.Timestamp
 	49,  // 13: types.SendMessage.message:type_name -> types.Message
 	49,  // 14: types.DeliverMessage.message:type_name -> types.Message
 	49,  // 15: types.StoreMessage.message:type_name -> types.Message
@@ -5094,20 +5291,22 @@ var file_types_proto_depIdxs = []int32{
 	49,  // 20: types.SuccessOpenAndLoadConversation.messages:type_name -> types.Message
 	49,  // 21: types.SuccessLoadConversation.messages:type_name -> types.Message
 	2,   // 22: types.SuccessUsersToNewConversation.users:type_name -> types.User
-	102, // 23: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
+	106, // 23: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
 	81,  // 24: types.SpawnAndRunDevice.device:type_name -> types.Device
 	4,   // 25: types.SuccessSpawnDevice.devicePID:type_name -> types.PID
 	4,   // 26: types.ConnectHDeviceToADevice.devicePID:type_name -> types.PID
 	92,  // 27: types.UpdateLocationReq.location:type_name -> types.Location
-	102, // 28: types.Task.completionDate:type_name -> google.protobuf.Timestamp
+	106, // 28: types.Task.completionDate:type_name -> google.protobuf.Timestamp
 	92,  // 29: types.Pin.location:type_name -> types.Location
-	102, // 30: types.Pin.last_online:type_name -> google.protobuf.Timestamp
+	106, // 30: types.Pin.last_online:type_name -> google.protobuf.Timestamp
 	98,  // 31: types.SuccessFetchPins.pins:type_name -> types.Pin
-	32,  // [32:32] is the sub-list for method output_type
-	32,  // [32:32] is the sub-list for method input_type
-	32,  // [32:32] is the sub-list for extension type_name
-	32,  // [32:32] is the sub-list for extension extendee
-	0,   // [0:32] is the sub-list for field type_name
+	97,  // 32: types.CurrentTask.task:type_name -> types.Task
+	102, // 33: types.SuccessFetchCurrentTask.lastTask:type_name -> types.CurrentTask
+	34,  // [34:34] is the sub-list for method output_type
+	34,  // [34:34] is the sub-list for method input_type
+	34,  // [34:34] is the sub-list for extension type_name
+	34,  // [34:34] is the sub-list for extension extendee
+	0,   // [0:34] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }
@@ -5126,7 +5325,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   102,
+			NumMessages:   106,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

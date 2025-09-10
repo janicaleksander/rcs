@@ -122,4 +122,5 @@ type Storage interface {
 	//location
 	UpdateLocation(ctx context.Context, data *proto.UpdateLocationReq) error
 	FetchPins(ctx context.Context) ([]*proto.Pin, error)
+	FetchCurrentTask(ctx context.Context, deviceID string) (*proto.CurrentTask, error)
 }
