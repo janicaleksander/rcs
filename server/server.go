@@ -8,7 +8,6 @@ import (
 
 	"github.com/anthdm/hollywood/actor"
 	db "github.com/janicaleksander/bcs/database"
-	"github.com/janicaleksander/bcs/external/unit"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
@@ -48,24 +47,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 	case actor.Started:
 		utils.Logger.Info("server has started")
 		ctx.SendRepeat(ctx.PID(), &proto.HeartbeatTick{}, 10*time.Second)
-
-		//spawn units as a child
-		c := context.Background()
-		units, err := s.storage.GetAllUnits(c)
-		if err != nil {
-			//TODO
-		}
-		for _, u := range units {
-			pid := ctx.SpawnChild(unit.NewUnit(u.Id, s.storage), "unit", actor.WithID(u.Id))
-			ctx.Send(ctx.PID(), &proto.LoginUnit{
-				Pid: &proto.PID{
-					Address: pid.Address,
-					Id:      pid.ID,
-				},
-				Id: u.Id,
-			})
-			//TODO deal with disconnect
-		}
+		//safety thing if user is not in unit but have a unit id -> error
 	case actor.Stopped:
 		utils.Logger.Info("server has stopped")
 	case *proto.HeartbeatTick:

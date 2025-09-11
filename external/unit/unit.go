@@ -17,17 +17,19 @@ import (
 
 // if we delete user, we have to think what to do with assign device(maybe move somewhere?)
 type Unit struct {
-	id      string                // uuid
-	devices map[string]*actor.PID //device id to his PID
-	storage database.Storage
+	id        string
+	serverPID *actor.PID
+	devices   map[string]*actor.PID //device id to his PID
+	storage   database.Storage
 }
 
-func NewUnit(id string, storage database.Storage) actor.Producer {
+func NewUnit(id string, serverPID *actor.PID, storage database.Storage) actor.Producer {
 	return func() actor.Receiver {
 		return &Unit{
-			id:      id,
-			devices: make(map[string]*actor.PID, 64),
-			storage: storage,
+			id:        id,
+			serverPID: serverPID,
+			devices:   make(map[string]*actor.PID, 64),
+			storage:   storage,
 		}
 	}
 }
@@ -39,6 +41,13 @@ func (u *Unit) Receive(ctx *actor.Context) {
 		utils.Logger.Info("Unit has initialized")
 	case actor.Started:
 		utils.Logger.Info("Unit has started")
+		ctx.Send(u.serverPID, &proto.LoginUnit{
+			Pid: &proto.PID{
+				Address: ctx.PID().Address,
+				Id:      ctx.PID().ID,
+			},
+			Id: u.id,
+		})
 	case actor.Stopped:
 		utils.Logger.Info("Unit has stopped")
 	case *proto.Ping:
