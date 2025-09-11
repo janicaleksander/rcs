@@ -4883,6 +4883,238 @@ func (*FailureFetchCurrentTask) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{105}
 }
 
+type GetDeviceTypes struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDeviceTypes) Reset() {
+	*x = GetDeviceTypes{}
+	mi := &file_types_proto_msgTypes[106]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDeviceTypes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDeviceTypes) ProtoMessage() {}
+
+func (x *GetDeviceTypes) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[106]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDeviceTypes.ProtoReflect.Descriptor instead.
+func (*GetDeviceTypes) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{106}
+}
+
+type SuccessGetDeviceTypes struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Types         []string               `protobuf:"bytes,1,rep,name=types,proto3" json:"types,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessGetDeviceTypes) Reset() {
+	*x = SuccessGetDeviceTypes{}
+	mi := &file_types_proto_msgTypes[107]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessGetDeviceTypes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessGetDeviceTypes) ProtoMessage() {}
+
+func (x *SuccessGetDeviceTypes) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[107]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessGetDeviceTypes.ProtoReflect.Descriptor instead.
+func (*SuccessGetDeviceTypes) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{107}
+}
+
+func (x *SuccessGetDeviceTypes) GetTypes() []string {
+	if x != nil {
+		return x.Types
+	}
+	return nil
+}
+
+type FailureGetDeviceTypes struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FailureGetDeviceTypes) Reset() {
+	*x = FailureGetDeviceTypes{}
+	mi := &file_types_proto_msgTypes[108]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FailureGetDeviceTypes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FailureGetDeviceTypes) ProtoMessage() {}
+
+func (x *FailureGetDeviceTypes) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[108]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FailureGetDeviceTypes.ProtoReflect.Descriptor instead.
+func (*FailureGetDeviceTypes) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{108}
+}
+
+type CreateDevice struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Device        *Device                `protobuf:"bytes,1,opt,name=device,proto3" json:"device,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateDevice) Reset() {
+	*x = CreateDevice{}
+	mi := &file_types_proto_msgTypes[109]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateDevice) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateDevice) ProtoMessage() {}
+
+func (x *CreateDevice) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[109]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateDevice.ProtoReflect.Descriptor instead.
+func (*CreateDevice) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{109}
+}
+
+func (x *CreateDevice) GetDevice() *Device {
+	if x != nil {
+		return x.Device
+	}
+	return nil
+}
+
+type SuccessCreateDevice struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessCreateDevice) Reset() {
+	*x = SuccessCreateDevice{}
+	mi := &file_types_proto_msgTypes[110]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessCreateDevice) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessCreateDevice) ProtoMessage() {}
+
+func (x *SuccessCreateDevice) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[110]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessCreateDevice.ProtoReflect.Descriptor instead.
+func (*SuccessCreateDevice) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{110}
+}
+
+type FailureCreateDevice struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FailureCreateDevice) Reset() {
+	*x = FailureCreateDevice{}
+	mi := &file_types_proto_msgTypes[111]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FailureCreateDevice) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FailureCreateDevice) ProtoMessage() {}
+
+func (x *FailureCreateDevice) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[111]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FailureCreateDevice.ProtoReflect.Descriptor instead.
+func (*FailureCreateDevice) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{111}
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
@@ -5143,7 +5375,15 @@ const file_types_proto_rawDesc = "" +
 	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\"I\n" +
 	"\x17SuccessFetchCurrentTask\x12.\n" +
 	"\blastTask\x18\x01 \x01(\v2\x12.types.CurrentTaskR\blastTask\"\x19\n" +
-	"\x17FailureFetchCurrentTaskB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
+	"\x17FailureFetchCurrentTask\"\x10\n" +
+	"\x0eGetDeviceTypes\"-\n" +
+	"\x15SuccessGetDeviceTypes\x12\x14\n" +
+	"\x05types\x18\x01 \x03(\tR\x05types\"\x17\n" +
+	"\x15FailureGetDeviceTypes\"5\n" +
+	"\fCreateDevice\x12%\n" +
+	"\x06device\x18\x01 \x01(\v2\r.types.DeviceR\x06device\"\x15\n" +
+	"\x13SuccessCreateDevice\"\x15\n" +
+	"\x13FailureCreateDeviceB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -5157,7 +5397,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 106)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 112)
 var file_types_proto_goTypes = []any{
 	(*Role)(nil),                           // 0: types.Role
 	(*Personal)(nil),                       // 1: types.Personal
@@ -5265,7 +5505,13 @@ var file_types_proto_goTypes = []any{
 	(*FetchCurrentTask)(nil),               // 103: types.FetchCurrentTask
 	(*SuccessFetchCurrentTask)(nil),        // 104: types.SuccessFetchCurrentTask
 	(*FailureFetchCurrentTask)(nil),        // 105: types.FailureFetchCurrentTask
-	(*timestamppb.Timestamp)(nil),          // 106: google.protobuf.Timestamp
+	(*GetDeviceTypes)(nil),                 // 106: types.GetDeviceTypes
+	(*SuccessGetDeviceTypes)(nil),          // 107: types.SuccessGetDeviceTypes
+	(*FailureGetDeviceTypes)(nil),          // 108: types.FailureGetDeviceTypes
+	(*CreateDevice)(nil),                   // 109: types.CreateDevice
+	(*SuccessCreateDevice)(nil),            // 110: types.SuccessCreateDevice
+	(*FailureCreateDevice)(nil),            // 111: types.FailureCreateDevice
+	(*timestamppb.Timestamp)(nil),          // 112: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
 	1,   // 0: types.User.personal:type_name -> types.Personal
@@ -5280,7 +5526,7 @@ var file_types_proto_depIdxs = []int32{
 	4,   // 9: types.RegisterClient.pid:type_name -> types.PID
 	49,  // 10: types.ConversationSummary.last_message:type_name -> types.Message
 	45,  // 11: types.SuccessGetUserConversation.convSummary:type_name -> types.ConversationSummary
-	106, // 12: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	112, // 12: types.Message.sent_at:type_name -> google.protobuf.Timestamp
 	49,  // 13: types.SendMessage.message:type_name -> types.Message
 	49,  // 14: types.DeliverMessage.message:type_name -> types.Message
 	49,  // 15: types.StoreMessage.message:type_name -> types.Message
@@ -5291,22 +5537,23 @@ var file_types_proto_depIdxs = []int32{
 	49,  // 20: types.SuccessOpenAndLoadConversation.messages:type_name -> types.Message
 	49,  // 21: types.SuccessLoadConversation.messages:type_name -> types.Message
 	2,   // 22: types.SuccessUsersToNewConversation.users:type_name -> types.User
-	106, // 23: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
+	112, // 23: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
 	81,  // 24: types.SpawnAndRunDevice.device:type_name -> types.Device
 	4,   // 25: types.SuccessSpawnDevice.devicePID:type_name -> types.PID
 	4,   // 26: types.ConnectHDeviceToADevice.devicePID:type_name -> types.PID
 	92,  // 27: types.UpdateLocationReq.location:type_name -> types.Location
-	106, // 28: types.Task.completionDate:type_name -> google.protobuf.Timestamp
+	112, // 28: types.Task.completionDate:type_name -> google.protobuf.Timestamp
 	92,  // 29: types.Pin.location:type_name -> types.Location
-	106, // 30: types.Pin.last_online:type_name -> google.protobuf.Timestamp
+	112, // 30: types.Pin.last_online:type_name -> google.protobuf.Timestamp
 	98,  // 31: types.SuccessFetchPins.pins:type_name -> types.Pin
 	97,  // 32: types.CurrentTask.task:type_name -> types.Task
 	102, // 33: types.SuccessFetchCurrentTask.lastTask:type_name -> types.CurrentTask
-	34,  // [34:34] is the sub-list for method output_type
-	34,  // [34:34] is the sub-list for method input_type
-	34,  // [34:34] is the sub-list for extension type_name
-	34,  // [34:34] is the sub-list for extension extendee
-	0,   // [0:34] is the sub-list for field type_name
+	81,  // 34: types.CreateDevice.device:type_name -> types.Device
+	35,  // [35:35] is the sub-list for method output_type
+	35,  // [35:35] is the sub-list for method input_type
+	35,  // [35:35] is the sub-list for extension type_name
+	35,  // [35:35] is the sub-list for extension extendee
+	0,   // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }
@@ -5325,7 +5572,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   106,
+			NumMessages:   112,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

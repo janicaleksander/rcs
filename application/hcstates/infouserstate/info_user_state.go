@@ -32,8 +32,8 @@ type UserListSection struct {
 	users                []*proto.User
 	usersList            component.ListSlider
 	lastProcessedUserIdx int32
-	currSelectedUserID   string
 	isInUnit             bool
+	currSelectedUserID   string
 }
 
 type DescriptionSection struct {

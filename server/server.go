@@ -228,6 +228,23 @@ func (s *Server) Receive(ctx *actor.Context) {
 				LastTask: lastTask,
 			})
 		}
+	case *proto.GetDeviceTypes:
+		c := context.Background()
+		types, err := s.storage.GetDeviceTypes(c)
+		if err != nil {
+			ctx.Respond(&proto.FailureGetDeviceTypes{})
+		} else {
+			ctx.Respond(&proto.SuccessGetDeviceTypes{Types: types})
+		}
+	case *proto.CreateDevice:
+		c := context.Background()
+		err := s.storage.InsertDevice(c, msg.Device)
+		if err != nil {
+			fmt.Println(err)
+			ctx.Respond(&proto.FailureCreateDevice{})
+		} else {
+			ctx.Respond(&proto.SuccessCreateDevice{})
+		}
 	default:
 		utils.Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())
 

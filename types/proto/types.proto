@@ -409,3 +409,24 @@ message SuccessFetchCurrentTask{
 message FailureFetchCurrentTask{
 
 }
+
+message GetDeviceTypes {
+
+}
+
+message SuccessGetDeviceTypes {
+  repeated string types =1;
+}
+
+message FailureGetDeviceTypes{
+
+}
+message CreateDevice{
+  Device device =1;
+}
+
+message SuccessCreateDevice{
+}
+
+message FailureCreateDevice{
+}

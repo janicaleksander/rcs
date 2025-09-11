@@ -9,6 +9,7 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/application/commonstates/inboxstate"
 	"github.com/janicaleksander/bcs/application/commonstates/loginstate"
+	"github.com/janicaleksander/bcs/application/hcstates/createdevicestate"
 	"github.com/janicaleksander/bcs/application/hcstates/createunitstate"
 	"github.com/janicaleksander/bcs/application/hcstates/createuserstate"
 	"github.com/janicaleksander/bcs/application/hcstates/hcmenustate"
@@ -34,15 +35,16 @@ type Window struct {
 
 	messageServiceError bool
 	//and other errors this is good idea
-	loginScene      loginstate.LoginScene
-	hcMenuScene     hcmenustate.HCMenuScene
-	createUnitScene createunitstate.CreateUnitScene
-	infoUnitScene   infounitstate.InfoUnitScene
-	createUserScene createuserstate.CreateUserScene
-	infoUserScene   infouserstate.InfoUserScene
-	inboxScene      inboxstate.InboxScene
-	Flow            chan statesmanager.GameState
-	Done            chan bool
+	loginScene        loginstate.LoginScene
+	hcMenuScene       hcmenustate.HCMenuScene
+	createUnitScene   createunitstate.CreateUnitScene
+	infoUnitScene     infounitstate.InfoUnitScene
+	createUserScene   createuserstate.CreateUserScene
+	infoUserScene     infouserstate.InfoUserScene
+	inboxScene        inboxstate.InboxScene
+	createDeviceScene createdevicestate.CreateDeviceScene
+	Flow              chan statesmanager.GameState
+	Done              chan bool
 }
 
 func NewWindowActor(w *Window, serverPID, messageServicePID *actor.PID) actor.Producer {
@@ -140,6 +142,8 @@ func (w *Window) setupSceneForState(state statesmanager.GameState) {
 		w.infoUnitScene.InfoUnitSceneSetup(&w.stateManager, &w.sharedCfg)
 	case statesmanager.CreateUserState:
 		w.createUserScene.CreateUserSceneSetup(&w.stateManager, &w.sharedCfg)
+	case statesmanager.CreateDeviceState:
+		w.createDeviceScene.CreateDeviceSceneSetup(&w.stateManager, &w.sharedCfg)
 	case statesmanager.InfoUserState:
 		w.infoUserScene.InfoUserSceneSetup(&w.stateManager, &w.sharedCfg)
 	case statesmanager.InboxState:
@@ -159,6 +163,8 @@ func (w *Window) update() {
 		w.infoUnitScene.UpdateInfoUnitState()
 	case statesmanager.CreateUserState:
 		w.createUserScene.UpdateCreateUserState()
+	case statesmanager.CreateDeviceState:
+		w.createDeviceScene.UpdateCreateDeviceState()
 	case statesmanager.InfoUserState:
 		w.infoUserScene.UpdateInfoUserState()
 	case statesmanager.InboxState:
@@ -182,6 +188,8 @@ func (w *Window) render() {
 		w.createUserScene.RenderCreateUserState()
 	case statesmanager.InfoUserState:
 		w.infoUserScene.RenderInfoUserState()
+	case statesmanager.CreateDeviceState:
+		w.createDeviceScene.RenderCreateDeviceState()
 	case statesmanager.InboxState:
 		w.inboxScene.RenderInboxState()
 	default:

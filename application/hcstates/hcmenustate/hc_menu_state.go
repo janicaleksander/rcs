@@ -26,11 +26,13 @@ type UnitSection struct {
 }
 
 type UserSection struct {
-	userRectangle       rl.Rectangle
-	createUserButton    component.Button
-	isCreateUserPressed bool
-	infoUserButton      component.Button
-	isInfoUserPressed   bool
+	userRectangle         rl.Rectangle
+	createUserButton      component.Button
+	isCreateUserPressed   bool
+	infoUserButton        component.Button
+	isInfoUserPressed     bool
+	createDeviceButton    component.Button
+	isCreateDevicePressed bool
 }
 
 type InboxSection struct {
@@ -103,6 +105,7 @@ func (h *HCMenuScene) MenuHCSceneSetup(state *statesmanager.StateManager, cfg *u
 		"Create User", false)
 
 	//info about users
+	//TODO add to user info delete device
 	h.userSection.infoUserButton = *component.NewButton(component.NewButtonConfig(),
 		rl.NewRectangle(
 			h.userSection.userRectangle.X,
@@ -110,6 +113,14 @@ func (h *HCMenuScene) MenuHCSceneSetup(state *statesmanager.StateManager, cfg *u
 			200,
 			40),
 		"Users info", false)
+	//create and assign device
+	h.userSection.createDeviceButton = *component.NewButton(component.NewButtonConfig(),
+		rl.NewRectangle(
+			h.userSection.userRectangle.X,
+			h.userSection.userRectangle.Y+160,
+			200,
+			40),
+		"Add device", false)
 
 	h.inboxSection.openInboxButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 		h.inboxSection.inboxRectangle.X,
@@ -123,6 +134,7 @@ func (h *HCMenuScene) UpdateHCMenuState() {
 	h.unitSection.isInfoUnitPressed = h.unitSection.infoUnitButton.Update()
 	h.userSection.isCreateUserPressed = h.userSection.createUserButton.Update()
 	h.userSection.isInfoUserPressed = h.userSection.infoUserButton.Update()
+	h.userSection.isCreateDevicePressed = h.userSection.createDeviceButton.Update()
 	h.inboxSection.isOpenInboxPressed = h.inboxSection.openInboxButton.Update()
 
 	if h.unitSection.isInfoUnitPressed {
@@ -133,6 +145,10 @@ func (h *HCMenuScene) UpdateHCMenuState() {
 		h.stateManager.Add(statesmanager.CreateUserState)
 	} else if h.userSection.isInfoUserPressed {
 		h.stateManager.Add(statesmanager.InfoUserState)
+	} else if h.userSection.isCreateDevicePressed {
+		h.stateManager.Add(statesmanager.CreateDeviceState)
+	} else if h.inboxSection.isOpenInboxPressed {
+		h.stateManager.Add(statesmanager.InboxState)
 	} else if h.inboxSection.isOpenInboxPressed {
 		h.stateManager.Add(statesmanager.InboxState)
 	}
@@ -171,6 +187,7 @@ func (h *HCMenuScene) RenderHCMenuState() {
 	h.unitSection.infoUnitButton.Render()
 	h.userSection.createUserButton.Render()
 	h.userSection.infoUserButton.Render()
+	h.userSection.createDeviceButton.Render()
 	h.inboxSection.openInboxButton.Render()
 
 }

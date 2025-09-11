@@ -586,6 +586,47 @@ func (p *Postgres) FetchCurrentTask(ctx context.Context, deviceID string) (*prot
 	return t, nil
 }
 
+func (p *Postgres) GetDeviceTypes(ctx context.Context) ([]string, error) {
+	rows, err := p.Conn.QueryContext(ctx, `SELECT type FROM device_type`)
+	if err != nil {
+		return nil, err
+	}
+	types := make([]string, 0, 64)
+	for rows.Next() {
+		var t string
+		err = rows.Scan(&t)
+		if err != nil {
+			continue
+		}
+		types = append(types, t)
+	}
+	return types, nil
+}
+
+func (p *Postgres) InsertDevice(ctx context.Context, device *proto.Device) error {
+	tx, err := p.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx,
+		`INSERT INTO device (id,name,last_time_online,owner,type) 
+				   VALUES ($1,$2,$3,$4,$5)`,
+		device.Id,
+		device.Name,
+		device.LastTimeOnline,
+		device.Owner,
+		device.Type,
+	)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
 //naprawic to ze muser moze miec wiecej niz jeden curent task niedzy innymi dlatego
 //ze moze meic weicj niz 1 urzadzenie
 ///czyli tylko i wuylaczeni do deviceID to brac

@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS device
     name VARCHAR(255) NOT NULL,
     last_time_online TIMESTAMP,
     owner UUID REFERENCES users(id) ON DELETE SET NULL,
-    type VARCHAR(255) REFERENCES device_type(type) NOT NULL
-
+    type VARCHAR(255) REFERENCES device_type(type) NOT NULL,
+    UNIQUE(name)
 
 );
 

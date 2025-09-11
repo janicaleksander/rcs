@@ -29,8 +29,6 @@ func (i *InfoUserScene) UpdateDescription() {
 	if currentUserIdx != -1 && currentUserIdx != i.userListSection.lastProcessedUserIdx {
 		user := i.userListSection.users[i.userListSection.usersList.IdxActiveElement]
 		i.userListSection.currSelectedUserID = user.Id
-		//TODO in the v2 version we need to track more than
-		// one unit ID
 		if _, ok := i.unitListSection.userToUnitCache[user.Id]; ok {
 			i.userListSection.isInUnit = true
 		} else {
@@ -466,7 +464,8 @@ func (i *InfoUserScene) drawInfoTab(currentTaskTab *component.CurrentTaskTab) {
 		int32(i.trackUserLocationSection.currentTaskTab.Y),
 		20,
 		rl.Black)
-	//TODO addhere this 	func WrapText(maxWidth int32, input string, fontSize int32) string {
+
+	//TODO repair what if I dont have any current task
 	text := utils.WrapText(
 		int32(i.trackUserLocationSection.currentTaskTab.Width),
 		currentTaskTab.Task.Name+"\n"+currentTaskTab.Task.Description,
@@ -479,8 +478,6 @@ func (i *InfoUserScene) drawInfoTab(currentTaskTab *component.CurrentTaskTab) {
 		rl.Black)
 }
 
-/*
- */
 func drawInfoBox(pin *component.PinInformation) {
 	rl.SetMouseCursor(rl.MouseCursorPointingHand)
 	notificationBox := rl.NewRectangle(
