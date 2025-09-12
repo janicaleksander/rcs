@@ -8,6 +8,14 @@ import  "google/protobuf/timestamp.proto";
 // ========================
 // DATA MODELS
 // ========================
+message Error {
+  string content = 1;
+}
+
+message PID {
+  string address = 1;
+  string id = 2;
+}
 
 message Role {
   string name = 1;
@@ -33,25 +41,64 @@ message Unit {
   bool isConfigured = 3;
 }
 
-message PID {
-  string address = 1;
-  string id = 2;
+message Conversation{
+  string id = 1;
+  string senderID =3;
+  string receiverID =4;
 }
 
+message Message{
+  string id = 1;
+  string senderID = 2;
+  string conversationID =3;
+  string content = 4;
+  google.protobuf.Timestamp sent_at = 5;
+}
+
+message Device {
+  string id =1;
+  string name = 2;
+  string owner =3;
+  google.protobuf.Timestamp last_time_online = 5;
+  string type = 4;
+}
+
+message Location{
+  double latitude =1;
+  double longitude =2;
+}
+
+message Task {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int32 state =4;
+  google.protobuf.Timestamp completionDate = 5;
+
+}
+
+message Pin {
+  string deviceID = 1;
+  string ownerName =2;
+  string ownerSurname =3;
+  Location location = 4;
+  google.protobuf.Timestamp last_online = 5;
+}
 // ========================
-// SYSTEM & STATUS MESSAGES
+// ACTION MESSAGE
 // ========================
 
 message IsServerRunning {}
-message Running {}
+
+message ServerIsRunning {}
+
 message Disconnect {
   string id =1;
 }
+
 message Ping{}
+
 message Pong{}
-// ========================
-// AUTHENTICATION & LOGIN
-// ========================
 
 message LoginUser {
   PID pid = 1;
@@ -59,13 +106,9 @@ message LoginUser {
   string password = 3;
 }
 
-message AcceptLogin {
-  string id = 1;
-  int64 rule_level = 2;
-}
-
-message DenyLogin {
-  string info = 1;
+message AcceptUserLogin {
+  string userID = 1;
+  int64 ruleLevel = 2;
 }
 
 message GetLoggedInUUID {
@@ -75,56 +118,35 @@ message LoggedInUUID {
   string id = 1;
 }
 
-// ========================
-// SERVER CONFIGURATION
-// ========================
-
-message NeededServerConfiguration {
-  PID serverPID = 1;
-}
-
-// ========================
-// UNIT OPERATIONS
-// ========================
-
 message CreateUnit {
   string name = 1;
-  bool isConfigured = 2;
-  string userID = 3;
+  string userID = 2;
 }
 
 message AcceptCreateUnit {}
-message DenyCreateUnit {
-  string info = 1;
-}
 
 message GetAllUnits {}
+
 message AllUnits {
   repeated Unit units = 1;
 }
 
 message LoginUnit {
   PID pid = 1;
-  string id = 2;
+  string unitID = 2;
 }
 
-// ========================
-// USER OPERATIONS
-// ========================
 message CreateUser{
   User user = 1 ;
-
-}
-message AcceptCreateUser{
-}
-message DenyCreateUser{
-  string info = 1;
-}
-message GetAllUsersInUnit {
-  string id = 1; //unit uuid
 }
 
-message AllUsersInUnit {
+message AcceptCreateUser{}
+
+message GetUsersInUnit {
+  string unitID = 1;
+}
+
+message UsersInUnit {
   repeated User users = 1;
 }
 
@@ -136,50 +158,41 @@ message UsersAboveLVL{
   repeated User users = 1;
 }
 
-message IsUserInUnit {
+message IsUserInUnit{
   string id =1;
 }
+
 message UserInUnit{
   string unitID = 1;
 }
-message UserNotInUnit{}
-// TODO maybe add some info to all reject type message
+
 message AssignUserToUnit {
   string userID = 1;
-  string unitID =2;
+  string unitID = 2;
 }
-message SuccessOfAssign{}
-message FailureOfAssign{}
+
+message AcceptAssignUserToUnit{}
 
 message DeleteUserFromUnit{
   string userID = 1;
   string unitID = 2;
 }
-message SuccessOfDelete{}
-message FailureOfDelete{}
+message AcceptDeleteUserFromUnit{}
 
-// ========================
-// MessageService OPERATIONS
-// ========================
-message Conversation{
-    string id = 1;
-    string senderID =3;
-    string receiverID =4;
-}
-message RegisterClient{
+message RegisterClientInMessageService{
   string id =1;
   PID pid =2;
 }
-message SuccessRegisterClient{}
-message FailureRegisterClient{}
+
+message AcceptRegisterClient{}
+
 message CreateConversation{
   string id = 1;
-  string senderID =3;
-  string receiverID =4;
+  string senderID = 2;
+  string receiverID = 3;
 }
 
-message SuccessOfCreateConversation{}
-message FailureOfCreateConversation{}
+message AcceptCreateConversation{}
 
 message ConversationSummary {
   string conversation_id = 1;
@@ -189,59 +202,54 @@ message ConversationSummary {
 }
 
 
-message GetUserConversation{
+message GetUserConversations{
   string id = 1;
 }
-message SuccessGetUserConversation{
-  repeated ConversationSummary  convSummary = 1;
+
+message UserConversations {
+  repeated ConversationSummary convSummary = 1;
 }
-message FailureGetUserConversation{}
-message Message{
-  string id = 1;
-  string senderID = 2;
-  string conversationID =3;
-  string content = 4;
-  google.protobuf.Timestamp sent_at = 5;
-}
+
 message SendMessage{
   string receiver = 1;
-  Message message =2;
+  Message message = 2;
 }
+
+message AcceptSend{}
+
 message DeliverMessage{
   string receiver = 1;
   Message message =2;
 }
-message SuccessSend{}
-message FailureSend{}
-message SuccessDeliver{}
-message FailureDeliver{}
+
+message AcceptDeliver{}
+
 message StoreMessage{
-  Message message =2;
+  Message message = 1;
 }
-message SuccessStoreMessage{}
-message FailureStoreMessage{}
-
-
+message AcceptStoreMessage{}
 
 message IsOnline{
-  string uuid = 1;
+  string userID = 1;
 }
+
 message Online{}
+
 message Offline{}
 
 message FillConversationID{
-  string senderID =1;
-  string receiverID =2;
-}
-message SuccessOfFillConversationID{
-  string id =1;
-}
-message FailureOfFillConversationID{
+  string senderID = 1;
+  string receiverID = 2;
 }
 
-message HeartbeatTick{
+message FilledConversationID{
+  string id =1;
 }
+
+message HeartbeatTick{}
+
 message Outbox{}
+
 message Inbox {
   string withID =1;
 }
@@ -252,12 +260,15 @@ message PresenceType {
     Inbox inbox = 2;
   }
 }
+
 message GetPresence{
   string id = 1;
 }
+
 message Presence {
-PresenceType  presence= 1;
+  PresenceType  presence= 1;
 }
+
 message UpdatePresence{
   string id = 1;
   PresenceType presence = 2;
@@ -268,41 +279,22 @@ message OpenAndLoadConversation{
   string receiverID=2;
   string conversationID =3;
 }
-message SuccessOpenAndLoadConversation{
-  repeated Message messages =1;
-}
-message FailureOpenAndLoadConversation{
-}
+
 message LoadConversation{
   string conversationID  = 1;
 }
-message SuccessLoadConversation{
-  repeated  Message messages =1;
+
+message LoadedConversation{
+  repeated  Message messages = 1;
 }
-message FailureLoadConversation{}
-/* rm from server fill conv id maybe*/
-
-
 
 message GetUsersToNewConversation{
-  string id = 1;
+  string userID = 1;
 }
 
-message SuccessUsersToNewConversation{
+message UsersToNewConversation{
   repeated User users = 1;
 }
-message FailureUsersToNewConversation{}
-
-
-
-message Device {
-  string id =1;
-  string name = 2;
-  string owner =3;
-  google.protobuf.Timestamp last_time_online = 5;
-  string type = 4;
-}
-
 
 message HTTPSpawnDevice{
   string email = 1; //we have to check based on this is user is in unit -> success
@@ -312,33 +304,18 @@ message HTTPSpawnDevice{
 message SpawnAndRunDevice {
   Device device =1;
 }
-message SuccessSpawnDevice{
+
+message AcceptSpawnDevice{
   string userID =1;
   string deviceID =2;
   PID devicePID  =3;
-}
-message FailureSpawnDevice{
-
 }
 
 message ConnectHDeviceToADevice{
   string deviceID =1;
   PID devicePID =2;
 }
-message SuccessConnectHtoA{}
-message FailureConnectHtoA{}
-
-
-
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-/////////////////////////////HTTP PART//////////////////////////////////
-////////////////////////////////////////////////////////////////////////
+message AcceptConnectHtoA{}
 
 message LoginUserReq {
   string email = 1;
@@ -350,83 +327,55 @@ message UserRes{
   string surname = 2;
 }
 
-
 message LoginUserRes{
   string accessToken = 1;
   string userID = 2;
   string deviceID =3;
 }
-message Location{
-  double latitude =1;
-  double longitude =2;
-}
+
 message UpdateLocationReq{
   Location location =1;
   string deviceID = 2;
 }
 
-message SuccessUpdateLocationReq{}
-message FailureUpdateLocationReq{}
-message UpdateLocationRes{//this can be a response in actor when i refactor it
+message AcceptUpdateLocationReq{}
+
+message UpdateLocationRes{
   string message =1;
 }
-message Task {
-  string id = 1;
-  string name = 2;
-  string description = 3;
-  int32 state =4;
-  google.protobuf.Timestamp completionDate = 5;
 
-}
-message Pin {
-  string deviceID = 1;
-  string ownerName =2;
-  string ownerSurname =3;
-  Location location = 4;
-  google.protobuf.Timestamp last_online = 5;
+message GetPins{
 }
 
-message FetchPins{
-
-}
-message SuccessFetchPins{
+message Pins{
   repeated Pin pins = 1;
-}
-message FailureFetchPins{
-
 }
 
 message CurrentTask{
   Task task = 1;
   string userID = 2;
 }
-message FetchCurrentTask {
+
+message GetCurrentTasks {
   string deviceID = 1;
 }
-message SuccessFetchCurrentTask{
-  CurrentTask lastTask = 1;
-}
-message FailureFetchCurrentTask{
 
+message CurrentTasks{
+  CurrentTask lastTask = 1;
 }
 
 message GetDeviceTypes {
 
 }
 
-message SuccessGetDeviceTypes {
+message DeviceTypes {
   repeated string types =1;
 }
 
-message FailureGetDeviceTypes{
-
-}
 message CreateDevice{
   Device device =1;
 }
 
-message SuccessCreateDevice{
+message AcceptCreateDevice{
 }
 
-message FailureCreateDevice{
-}
