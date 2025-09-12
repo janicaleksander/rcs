@@ -51,7 +51,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	var userID string
 	var deviceID string
-	if v, ok := res.(*proto.SuccessSpawnDevice); !ok {
+	if v, ok := res.(*proto.AcceptSpawnAndRunDevice); !ok {
 		render.Render(w, r, ErrInvalidCredentials(errors.New("invalid credentials")))
 		return
 	} else {
@@ -108,7 +108,7 @@ func (h *Handler) updateLocation(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, ErrActorMakeRequest(err))
 		return
 	}
-	if _, ok := res.(*proto.FailureUpdateLocationReq); ok {
+	if _, ok := res.(*proto.AcceptUpdateLocationReq); !ok {
 		render.Render(w, r, ErrUpdateLocation(errors.ErrUnsupported))
 		return
 	}

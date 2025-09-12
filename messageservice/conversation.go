@@ -40,10 +40,10 @@ func (c *Conversation) Receive(ctx *actor.Context) {
 		if err != nil {
 			panic(err.Error() + "cnv")
 		}
-		if _, ok := res.(*proto.SuccessStoreMessage); ok {
-			ctx.Respond(&proto.SuccessSend{})
+		if _, ok := res.(*proto.AcceptStoreMessage); ok {
+			ctx.Respond(&proto.AcceptSend{})
 		} else {
-			ctx.Respond(&proto.FailureSend{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 			utils.Logger.Error("SOME ERROR in sending ")
 			return
 		}

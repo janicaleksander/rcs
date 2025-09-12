@@ -43,14 +43,14 @@ func (i *InboxScene) GetLoggedID() {
 func (i *InboxScene) GetUserConversation() {
 
 	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID,
-		&proto.GetUserConversation{
+		&proto.GetUserConversations{
 			Id: i.tempUserID},
 	))
 	if err != nil {
 		//TODO error ctx deadline exceeded
 	}
 
-	if v, ok := res.(*proto.SuccessGetUserConversation); ok {
+	if v, ok := res.(*proto.UserConversations); ok {
 		i.conversationSection.usersConversations = v.ConvSummary
 	} else {
 		// maybe one message proto.Error with msg
@@ -59,12 +59,15 @@ func (i *InboxScene) GetUserConversation() {
 }
 
 func (i *InboxScene) GetUserToNewConversation() {
-	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.GetUsersToNewConversation{Id: i.tempUserID}))
+	res, err := utils.MakeRequest(utils.NewRequest(
+		i.cfg.Ctx,
+		i.cfg.MessageServicePID,
+		&proto.GetUsersToNewConversation{UserID: i.tempUserID}))
 	if err != nil {
 		//TODO error ctx deadline exceeded
 	}
 
-	if v, ok := res.(*proto.SuccessUsersToNewConversation); ok {
+	if v, ok := res.(*proto.UsersToNewConversation); ok {
 		i.modalSection.users = v.Users
 	} else {
 		// maybe one message proto.Error with msg
@@ -128,7 +131,7 @@ func (i *InboxScene) addNewConversation() {
 
 		}
 
-		if _, ok := res.(*proto.SuccessOfCreateConversation); ok {
+		if _, ok := res.(*proto.AcceptCreateConversation); ok {
 			i.refreshConversationsPanel()
 		} else {
 			i.modalSection.isErrorModal = true
@@ -143,13 +146,14 @@ func (i *InboxScene) addNewConversation() {
 func (i *InboxScene) refreshConversationsPanel() {
 	i.conversationSection.activeConversation = -1
 	i.conversationSection.conversationsTabs = i.conversationSection.conversationsTabs[:0]
-	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID,
-		&proto.GetUserConversation{Id: i.tempUserID}))
+	res, err := utils.MakeRequest(utils.NewRequest(
+		i.cfg.Ctx,
+		i.cfg.MessageServicePID,
+		&proto.GetUserConversations{Id: i.tempUserID}))
 	if err != nil {
 		//TODO context deadline exceeded
 	}
-
-	if v, ok := res.(*proto.SuccessGetUserConversation); ok {
+	if v, ok := res.(*proto.UserConversations); ok {
 		fmt.Println(v.ConvSummary)
 		i.conversationSection.usersConversations = v.ConvSummary
 	} else {

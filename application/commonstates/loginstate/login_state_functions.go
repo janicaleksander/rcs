@@ -44,15 +44,17 @@ func (l *LoginScene) Login() {
 		return
 	}
 
-	if v, ok := res.(*proto.AcceptLogin); ok {
+	if v, ok := res.(*proto.AcceptUserLogin); ok {
 		//to show login is taking to much time add some circle or infobar animation
-		res, err := utils.MakeRequest(utils.NewRequest(l.cfg.Ctx, l.cfg.MessageServicePID, &proto.RegisterClient{
-			Id: v.Id,
-			Pid: &proto.PID{
-				Address: l.cfg.Ctx.PID().Address,
-				Id:      l.cfg.Ctx.PID().ID,
-			},
-		}))
+		res, err = utils.MakeRequest(utils.NewRequest(
+			l.cfg.Ctx,
+			l.cfg.MessageServicePID, &proto.RegisterClientInMessageService{
+				Id: v.UserID,
+				Pid: &proto.PID{
+					Address: l.cfg.Ctx.PID().Address,
+					Id:      l.cfg.Ctx.PID().ID,
+				},
+			}))
 
 		if err != nil {
 			//context deadline exceeded
@@ -64,7 +66,7 @@ func (l *LoginScene) Login() {
 			return
 		}
 
-		if _, ok := res.(*proto.SuccessRegisterClient); !ok {
+		if _, ok := res.(*proto.AcceptRegisterClient); !ok {
 			l.errorSection.loginErrorMessage = "CANT LOGIN TO Service message"
 
 			//TODO but i dont know if this should be critical error to have error below

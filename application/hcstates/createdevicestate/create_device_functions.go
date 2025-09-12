@@ -41,7 +41,7 @@ func (d *CreateDeviceScene) FetchDeviceTypes() {
 	}
 	d.newDeviceSection.deviceTypes = make([]string, 0, 64)
 	d.newDeviceSection.typeSlider.Strings = make([]string, 0, 64)
-	if v, ok := res.(*proto.SuccessGetDeviceTypes); ok {
+	if v, ok := res.(*proto.DeviceTypes); ok {
 		for _, t := range v.Types {
 			d.newDeviceSection.deviceTypes = append(d.newDeviceSection.deviceTypes, t)
 			d.newDeviceSection.typeSlider.Strings = append(d.newDeviceSection.typeSlider.Strings, t)
@@ -88,7 +88,7 @@ func (d *CreateDeviceScene) CreateDevice() {
 		})
 	}
 
-	if _, ok := res.(*proto.SuccessCreateDevice); ok {
+	if _, ok := res.(*proto.AcceptCreateDevice); ok {
 		d.infoSection.info = "Good!"
 		d.infoSection.infoPopup.Show()
 		d.scheduler.After((3 * time.Second).Seconds(), func() {

@@ -108,7 +108,7 @@ message LoginUser {
 
 message AcceptUserLogin {
   string userID = 1;
-  int64 ruleLevel = 2;
+  int32 ruleLevel = 2;
 }
 
 message GetLoggedInUUID {
@@ -162,7 +162,7 @@ message IsUserInUnit{
   string id =1;
 }
 
-message UserInUnit{
+message UserIsInUnit{
   string unitID = 1;
 }
 
@@ -305,7 +305,7 @@ message SpawnAndRunDevice {
   Device device =1;
 }
 
-message AcceptSpawnDevice{
+message AcceptSpawnAndRunDevice{
   string userID =1;
   string deviceID =2;
   PID devicePID  =3;
@@ -315,6 +315,7 @@ message ConnectHDeviceToADevice{
   string deviceID =1;
   PID devicePID =2;
 }
+
 message AcceptConnectHtoA{}
 
 message LoginUserReq {
@@ -333,15 +334,16 @@ message LoginUserRes{
   string deviceID =3;
 }
 
-message UpdateLocationReq{
-  Location location =1;
-  string deviceID = 2;
-}
 
 message AcceptUpdateLocationReq{}
 
 message UpdateLocationRes{
   string message =1;
+}
+
+message UpdateLocationReq{
+  Location location =1;
+  string deviceID = 2;
 }
 
 message GetPins{
@@ -351,17 +353,13 @@ message Pins{
   repeated Pin pins = 1;
 }
 
-message CurrentTask{
-  Task task = 1;
-  string userID = 2;
-}
-
-message GetCurrentTasks {
+message GetCurrentTask {
   string deviceID = 1;
 }
 
-message CurrentTasks{
-  CurrentTask lastTask = 1;
+message CurrentTask{
+  Task task = 1;
+  string userID = 2;
 }
 
 message GetDeviceTypes {
@@ -376,6 +374,5 @@ message CreateDevice{
   Device device =1;
 }
 
-message AcceptCreateDevice{
-}
+message AcceptCreateDevice{}
 

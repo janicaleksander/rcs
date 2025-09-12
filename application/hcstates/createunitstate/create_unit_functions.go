@@ -48,9 +48,8 @@ func (c *CreateUnitScene) CreateUnit() {
 	} else {
 		//user can be only in one unit in the same time -> error
 		res, err := utils.MakeRequest(utils.NewRequest(c.cfg.Ctx, c.cfg.ServerPID, &proto.CreateUnit{
-			Name:         name,
-			IsConfigured: false,
-			UserID:       c.newUnitSection.usersDropdown.Strings[user],
+			Name:   name,
+			UserID: c.newUnitSection.usersDropdown.Strings[user],
 		}))
 
 		if err != nil {

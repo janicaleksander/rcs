@@ -315,7 +315,7 @@ func (i *InboxScene) UpdateInboxState() {
 				}
 				i.MessageSection.messages = i.MessageSection.messages[:0]
 				i.MessageSection.messagePanelLayout.currHeight = i.MessageSection.messagePanel.Bounds.Y + 3*i.MessageSection.messagePanelLayout.padding
-				if v, ok := res.(*proto.SuccessOpenAndLoadConversation); ok {
+				if v, ok := res.(*proto.LoadedConversation); ok {
 					for _, msg := range v.Messages {
 						i.AppendMessage(msg)
 					}

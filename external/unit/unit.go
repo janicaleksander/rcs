@@ -46,7 +46,7 @@ func (u *Unit) Receive(ctx *actor.Context) {
 				Address: ctx.PID().Address,
 				Id:      ctx.PID().ID,
 			},
-			Id: u.id,
+			UnitID: u.id,
 		})
 	case actor.Stopped:
 		utils.Logger.Info("Unit has stopped")
@@ -55,7 +55,7 @@ func (u *Unit) Receive(ctx *actor.Context) {
 	case *proto.SpawnAndRunDevice:
 		pid := ctx.SpawnChild(device.NewDevice(msg.Device.Id, ctx.PID()), "device", actor.WithID(msg.Device.Id))
 		u.devices[msg.Device.Id] = pid
-		ctx.Respond(&proto.SuccessSpawnDevice{
+		ctx.Respond(&proto.AcceptSpawnAndRunDevice{
 			UserID:   msg.Device.Owner,
 			DeviceID: msg.Device.Id,
 			DevicePID: &proto.PID{
@@ -68,9 +68,9 @@ func (u *Unit) Receive(ctx *actor.Context) {
 		c := context.Background()
 		err := u.storage.UpdateLocation(c, msg)
 		if err != nil {
-			ctx.Respond(&proto.FailureUpdateLocationReq{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessUpdateLocationReq{})
+			ctx.Respond(&proto.AcceptUpdateLocationReq{})
 		}
 
 	default:

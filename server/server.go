@@ -12,10 +12,6 @@ import (
 	"github.com/janicaleksander/bcs/utils"
 )
 
-const (
-	PingPongTime = 3 * time.Second
-)
-
 // TODO make a two maybe maps one for connected by app commander lvl person
 // and second to 0 1 2 users/soldiers connected by device->unit->server
 // this is problem e.g. in sending message from 5lvl from app to 0lvl to device in unit
@@ -53,7 +49,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 	case *proto.HeartbeatTick:
 		s.startHeartbeat(ctx)
 	case *proto.IsServerRunning:
-		ctx.Respond(&proto.Running{})
+		ctx.Respond(&proto.IsServerRunning{})
 	case *proto.Disconnect: // after this switch state to loginScene
 		pid, ok := s.connections[msg.Id]
 		if ok {
@@ -62,26 +58,25 @@ func (s *Server) Receive(ctx *actor.Context) {
 		}
 
 	case *proto.IsOnline:
-		if _, ok := s.connections[msg.Uuid]; ok {
+		if _, ok := s.connections[msg.UserID]; ok {
 			ctx.Respond(&proto.Online{})
 		} else {
 			ctx.Respond(&proto.Offline{})
 		}
 	case *proto.LoginUnit:
 		pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //unit PID
-		s.connections[msg.Id] = pid                      //pid to uuid
-		s.reverseConnections[pid.String()] = msg.Id
+		s.connections[msg.UnitID] = pid                  //pid to uuid
+		s.reverseConnections[pid.String()] = msg.UnitID
 	case *proto.LoginUser:
 		c := context.Background()
 		id, role, err := s.storage.LoginUser(c, msg.Email, msg.Password)
 		if err != nil {
-			ctx.Respond(&proto.DenyLogin{Info: err.Error()})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
 			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
 			s.connections[id] = pid                          //pid to uuid
 			s.reverseConnections[pid.String()] = id
-			ctx.Respond(&proto.AcceptLogin{Id: id, RuleLevel: int64(role)})
-
+			ctx.Respond(&proto.AcceptUserLogin{UserID: id, RuleLevel: int32(role)})
 		}
 		//TODO idk if this getlogged works
 
@@ -97,9 +92,9 @@ func (s *Server) Receive(ctx *actor.Context) {
 		}
 	case *proto.CreateUnit:
 		c := context.Background()
-		err := s.storage.InsertUnit(c, msg.Name, msg.IsConfigured, msg.UserID)
+		err := s.storage.InsertUnit(c, msg.Name, msg.UserID)
 		if err != nil {
-			ctx.Respond(&proto.DenyCreateUnit{Info: err.Error()})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
 			ctx.Respond(&proto.AcceptCreateUnit{})
 		}
@@ -110,19 +105,19 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.AllUnits{Units: units})
 		}
 
-	case *proto.GetAllUsersInUnit:
+	case *proto.GetUsersInUnit:
 		c := context.Background()
-		unitID := msg.Id
+		unitID := msg.UnitID
 		users, err := s.storage.GetUsersInUnit(c, unitID)
 		if err == nil {
 			fmt.Println(users)
-			ctx.Respond(&proto.AllUsersInUnit{Users: users})
+			ctx.Respond(&proto.UsersInUnit{Users: users})
 		}
 	case *proto.CreateUser:
 		c := context.Background()
 		err := s.storage.InsertUser(c, msg.User)
 		if err != nil {
-			ctx.Respond(&proto.DenyCreateUser{Info: err.Error()})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
 			ctx.Respond(&proto.AcceptCreateUser{})
 		}
@@ -130,33 +125,33 @@ func (s *Server) Receive(ctx *actor.Context) {
 		c := context.Background()
 		isInUnit, unitID, err := s.storage.IsUserInUnit(c, msg.Id)
 		if err != nil {
-			ctx.Respond(&proto.UserNotInUnit{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else if isInUnit {
-			ctx.Respond(&proto.UserInUnit{UnitID: unitID})
+			ctx.Respond(&proto.UserIsInUnit{UnitID: unitID})
 		} else {
-			ctx.Respond(&proto.UserNotInUnit{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		}
 	case *proto.AssignUserToUnit:
 		c := context.Background()
 		err := s.storage.AssignUserToUnit(c, msg.UserID, msg.UnitID)
 		if err != nil {
-			ctx.Respond(&proto.FailureOfAssign{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessOfAssign{})
+			ctx.Respond(&proto.AcceptAssignUserToUnit{})
 		}
 	case *proto.DeleteUserFromUnit:
 		c := context.Background()
 		err := s.storage.DeleteUserFromUnit(c, msg.UserID, msg.UnitID)
 		if err != nil {
-			ctx.Respond(&proto.FailureOfDelete{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessOfDelete{})
+			ctx.Respond(&proto.AcceptDeleteUserFromUnit{})
 		}
 	case *proto.HTTPSpawnDevice:
 		c := context.Background()
 		userID, _, err := s.storage.LoginUser(c, msg.Email, msg.Password)
 		if err != nil {
-			ctx.Respond(&proto.FailureSpawnDevice{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 			utils.Logger.Error(err.Error())
 		} else {
 			ok, unitID, err := s.storage.IsUserInUnit(c, userID)
@@ -192,40 +187,38 @@ func (s *Server) Receive(ctx *actor.Context) {
 				// units needs to spawn a child ->get this PID and respond
 			}
 		}
-	case *proto.FetchPins:
+	case *proto.GetPins:
 		c := context.Background()
 		pins, err := s.storage.FetchPins(c)
 		if err != nil {
-			ctx.Respond(&proto.FailureFetchPins{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessFetchPins{Pins: pins})
+			ctx.Respond(&proto.Pins{Pins: pins})
 		}
-	case *proto.FetchCurrentTask:
+	case *proto.GetCurrentTask:
 		c := context.Background()
-		lastTask, err := s.storage.FetchCurrentTask(c, msg.DeviceID)
+		currentTask, err := s.storage.FetchCurrentTask(c, msg.DeviceID)
 		if err != nil {
-			ctx.Respond(&proto.FailureFetchCurrentTask{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessFetchCurrentTask{
-				LastTask: lastTask,
-			})
+			ctx.Respond(currentTask)
 		}
 	case *proto.GetDeviceTypes:
 		c := context.Background()
 		types, err := s.storage.GetDeviceTypes(c)
 		if err != nil {
-			ctx.Respond(&proto.FailureGetDeviceTypes{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessGetDeviceTypes{Types: types})
+			ctx.Respond(&proto.DeviceTypes{Types: types})
 		}
 	case *proto.CreateDevice:
 		c := context.Background()
 		err := s.storage.InsertDevice(c, msg.Device)
 		if err != nil {
 			fmt.Println(err)
-			ctx.Respond(&proto.FailureCreateDevice{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessCreateDevice{})
+			ctx.Respond(&proto.AcceptCreateDevice{})
 		}
 	default:
 		utils.Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())

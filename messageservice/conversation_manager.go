@@ -40,7 +40,7 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		exists, _, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
 		if exists || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
 			utils.Logger.Error("Here x1", err, exists)
-			ctx.Respond(&proto.FailureOfCreateConversation{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 			return
 		}
 		cnv := &proto.Conversation{
@@ -52,12 +52,12 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		if err != nil {
 			utils.Logger.Error("Here x2")
 
-			ctx.Respond(&proto.FailureOfCreateConversation{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 			return
 		} else {
 			utils.Logger.Error("Here x3")
 
-			ctx.Respond(&proto.SuccessOfCreateConversation{})
+			ctx.Respond(&proto.AcceptCreateConversation{})
 			return
 		}
 	case *proto.OpenAndLoadConversation:
@@ -69,17 +69,17 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		if err != nil {
 			//TODO
 		} else {
-			ctx.Respond(&proto.SuccessOpenAndLoadConversation{Messages: msgs})
+			ctx.Respond(&proto.LoadedConversation{Messages: msgs})
 		}
-	case *proto.GetUserConversation:
+	case *proto.GetUserConversations:
 		c := context.Background()
 		conversations, err := cm.storage.GetUserConversations(c, msg.Id)
 		if err != nil {
-			ctx.Respond(&proto.FailureGetUserConversation{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 			fmt.Println(err)
 			//TODO
 		} else {
-			ctx.Respond(&proto.SuccessGetUserConversation{ConvSummary: conversations})
+			ctx.Respond(&proto.UserConversations{ConvSummary: conversations})
 		}
 	case *proto.FillConversationID:
 		c := context.Background()
@@ -87,7 +87,7 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
 				utils.Logger.Error("DB ERROR fillconversationDB x1", "ERR:", err)
-				ctx.Respond(&proto.FailureOfFillConversationID{})
+				ctx.Respond(&proto.Error{Content: err.Error()})
 				return
 			}
 		}
@@ -99,13 +99,13 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			}
 			err = cm.storage.CreateConversation(c, cnv)
 			if err != nil {
-				ctx.Respond(&proto.FailureOfFillConversationID{})
+				ctx.Respond(&proto.Error{Content: err.Error()})
 				utils.Logger.Error("DB ERROR fillconversationDB x2", "ERR", err)
 			}
-			ctx.Respond(&proto.SuccessOfFillConversationID{Id: cnv.Id})
+			ctx.Respond(&proto.FilledConversationID{Id: cnv.Id})
 			return
 		}
-		ctx.Respond(&proto.SuccessOfFillConversationID{Id: id})
+		ctx.Respond(&proto.FilledConversationID{Id: id})
 	case *proto.GetPresence:
 		resp := ctx.Request(ctx.Parent(), msg, utils.WaitTime)
 		res, _ := resp.Result()
@@ -128,7 +128,7 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		}
 		//here actor receive another message form this resp and change a orignal ctx of messageservicePID so cause of that
 		//we had to memorize orgSender
-		if message, ok := res.(*proto.SuccessSend); ok {
+		if message, ok := res.(*proto.AcceptSend); ok {
 			ctx.Send(orgSender, message)
 		} else {
 			ctx.Send(orgSender, message)
@@ -138,20 +138,20 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		c := context.Background()
 		err := cm.storage.InsertMessage(c, msg.Message)
 		if err != nil {
-			ctx.Respond(&proto.FailureStoreMessage{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessStoreMessage{})
+			ctx.Respond(&proto.AcceptStoreMessage{})
 		}
 	case *proto.DeliverMessage:
 		fmt.Println("odebralem od cnv", msg.Message, ctx.Parent())
 		ctx.Send(ctx.Parent(), msg)
 	case *proto.GetUsersToNewConversation:
 		c := context.Background()
-		users, err := cm.storage.SelectUsersToNewConversation(c, msg.Id)
+		users, err := cm.storage.SelectUsersToNewConversation(c, msg.UserID)
 		if err != nil {
-			ctx.Respond(&proto.FailureUsersToNewConversation{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessUsersToNewConversation{Users: users})
+			ctx.Respond(&proto.UsersToNewConversation{Users: users})
 		}
 	default:
 		_ = msg

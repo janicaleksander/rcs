@@ -36,7 +36,7 @@ func (d *DeviceActor) Receive(ctx *actor.Context) {
 	case *proto.UpdateLocationReq:
 		res, err := utils.MakeRequest(utils.NewRequest(ctx, d.connections[msg.DeviceID], msg))
 		if err != nil {
-			d.ctx.Respond(&proto.FailureUpdateLocationReq{})
+			d.ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
 			d.ctx.Respond(res)
 		}

@@ -72,7 +72,7 @@ func (i *InfoUserScene) AddToUnit() {
 				if err != nil {
 					//context error deadline
 				}
-				if _, ok := res.(*proto.SuccessOfAssign); ok {
+				if _, ok := res.(*proto.AcceptAssignUserToUnit); ok {
 					// TODO failure
 					i.unitListSection.userToUnitCache[i.userListSection.currSelectedUserID] = unit.Id
 					i.userListSection.isInUnit = true
@@ -120,7 +120,7 @@ func (i *InfoUserScene) RemoveFromUnit() {
 					//error context deadline exceeded
 				}
 
-				if _, ok := res.(*proto.SuccessOfDelete); ok {
+				if _, ok := res.(*proto.AcceptDeleteUserFromUnit); ok {
 					//TODO success
 
 					//TODO in v2 map str->[]str and then we have to iterate through
@@ -156,7 +156,7 @@ func (i *InfoUserScene) RemoveFromUnit() {
 func (i *InfoUserScene) SendMessage() {
 	if i.actionSection.showInboxModal {
 		res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.IsOnline{
-			Uuid: i.userListSection.currSelectedUserID,
+			UserID: i.userListSection.currSelectedUserID,
 		}))
 
 		if err != nil {
@@ -198,7 +198,7 @@ func (i *InfoUserScene) SendMessage() {
 			//ctx error
 		}
 		var cnvID string
-		if v, ok := res.(*proto.SuccessOfFillConversationID); ok {
+		if v, ok := res.(*proto.FilledConversationID); ok {
 			cnvID = v.Id
 		} else {
 			//todo
@@ -222,7 +222,7 @@ func (i *InfoUserScene) SendMessage() {
 			panic(err.Error())
 		}
 
-		if _, ok := res.(*proto.SuccessSend); !ok {
+		if _, ok := res.(*proto.AcceptSend); !ok {
 			//todo error
 		}
 
@@ -282,7 +282,7 @@ func (i *InfoUserScene) FetchUsers() {
 			if err != nil {
 				//context deadline exceeded
 			}
-			if v, ok := res.(*proto.UserInUnit); ok {
+			if v, ok := res.(*proto.UserIsInUnit); ok {
 				cacheChan <- struct {
 					userID string
 					unitID string
@@ -368,11 +368,14 @@ func (i *InfoUserScene) updateMap() {
 }
 
 func (i *InfoUserScene) FetchPins() {
-	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.FetchPins{}))
+	res, err := utils.MakeRequest(utils.NewRequest(
+		i.cfg.Ctx,
+		i.cfg.ServerPID,
+		&proto.GetPins{}))
 	if err != nil {
 		//TODO
 	}
-	if v, ok := res.(*proto.SuccessFetchPins); !ok {
+	if v, ok := res.(*proto.Pins); !ok {
 		//error
 		return
 	} else {
@@ -393,18 +396,22 @@ func (i *InfoUserScene) FetchPins() {
 			go func(wg *sync.WaitGroup) {
 				wg.Add(1)
 				defer wg.Done()
-				res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.FetchCurrentTask{DeviceID: p.DeviceID}))
+				res, err = utils.MakeRequest(
+					utils.NewRequest(
+						i.cfg.Ctx,
+						i.cfg.ServerPID,
+						&proto.GetCurrentTask{DeviceID: p.DeviceID}))
 				if err != nil {
 					//todo
 				} else {
-					if v, ok := res.(*proto.SuccessFetchCurrentTask); ok {
+					if v, ok := res.(*proto.CurrentTask); ok {
 						i.trackUserLocationSection.locationMapInformation.MapCurrentTask[p.DeviceID] = &component.CurrentTaskTab{
-							OwnerID:        v.LastTask.UserID,
+							OwnerID:        v.UserID,
 							OwnerName:      p.OwnerName,
 							OwnerSurname:   p.OwnerSurname,
 							DeviceID:       p.DeviceID,
 							LastTimeOnline: p.LastOnline.AsTime(),
-							Task:           v.LastTask.Task,
+							Task:           v.Task,
 						}
 					}
 				}

@@ -51,9 +51,9 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 	case *proto.Ping:
 
 		ctx.Respond(&proto.Pong{})
-	case *proto.RegisterClient:
+	case *proto.RegisterClientInMessageService:
 		ms.connections[msg.Id] = actor.NewPID(msg.Pid.Address, msg.Pid.Id)
-		ctx.Respond(&proto.SuccessRegisterClient{})
+		ctx.Respond(&proto.AcceptRegisterClient{})
 		ctx.Send(ms.presenceManger, &proto.UpdatePresence{
 			Id: msg.Id,
 			Presence: &proto.PresenceType{
@@ -75,17 +75,17 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 	case *proto.OpenAndLoadConversation:
 		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
 		res, err := resp.Result()
-		if message, ok := res.(*proto.SuccessOpenAndLoadConversation); ok {
+		if message, ok := res.(*proto.OpenAndLoadConversation); ok {
 			ctx.Respond(message)
 		} else {
 			utils.Logger.Error("Error in MSSVC OpenAndLoadConversation" + err.Error())
 			ctx.Respond(message)
 		}
 
-	case *proto.GetUserConversation:
+	case *proto.GetUserConversations:
 		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
 		res, _ := resp.Result()
-		if message, ok := res.(*proto.SuccessGetUserConversation); ok {
+		if message, ok := res.(*proto.UserConversations); ok {
 			ctx.Respond(message)
 		} else {
 			utils.Logger.Error("Error in MSSVC GetUserConversation")
@@ -94,7 +94,7 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 	case *proto.FillConversationID:
 		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
 		res, _ := resp.Result()
-		if message, ok := res.(*proto.SuccessOfFillConversationID); ok {
+		if message, ok := res.(*proto.FilledConversationID); ok {
 			ctx.Respond(message)
 		} else {
 			utils.Logger.Error("Error in MSSVC FillConversationID")
@@ -106,7 +106,7 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
 		fmt.Println("PID pierwszego requesta", resp.PID())
 		res, err := resp.Result()
-		if message, ok := res.(*proto.SuccessSend); ok {
+		if message, ok := res.(*proto.AcceptSend); ok {
 			ctx.Send(org, message)
 		} else {
 			utils.Logger.Error("Error in MSSVC SendMessage", err)
@@ -123,10 +123,9 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 		if err != nil {
 			panic(err)
 		}
-		if message, ok := res.(*proto.SuccessUsersToNewConversation); ok {
+		if message, ok := res.(*proto.UsersToNewConversation); ok {
 			ctx.Respond(message)
 		} else {
-
 			utils.Logger.Error("Error in MSSVC GetUsersToNewConversation")
 			ctx.Respond(message)
 		}
@@ -135,18 +134,16 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 		res, err := resp.Result()
 		if err != nil {
 			utils.Logger.Error("Here x4")
-
-			ctx.Respond(&proto.FailureOfCreateConversation{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 			return
 		}
-		if _, ok := res.(*proto.SuccessOfCreateConversation); ok {
-			ctx.Respond(&proto.SuccessOfCreateConversation{})
+		if _, ok := res.(*proto.AcceptCreateConversation); ok {
+			ctx.Respond(&proto.AcceptCreateConversation{})
 			utils.Logger.Error("Here x5")
-
 			return
 		} else {
 			utils.Logger.Error("Here x6")
-			ctx.Respond(&proto.FailureOfCreateConversation{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 			return
 		}
 
