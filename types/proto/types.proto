@@ -32,19 +32,19 @@ message User {
   string email = 2;
   string password = 3;
   int32 rule_lvl = 4;
-  Personal personal = 5;
+  google.protobuf.Timestamp las_time_online = 5;
+  Personal personal = 6;
 }
 
 message Unit {
   string id = 1;
   string name = 2;
-  bool isConfigured = 3;
 }
 
 message Conversation{
   string id = 1;
-  string senderID =3;
-  string receiverID =4;
+  string senderID = 2;
+  string receiverID = 3;
 }
 
 message Message{
@@ -60,12 +60,12 @@ message Device {
   string name = 2;
   string owner =3;
   google.protobuf.Timestamp last_time_online = 5;
-  string type = 4;
+  int32 type = 4;
 }
 
 message Location{
-  double latitude =1;
-  double longitude =2;
+  double latitude = 1;
+  double longitude = 2;
 }
 
 message Task {
@@ -74,6 +74,7 @@ message Task {
   string description = 3;
   int32 state =4;
   google.protobuf.Timestamp completionDate = 5;
+  google.protobuf.Timestamp deadline = 6;
 
 }
 
@@ -82,7 +83,7 @@ message Pin {
   string ownerName =2;
   string ownerSurname =3;
   Location location = 4;
-  google.protobuf.Timestamp last_online = 5;
+  google.protobuf.Timestamp lastOnline = 5;
 }
 // ========================
 // ACTION MESSAGE
@@ -119,7 +120,7 @@ message LoggedInUUID {
 }
 
 message CreateUnit {
-  string name = 1;
+  Unit unit = 1;
   string userID = 2;
 }
 
@@ -151,7 +152,8 @@ message UsersInUnit {
 }
 
 message GetUserAboveLVL {
-  int32 lvl = 1;
+  int32 lower = 1;
+  int32 upper = 2;
 }
 
 message UsersAboveLVL{

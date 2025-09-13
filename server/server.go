@@ -86,13 +86,13 @@ func (s *Server) Receive(ctx *actor.Context) {
 		ctx.Respond(&proto.LoggedInUUID{Id: id})
 	case *proto.GetUserAboveLVL:
 		c := context.Background()
-		users, err := s.storage.GetUsersWithLVL(c, int(msg.Lvl))
+		users, err := s.storage.GetUsersWithLVL(c, int(msg.Lower), int(msg.Upper))
 		if err == nil {
 			ctx.Respond(&proto.UsersAboveLVL{Users: users})
 		}
 	case *proto.CreateUnit:
 		c := context.Background()
-		err := s.storage.InsertUnit(c, msg.Name, msg.UserID)
+		err := s.storage.InsertUnit(c, msg.Unit, msg.UserID)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
@@ -160,7 +160,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 				//TODO
 			} else {
 				if ok {
-					ok, devices, err := s.storage.DoUserHaveDevice(c, userID)
+					ok, devices, err := s.storage.DoesUserHaveDevice(c, userID)
 					if err != nil {
 						utils.Logger.Error(err.Error())
 						//TODO
@@ -189,7 +189,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 		}
 	case *proto.GetPins:
 		c := context.Background()
-		pins, err := s.storage.FetchPins(c)
+		pins, err := s.storage.GetPins(c)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
@@ -197,7 +197,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 		}
 	case *proto.GetCurrentTask:
 		c := context.Background()
-		currentTask, err := s.storage.FetchCurrentTask(c, msg.DeviceID)
+		currentTask, err := s.storage.GetCurrentTask(c, msg.DeviceID)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {

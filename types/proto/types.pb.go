@@ -231,7 +231,8 @@ type User struct {
 	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
 	RuleLvl       int32                  `protobuf:"varint,4,opt,name=rule_lvl,json=ruleLvl,proto3" json:"rule_lvl,omitempty"`
-	Personal      *Personal              `protobuf:"bytes,5,opt,name=personal,proto3" json:"personal,omitempty"`
+	LasTimeOnline *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=las_time_online,json=lasTimeOnline,proto3" json:"las_time_online,omitempty"`
+	Personal      *Personal              `protobuf:"bytes,6,opt,name=personal,proto3" json:"personal,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -294,6 +295,13 @@ func (x *User) GetRuleLvl() int32 {
 	return 0
 }
 
+func (x *User) GetLasTimeOnline() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LasTimeOnline
+	}
+	return nil
+}
+
 func (x *User) GetPersonal() *Personal {
 	if x != nil {
 		return x.Personal
@@ -305,7 +313,6 @@ type Unit struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	IsConfigured  bool                   `protobuf:"varint,3,opt,name=isConfigured,proto3" json:"isConfigured,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -354,18 +361,11 @@ func (x *Unit) GetName() string {
 	return ""
 }
 
-func (x *Unit) GetIsConfigured() bool {
-	if x != nil {
-		return x.IsConfigured
-	}
-	return false
-}
-
 type Conversation struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	SenderID      string                 `protobuf:"bytes,3,opt,name=senderID,proto3" json:"senderID,omitempty"`
-	ReceiverID    string                 `protobuf:"bytes,4,opt,name=receiverID,proto3" json:"receiverID,omitempty"`
+	SenderID      string                 `protobuf:"bytes,2,opt,name=senderID,proto3" json:"senderID,omitempty"`
+	ReceiverID    string                 `protobuf:"bytes,3,opt,name=receiverID,proto3" json:"receiverID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -503,7 +503,7 @@ type Device struct {
 	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Owner          string                 `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 	LastTimeOnline *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=last_time_online,json=lastTimeOnline,proto3" json:"last_time_online,omitempty"`
-	Type           string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
+	Type           int32                  `protobuf:"varint,4,opt,name=type,proto3" json:"type,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -566,11 +566,11 @@ func (x *Device) GetLastTimeOnline() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Device) GetType() string {
+func (x *Device) GetType() int32 {
 	if x != nil {
 		return x.Type
 	}
-	return ""
+	return 0
 }
 
 type Location struct {
@@ -632,6 +632,7 @@ type Task struct {
 	Description    string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	State          int32                  `protobuf:"varint,4,opt,name=state,proto3" json:"state,omitempty"`
 	CompletionDate *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=completionDate,proto3" json:"completionDate,omitempty"`
+	Deadline       *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=deadline,proto3" json:"deadline,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -701,13 +702,20 @@ func (x *Task) GetCompletionDate() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Task) GetDeadline() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Deadline
+	}
+	return nil
+}
+
 type Pin struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DeviceID      string                 `protobuf:"bytes,1,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
 	OwnerName     string                 `protobuf:"bytes,2,opt,name=ownerName,proto3" json:"ownerName,omitempty"`
 	OwnerSurname  string                 `protobuf:"bytes,3,opt,name=ownerSurname,proto3" json:"ownerSurname,omitempty"`
 	Location      *Location              `protobuf:"bytes,4,opt,name=location,proto3" json:"location,omitempty"`
-	LastOnline    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=last_online,json=lastOnline,proto3" json:"last_online,omitempty"`
+	LastOnline    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=lastOnline,proto3" json:"lastOnline,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1167,7 +1175,7 @@ func (x *LoggedInUUID) GetId() string {
 
 type CreateUnit struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Unit          *Unit                  `protobuf:"bytes,1,opt,name=unit,proto3" json:"unit,omitempty"`
 	UserID        string                 `protobuf:"bytes,2,opt,name=userID,proto3" json:"userID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1203,11 +1211,11 @@ func (*CreateUnit) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *CreateUnit) GetName() string {
+func (x *CreateUnit) GetUnit() *Unit {
 	if x != nil {
-		return x.Name
+		return x.Unit
 	}
-	return ""
+	return nil
 }
 
 func (x *CreateUnit) GetUserID() string {
@@ -1555,7 +1563,8 @@ func (x *UsersInUnit) GetUsers() []*User {
 
 type GetUserAboveLVL struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Lvl           int32                  `protobuf:"varint,1,opt,name=lvl,proto3" json:"lvl,omitempty"`
+	Lower         int32                  `protobuf:"varint,1,opt,name=lower,proto3" json:"lower,omitempty"`
+	Upper         int32                  `protobuf:"varint,2,opt,name=upper,proto3" json:"upper,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1590,9 +1599,16 @@ func (*GetUserAboveLVL) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{30}
 }
 
-func (x *GetUserAboveLVL) GetLvl() int32 {
+func (x *GetUserAboveLVL) GetLower() int32 {
 	if x != nil {
-		return x.Lvl
+		return x.Lower
+	}
+	return 0
+}
+
+func (x *GetUserAboveLVL) GetUpper() int32 {
+	if x != nil {
+		return x.Upper
 	}
 	return 0
 }
@@ -4178,22 +4194,22 @@ const file_types_proto_rawDesc = "" +
 	"\truleLevel\x18\x02 \x01(\x04R\truleLevel\"8\n" +
 	"\bPersonal\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
-	"\asurname\x18\x02 \x01(\tR\asurname\"\x90\x01\n" +
+	"\asurname\x18\x02 \x01(\tR\asurname\"\xd4\x01\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x03 \x01(\tR\bpassword\x12\x19\n" +
-	"\brule_lvl\x18\x04 \x01(\x05R\aruleLvl\x12+\n" +
-	"\bpersonal\x18\x05 \x01(\v2\x0f.types.PersonalR\bpersonal\"N\n" +
+	"\brule_lvl\x18\x04 \x01(\x05R\aruleLvl\x12B\n" +
+	"\x0flas_time_online\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\rlasTimeOnline\x12+\n" +
+	"\bpersonal\x18\x06 \x01(\v2\x0f.types.PersonalR\bpersonal\"*\n" +
 	"\x04Unit\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\"\n" +
-	"\fisConfigured\x18\x03 \x01(\bR\fisConfigured\"Z\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"Z\n" +
 	"\fConversation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
-	"\bsenderID\x18\x03 \x01(\tR\bsenderID\x12\x1e\n" +
+	"\bsenderID\x18\x02 \x01(\tR\bsenderID\x12\x1e\n" +
 	"\n" +
-	"receiverID\x18\x04 \x01(\tR\n" +
+	"receiverID\x18\x03 \x01(\tR\n" +
 	"receiverID\"\xac\x01\n" +
 	"\aMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
@@ -4206,22 +4222,24 @@ const file_types_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05owner\x18\x03 \x01(\tR\x05owner\x12D\n" +
 	"\x10last_time_online\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x0elastTimeOnline\x12\x12\n" +
-	"\x04type\x18\x04 \x01(\tR\x04type\"D\n" +
+	"\x04type\x18\x04 \x01(\x05R\x04type\"D\n" +
 	"\bLocation\x12\x1a\n" +
 	"\blatitude\x18\x01 \x01(\x01R\blatitude\x12\x1c\n" +
-	"\tlongitude\x18\x02 \x01(\x01R\tlongitude\"\xa6\x01\n" +
+	"\tlongitude\x18\x02 \x01(\x01R\tlongitude\"\xde\x01\n" +
 	"\x04Task\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
 	"\x05state\x18\x04 \x01(\x05R\x05state\x12B\n" +
-	"\x0ecompletionDate\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x0ecompletionDate\"\xcd\x01\n" +
+	"\x0ecompletionDate\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x0ecompletionDate\x126\n" +
+	"\bdeadline\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\bdeadline\"\xcc\x01\n" +
 	"\x03Pin\x12\x1a\n" +
 	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\x12\x1c\n" +
 	"\townerName\x18\x02 \x01(\tR\townerName\x12\"\n" +
 	"\fownerSurname\x18\x03 \x01(\tR\fownerSurname\x12+\n" +
-	"\blocation\x18\x04 \x01(\v2\x0f.types.LocationR\blocation\x12;\n" +
-	"\vlast_online\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"\blocation\x18\x04 \x01(\v2\x0f.types.LocationR\blocation\x12:\n" +
+	"\n" +
+	"lastOnline\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"lastOnline\"\x11\n" +
 	"\x0fIsServerRunning\"\x11\n" +
 	"\x0fServerIsRunning\"\x1c\n" +
@@ -4242,10 +4260,10 @@ const file_types_proto_rawDesc = "" +
 	"\x03pid\x18\x01 \x01(\v2\n" +
 	".types.PIDR\x03pid\"\x1e\n" +
 	"\fLoggedInUUID\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"8\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"E\n" +
 	"\n" +
-	"CreateUnit\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
+	"CreateUnit\x12\x1f\n" +
+	"\x04unit\x18\x01 \x01(\v2\v.types.UnitR\x04unit\x12\x16\n" +
 	"\x06userID\x18\x02 \x01(\tR\x06userID\"\x12\n" +
 	"\x10AcceptCreateUnit\"\r\n" +
 	"\vGetAllUnits\"-\n" +
@@ -4262,9 +4280,10 @@ const file_types_proto_rawDesc = "" +
 	"\x0eGetUsersInUnit\x12\x16\n" +
 	"\x06unitID\x18\x01 \x01(\tR\x06unitID\"0\n" +
 	"\vUsersInUnit\x12!\n" +
-	"\x05users\x18\x01 \x03(\v2\v.types.UserR\x05users\"#\n" +
-	"\x0fGetUserAboveLVL\x12\x10\n" +
-	"\x03lvl\x18\x01 \x01(\x05R\x03lvl\"2\n" +
+	"\x05users\x18\x01 \x03(\v2\v.types.UserR\x05users\"=\n" +
+	"\x0fGetUserAboveLVL\x12\x14\n" +
+	"\x05lower\x18\x01 \x01(\x05R\x05lower\x12\x14\n" +
+	"\x05upper\x18\x02 \x01(\x05R\x05upper\"2\n" +
 	"\rUsersAboveLVL\x12!\n" +
 	"\x05users\x18\x01 \x03(\v2\v.types.UserR\x05users\"\x1e\n" +
 	"\fIsUserInUnit\x12\x0e\n" +
@@ -4504,43 +4523,46 @@ var file_types_proto_goTypes = []any{
 	(*timestamppb.Timestamp)(nil),          // 87: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
-	3,  // 0: types.User.personal:type_name -> types.Personal
-	87, // 1: types.Message.sent_at:type_name -> google.protobuf.Timestamp
-	87, // 2: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
-	87, // 3: types.Task.completionDate:type_name -> google.protobuf.Timestamp
-	9,  // 4: types.Pin.location:type_name -> types.Location
-	87, // 5: types.Pin.last_online:type_name -> google.protobuf.Timestamp
-	1,  // 6: types.LoginUser.pid:type_name -> types.PID
-	1,  // 7: types.GetLoggedInUUID.pid:type_name -> types.PID
-	5,  // 8: types.AllUnits.units:type_name -> types.Unit
-	1,  // 9: types.LoginUnit.pid:type_name -> types.PID
-	4,  // 10: types.CreateUser.user:type_name -> types.User
-	4,  // 11: types.UsersInUnit.users:type_name -> types.User
-	4,  // 12: types.UsersAboveLVL.users:type_name -> types.User
-	1,  // 13: types.RegisterClientInMessageService.pid:type_name -> types.PID
-	7,  // 14: types.ConversationSummary.last_message:type_name -> types.Message
-	42, // 15: types.UserConversations.convSummary:type_name -> types.ConversationSummary
-	7,  // 16: types.SendMessage.message:type_name -> types.Message
-	7,  // 17: types.DeliverMessage.message:type_name -> types.Message
-	7,  // 18: types.StoreMessage.message:type_name -> types.Message
-	57, // 19: types.PresenceType.outbox:type_name -> types.Outbox
-	58, // 20: types.PresenceType.inbox:type_name -> types.Inbox
-	59, // 21: types.Presence.presence:type_name -> types.PresenceType
-	59, // 22: types.UpdatePresence.presence:type_name -> types.PresenceType
-	7,  // 23: types.LoadedConversation.messages:type_name -> types.Message
-	4,  // 24: types.UsersToNewConversation.users:type_name -> types.User
-	8,  // 25: types.SpawnAndRunDevice.device:type_name -> types.Device
-	1,  // 26: types.AcceptSpawnAndRunDevice.devicePID:type_name -> types.PID
-	1,  // 27: types.ConnectHDeviceToADevice.devicePID:type_name -> types.PID
-	9,  // 28: types.UpdateLocationReq.location:type_name -> types.Location
-	11, // 29: types.Pins.pins:type_name -> types.Pin
-	10, // 30: types.CurrentTask.task:type_name -> types.Task
-	8,  // 31: types.CreateDevice.device:type_name -> types.Device
-	32, // [32:32] is the sub-list for method output_type
-	32, // [32:32] is the sub-list for method input_type
-	32, // [32:32] is the sub-list for extension type_name
-	32, // [32:32] is the sub-list for extension extendee
-	0,  // [0:32] is the sub-list for field type_name
+	87, // 0: types.User.las_time_online:type_name -> google.protobuf.Timestamp
+	3,  // 1: types.User.personal:type_name -> types.Personal
+	87, // 2: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	87, // 3: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
+	87, // 4: types.Task.completionDate:type_name -> google.protobuf.Timestamp
+	87, // 5: types.Task.deadline:type_name -> google.protobuf.Timestamp
+	9,  // 6: types.Pin.location:type_name -> types.Location
+	87, // 7: types.Pin.lastOnline:type_name -> google.protobuf.Timestamp
+	1,  // 8: types.LoginUser.pid:type_name -> types.PID
+	1,  // 9: types.GetLoggedInUUID.pid:type_name -> types.PID
+	5,  // 10: types.CreateUnit.unit:type_name -> types.Unit
+	5,  // 11: types.AllUnits.units:type_name -> types.Unit
+	1,  // 12: types.LoginUnit.pid:type_name -> types.PID
+	4,  // 13: types.CreateUser.user:type_name -> types.User
+	4,  // 14: types.UsersInUnit.users:type_name -> types.User
+	4,  // 15: types.UsersAboveLVL.users:type_name -> types.User
+	1,  // 16: types.RegisterClientInMessageService.pid:type_name -> types.PID
+	7,  // 17: types.ConversationSummary.last_message:type_name -> types.Message
+	42, // 18: types.UserConversations.convSummary:type_name -> types.ConversationSummary
+	7,  // 19: types.SendMessage.message:type_name -> types.Message
+	7,  // 20: types.DeliverMessage.message:type_name -> types.Message
+	7,  // 21: types.StoreMessage.message:type_name -> types.Message
+	57, // 22: types.PresenceType.outbox:type_name -> types.Outbox
+	58, // 23: types.PresenceType.inbox:type_name -> types.Inbox
+	59, // 24: types.Presence.presence:type_name -> types.PresenceType
+	59, // 25: types.UpdatePresence.presence:type_name -> types.PresenceType
+	7,  // 26: types.LoadedConversation.messages:type_name -> types.Message
+	4,  // 27: types.UsersToNewConversation.users:type_name -> types.User
+	8,  // 28: types.SpawnAndRunDevice.device:type_name -> types.Device
+	1,  // 29: types.AcceptSpawnAndRunDevice.devicePID:type_name -> types.PID
+	1,  // 30: types.ConnectHDeviceToADevice.devicePID:type_name -> types.PID
+	9,  // 31: types.UpdateLocationReq.location:type_name -> types.Location
+	11, // 32: types.Pins.pins:type_name -> types.Pin
+	10, // 33: types.CurrentTask.task:type_name -> types.Task
+	8,  // 34: types.CreateDevice.device:type_name -> types.Device
+	35, // [35:35] is the sub-list for method output_type
+	35, // [35:35] is the sub-list for method input_type
+	35, // [35:35] is the sub-list for extension type_name
+	35, // [35:35] is the sub-list for extension extendee
+	0,  // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }

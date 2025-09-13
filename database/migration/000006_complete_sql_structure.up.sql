@@ -26,6 +26,13 @@ CREATE TABLE IF NOT EXISTS unit
     PRIMARY KEY (id),
     UNIQUE (name)
 );
+DROP TABLE IF EXISTS user_to_unit CASCADE ;
+CREATE TABLE IF NOT EXISTS user_to_unit
+(
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    unit_id UUID REFERENCES unit(id) ON DELETE CASCADE NOT NULL,
+    PRIMARY KEY (user_id)
+);
 DROP TABLE IF EXISTS device_type CASCADE ;
 CREATE TABLE IF NOT EXISTS device_type
 (
@@ -37,19 +44,22 @@ CREATE TABLE IF NOT EXISTS device
 (
     id UUID,
     name TEXT NOT NULL,
-    last_time_online TIMESTAMP,
+    last_time_online TIMESTAMP NULL,
     owner UUID REFERENCES users(id) ON DELETE RESTRICT NOT NULL ,
     type INT REFERENCES device_type(type) ON DELETE RESTRICT NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (name)
 );
-DROP TABLE IF EXISTS user_to_unit CASCADE ;
-CREATE TABLE IF NOT EXISTS user_to_unit
+
+DROP TABLE IF EXISTS device_location CASCADE ;
+CREATE TABLE IF NOT EXISTS device_location
 (
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-    unit_id UUID REFERENCES unit(id) ON DELETE CASCADE NOT NULL,
-    PRIMARY KEY (user_id)
+    device_id UUID REFERENCES device(id) ON DELETE CASCADE NOT NULL,
+    location GEOGRAPHY(Point, 4326) NOT NULL,
+    changed_at TIMESTAMP NOT NULL
 );
+
+
 
 DROP TABLE IF EXISTS conversation CASCADE ;
 CREATE TABLE IF NOT EXISTS conversation
@@ -69,6 +79,7 @@ CREATE TABLE IF NOT EXISTS message
     PRIMARY KEY(id)
 
 );
+
 DROP TABLE IF EXISTS user_conversation CASCADE ;
 CREATE TABLE IF NOT EXISTS user_conversation
 (
@@ -78,13 +89,7 @@ CREATE TABLE IF NOT EXISTS user_conversation
     PRIMARY KEY (user_id, conversation_id)
 
 );
-DROP TABLE IF EXISTS device_location CASCADE ;
-CREATE TABLE IF NOT EXISTS device_location
-(
-    device_id UUID REFERENCES device(id) ON DELETE CASCADE NOT NULL,
-    location GEOGRAPHY(Point, 4326) NOT NULL,
-    changed_at TIMESTAMP NOT NULL
-);
+
 DROP TABLE IF EXISTS task CASCADE ;
 CREATE TABLE IF NOT EXISTS task (
     id UUID ,
