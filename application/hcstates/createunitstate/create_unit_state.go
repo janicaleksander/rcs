@@ -8,7 +8,6 @@ import (
 	"github.com/janicaleksander/bcs/utils"
 )
 
-// TODO add better description to component in GUI
 type CreateUnitScene struct {
 	cfg            *utils.SharedConfig
 	stateManager   *statesmanager.StateManager
@@ -19,7 +18,6 @@ type CreateUnitScene struct {
 	infoSection    InfoSection
 }
 
-// TODO CHANGE THIS NAME TO ONLY ERROR SECTION AFTER PACKAGE REFACTOR
 type ErrorSection struct {
 	isSetupError  bool
 	isCreateError bool
@@ -44,37 +42,28 @@ func (c *CreateUnitScene) CreateUnitSceneSetup(state *statesmanager.StateManager
 	c.stateManager = state
 	c.Reset()
 	c.FetchUsers()
+
 	//name of unit
 	c.newUnitSection.nameInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2-100),
-		float32(rl.GetScreenHeight()/2-100),
-		200, 40,
+		float32(rl.GetScreenWidth()/2-60),
+		245,
+		240, 30,
 	))
 
 	//dropdown with users
 	c.newUnitSection.usersDropdown.IdxScroll = 0
 	c.newUnitSection.usersDropdown.IdxActiveElement = 0
 	c.newUnitSection.usersDropdown.Bounds = rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2-120),
-		float32(rl.GetScreenHeight()/2-60),
+		float32(rl.GetScreenWidth()/2-60),
+		320,
 		240, 80,
 	)
-	c.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2),
-		float32(rl.GetScreenHeight()-20),
-		100, 20), &c.errorSection.errorMessage)
-
-	c.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2),
-		float32(rl.GetScreenHeight()-20),
-		100, 20), &c.infoSection.infoMessage)
-
 	//accept button
 	c.newUnitSection.acceptButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
-		float32(rl.GetScreenHeight()/2+50),
-		200, 40,
-	), "Accept", false)
+		float32(rl.GetScreenHeight()/2+60),
+		200, 50,
+	), "ACCEPT", false)
 
 	//go back from creating unit
 	c.backButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
@@ -82,6 +71,20 @@ func (c *CreateUnitScene) CreateUnitSceneSetup(state *statesmanager.StateManager
 		float32(rl.GetScreenHeight()-50),
 		150,
 		50), "Go back", false)
+
+	c.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPERRORBG)), rl.NewRectangle(
+		float32(rl.GetScreenWidth()/2-215),
+		float32(rl.GetScreenHeight()-200),
+		350,
+		35,
+	), &c.errorSection.errorMessage)
+
+	c.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPINFOBG)), rl.NewRectangle(
+		float32(rl.GetScreenWidth()/2)-215,
+		float32(rl.GetScreenHeight()-200),
+		350,
+		35,
+	), &c.infoSection.infoMessage)
 
 }
 
@@ -116,10 +119,18 @@ func (c *CreateUnitScene) UpdateCreateUnitState() {
 
 }
 func (c *CreateUnitScene) RenderCreateUnitState() {
-	rl.DrawText(`Create unit Menu Page`, 50, 50, 20, rl.DarkGray)
+	rl.ClearBackground(utils.CREATEUNITBG)
+	rl.DrawText("CREATE UNIT", int32(rl.GetScreenWidth()/2)-rl.MeasureText("CREATE UNIT", 45)/2, 50, 45, rl.DarkGray)
+	xPos := int32(rl.GetScreenWidth()/2) - rl.MeasureText("CREATE UNIT", 45)/2 - 150
+	rl.DrawText("UNIT NAME", xPos, 250, 25, rl.Black)
+	rl.DrawText("UNIT COMMANDER", xPos, 350, 25, rl.Black)
+
 	c.newUnitSection.nameInput.Render()
 	c.newUnitSection.acceptButton.Render()
+	c.errorSection.errorPopup.Render()
+	c.infoSection.infoPopup.Render()
 	c.backButton.Render()
+
 	gui.ListViewEx(
 		c.newUnitSection.usersDropdown.Bounds,
 		c.newUnitSection.usersDropdown.Strings,
