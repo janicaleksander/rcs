@@ -5,12 +5,10 @@ import (
 
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"github.com/google/uuid"
 	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/application/statesmanager"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ToolboxSection struct {
@@ -295,59 +293,14 @@ func (i *InboxScene) UpdateInboxState() {
 			i.conversationSection.activeConversationID = tab.ConversationID
 			if tab.ID != i.conversationSection.activeConversation {
 				i.conversationSection.activeConversation = tab.ID
-
-				//open conversation
-				i.cfg.Ctx.Send(i.cfg.MessageServicePID, &proto.UpdatePresence{
-					Id: i.tempUserID,
-					Presence: &proto.PresenceType{
-						Type: &proto.PresenceType_Inbox{
-							Inbox: &proto.Inbox{
-								WithID: tab.WithID}}},
-				})
-				res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.OpenAndLoadConversation{
-					UserID:         i.tempUserID,
-					ReceiverID:     tab.WithID,
-					ConversationID: tab.ConversationID,
-				},
-				))
-				if err != nil {
-					//TODO context deadline exceeded
-				}
-				i.MessageSection.messages = i.MessageSection.messages[:0]
-				i.MessageSection.messagePanelLayout.currHeight = i.MessageSection.messagePanel.Bounds.Y + 3*i.MessageSection.messagePanelLayout.padding
-				if v, ok := res.(*proto.LoadedConversation); ok {
-					for _, msg := range v.Messages {
-						i.AppendMessage(msg)
-					}
-				} else {
-					//TODO err
-				}
+				i.LoadMessages(&tab)
 				i.conversationSection.conversationsTabs[k].IsPressed = false // to not load every time
 			}
 		}
 
 	}
 	if i.MessageSection.isSendButtonPressed {
-		res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.SendMessage{
-			Receiver: i.conversationSection.activeWithID,
-			Message: &proto.Message{
-				Id:             uuid.New().String(),
-				SenderID:       i.tempUserID,
-				ConversationID: i.conversationSection.activeConversationID,
-				Content:        i.MessageSection.textInput.GetText(),
-				SentAt:         timestamppb.Now(),
-			},
-		}))
-		if err != nil {
-			// context deadline exceed
-		}
-
-		if v, ok := res.(*proto.DeliverMessage); ok {
-			i.AppendMessage(v.Message)
-		} else {
-			//error
-		}
-
+		i.SendMessage()
 	}
 
 	if i.modalSection.isAcceptAddConversationPressed {
