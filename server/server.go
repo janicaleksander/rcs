@@ -12,31 +12,20 @@ import (
 	"github.com/janicaleksander/bcs/utils"
 )
 
-const (
-	PingPongTime = 3 * time.Second
-)
-
-type Session struct {
-	userID string
-	//presenceplace?
-}
-
 // TODO make a two maybe maps one for connected by app commander lvl person
 // and second to 0 1 2 users/soldiers connected by device->unit->server
 // this is problem e.g. in sending message from 5lvl from app to 0lvl to device in unit
 // but this 5 see this 0 in his lists of person in system (maybe)
 type Server struct {
 	storage            db.Storage
-	listenAddr         string                // IP of (one) main server
 	connections        map[string]*actor.PID // uuid to PID
 	reverseConnections map[string]string     //PIDstring to -> uuid
 }
 
-func NewServer(listenAddr string, storage db.Storage) actor.Producer {
+func NewServer(storage db.Storage) actor.Producer {
 	return func() actor.Receiver {
 		return &Server{
 			storage:            storage,
-			listenAddr:         listenAddr,
 			connections:        make(map[string]*actor.PID),
 			reverseConnections: make(map[string]string),
 		}
@@ -49,16 +38,16 @@ func (s *Server) Receive(ctx *actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case actor.Initialized:
 		utils.Logger.Info("server initialized")
-
 	case actor.Started:
 		utils.Logger.Info("server has started")
 		ctx.SendRepeat(ctx.PID(), &proto.HeartbeatTick{}, 10*time.Second)
+		//safety thing if user is not in unit but have a unit id -> error
 	case actor.Stopped:
 		utils.Logger.Info("server has stopped")
 	case *proto.HeartbeatTick:
 		s.startHeartbeat(ctx)
 	case *proto.IsServerRunning:
-		ctx.Respond(&proto.Running{})
+		ctx.Respond(&proto.IsServerRunning{})
 	case *proto.Disconnect: // after this switch state to loginScene
 		pid, ok := s.connections[msg.Id]
 		if ok {
@@ -67,27 +56,26 @@ func (s *Server) Receive(ctx *actor.Context) {
 		}
 
 	case *proto.IsOnline:
-		if _, ok := s.connections[msg.Uuid]; ok {
+		if _, ok := s.connections[msg.UserID]; ok {
 			ctx.Respond(&proto.Online{})
 		} else {
 			ctx.Respond(&proto.Offline{})
 		}
 	case *proto.LoginUnit:
-		//update use map
-		//id, err := s.loginUnit(ctx, msg.Email, msg.Password)
-		//if err == nil {
-		//	s.clients[id] = ctx.Sender().GetAddress()
-		//}
+		pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //unit PID
+		s.connections[msg.UnitID] = pid                  //pid to uuid
+		s.reverseConnections[pid.String()] = msg.UnitID
 	case *proto.LoginUser:
-		id, role, err := s.loginUser(msg.Email, msg.Password)
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		id, role, err := s.storage.LoginUser(c, msg.Email, msg.Password)
 		if err != nil {
-			ctx.Respond(&proto.DenyLogin{Info: err.Error()})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
 			pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //client PID
 			s.connections[id] = pid                          //pid to uuid
 			s.reverseConnections[pid.String()] = id
-			ctx.Respond(&proto.AcceptLogin{Id: id, RuleLevel: int64(role)})
-
+			ctx.Respond(&proto.AcceptUserLogin{UserID: id, RuleLevel: int32(role)})
 		}
 		//TODO idk if this getlogged works
 
@@ -96,69 +84,154 @@ func (s *Server) Receive(ctx *actor.Context) {
 		id := s.reverseConnections[pid.String()]
 		ctx.Respond(&proto.LoggedInUUID{Id: id})
 	case *proto.GetUserAboveLVL:
-		c := context.Background()
-		users, err := s.storage.GetUsersWithLVL(c, int(msg.Lvl))
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		users, err := s.storage.GetUsersWithLVL(c, int(msg.Lower), int(msg.Upper))
 		if err == nil {
 			ctx.Respond(&proto.UsersAboveLVL{Users: users})
 		}
 	case *proto.CreateUnit:
-		c := context.Background()
-		err := s.storage.InsertUnit(c, msg.Name, msg.IsConfigured, msg.UserID)
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := s.storage.InsertUnit(c, msg.Unit, msg.UserID)
 		if err != nil {
-			ctx.Respond(&proto.DenyCreateUnit{Info: err.Error()})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
 			ctx.Respond(&proto.AcceptCreateUnit{})
 		}
 	case *proto.GetAllUnits:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		units, err := s.storage.GetAllUnits(c)
 		if err == nil {
 			ctx.Respond(&proto.AllUnits{Units: units})
 		}
 
-	case *proto.GetAllUsersInUnit:
-		c := context.Background()
-		unitID := msg.Id
+	case *proto.GetUsersInUnit:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		unitID := msg.UnitID
 		users, err := s.storage.GetUsersInUnit(c, unitID)
 		if err == nil {
 			fmt.Println(users)
-			ctx.Respond(&proto.AllUsersInUnit{Users: users})
+			ctx.Respond(&proto.UsersInUnit{Users: users})
 		}
 	case *proto.CreateUser:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := s.storage.InsertUser(c, msg.User)
 		if err != nil {
-			ctx.Respond(&proto.DenyCreateUser{Info: err.Error()})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
 			ctx.Respond(&proto.AcceptCreateUser{})
 		}
 	case *proto.IsUserInUnit:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		isInUnit, unitID, err := s.storage.IsUserInUnit(c, msg.Id)
 		if err != nil {
-			ctx.Respond(&proto.UserNotInUnit{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else if isInUnit {
-			ctx.Respond(&proto.UserInUnit{UnitID: unitID})
+			ctx.Respond(&proto.UserIsInUnit{UnitID: unitID})
 		} else {
-			ctx.Respond(&proto.UserNotInUnit{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		}
 	case *proto.AssignUserToUnit:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := s.storage.AssignUserToUnit(c, msg.UserID, msg.UnitID)
 		if err != nil {
-			ctx.Respond(&proto.FailureOfAssign{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessOfAssign{})
+			ctx.Respond(&proto.AcceptAssignUserToUnit{})
 		}
 	case *proto.DeleteUserFromUnit:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := s.storage.DeleteUserFromUnit(c, msg.UserID, msg.UnitID)
 		if err != nil {
-			ctx.Respond(&proto.FailureOfDelete{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessOfDelete{})
+			ctx.Respond(&proto.AcceptDeleteUserFromUnit{})
 		}
+	case *proto.HTTPSpawnDevice:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		userID, _, err := s.storage.LoginUser(c, msg.Email, msg.Password)
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+			utils.Logger.Error(err.Error())
+		} else {
+			ok, unitID, err := s.storage.IsUserInUnit(c, userID)
+			if err != nil {
+				utils.Logger.Error(err.Error())
+				//TODO
+			} else {
+				if ok {
+					ok, devices, err := s.storage.DoesUserHaveDevice(c, userID)
+					if err != nil {
+						utils.Logger.Error(err.Error())
+						//TODO
+					} else {
+						if ok {
+							for _, device := range devices {
+								res, err := utils.MakeRequest(
+									utils.NewRequest(
+										ctx,
+										s.connections[unitID],
+										&proto.SpawnAndRunDevice{Device: device}),
+								)
+								if err != nil {
+									//TODO
+									utils.Logger.Error(err.Error())
 
+								}
+								ctx.Respond(res)
+							}
+						}
+					}
+				}
+				//this unit need to have a device with owner of this id user
+				// units needs to spawn a child ->get this PID and respond
+			}
+		}
+	case *proto.GetPins:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		pins, err := s.storage.GetPins(c)
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(&proto.Pins{Pins: pins})
+		}
+	case *proto.GetCurrentTask:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		currentTask, err := s.storage.GetCurrentTask(c, msg.DeviceID)
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(currentTask)
+		}
+	case *proto.GetDeviceTypes:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		types, err := s.storage.GetDeviceTypes(c)
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(&proto.DeviceTypes{Types: types})
+		}
+	case *proto.CreateDevice:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := s.storage.InsertDevice(c, msg.Device)
+		if err != nil {
+			fmt.Println(err)
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(&proto.AcceptCreateDevice{})
+		}
 	default:
 		utils.Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())
 
@@ -177,14 +250,4 @@ func (s *Server) startHeartbeat(ctx *actor.Context) {
 			}
 		}(PID, ID)
 	}
-}
-
-func (s *Server) loginUser(email, password string) (string, int, error) {
-	// TODO: add jwt to login
-	c := context.Background()
-	id, role, err := s.storage.LoginUser(c, email, password)
-	if err != nil {
-		return "", -1, err
-	}
-	return id, role, nil
 }

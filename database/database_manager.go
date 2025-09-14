@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"strconv"
 	"sync"
+	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/janicaleksander/bcs/types/proto"
-	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -24,17 +24,26 @@ var dbManager *DBManager
 
 func GetDBManager(options ...func(*string)) (*DBManager, error) {
 	if dbManager == nil {
-		err := godotenv.Load()
+		config := struct {
+			Database struct {
+				Dbname   string `toml:"dbname"`
+				Host     string `toml:"host"`
+				Port     int    `toml:"port"`
+				User     string `toml:"user"`
+				Password string `toml:"password"`
+				Sslmode  string `toml:"sslmode"`
+			}
+		}{}
+		_, err := toml.DecodeFile("configproduction/database.toml", &config)
 		if err != nil {
-			//make error
 			return nil, err
 		}
-		dbname := os.Getenv("DBNAME")
-		host := os.Getenv("HOST")
-		port := os.Getenv("PORT")
-		user := os.Getenv("USER")
-		password := os.Getenv("PASSWORD")
-		ssl := os.Getenv("SSLMODE")
+		dbname := config.Database.Dbname
+		host := config.Database.Host
+		port := config.Database.Port
+		user := config.Database.User
+		password := config.Database.Password
+		ssl := config.Database.Sslmode
 		dbManager = &DBManager{}
 		dbManager.once.Do(func() {
 			cfg := &Config{
@@ -98,20 +107,26 @@ func (d *DBManager) GetDB() *sql.DB {
 // database interface that is used in application
 type Storage interface {
 	InsertUser(context.Context, *proto.User) error
+	GetUser(ctx context.Context, id string) (*proto.User, error)
 	LoginUser(ctx context.Context, email, password string) (string, int, error)
-	GetUsersWithLVL(ctx context.Context, lvl int) ([]*proto.User, error)
-	//TODO maybe in the future also role to this
-	InsertUnit(ctx context.Context, nameUnit string, isConfigured bool, id string) error
+	GetUsersWithLVL(ctx context.Context, lower, upper int) ([]*proto.User, error)
+	InsertUnit(ctx context.Context, unit *proto.Unit, userID string) error
 	GetAllUnits(ctx context.Context) ([]*proto.Unit, error)
-	GetUsersInUnit(ctx context.Context, id string) ([]*proto.User, error)
-	IsUserInUnit(ctx context.Context, id string) (bool, string, error)
+	GetUsersInUnit(ctx context.Context, unitID string) ([]*proto.User, error)
+	IsUserInUnit(ctx context.Context, userID string) (bool, string, error)
 	AssignUserToUnit(ctx context.Context, userID string, unitID string) error
 	DeleteUserFromUnit(ctx context.Context, userID string, unitID string) error
-	//MESSAGE SERVICE SQL
-	DoConversationExists(ctx context.Context, sender, receiver string) (bool, string, error)
+	UpdateUserLastTimeOnline(ctx context.Context, id string, time time.Time) error
+	DoConversationExists(ctx context.Context, senderID, receiverID string) (bool, string, error)
 	CreateConversation(ctx context.Context, cnv *proto.Conversation) error
 	InsertMessage(ctx context.Context, msg *proto.Message) error
-	GetUserConversations(ctx context.Context, id string) ([]*proto.ConversationSummary, error)
+	GetUserConversations(ctx context.Context, userID string) ([]*proto.ConversationSummary, error)
 	LoadConversation(ctx context.Context, id string) ([]*proto.Message, error)
 	SelectUsersToNewConversation(ctx context.Context, id string) ([]*proto.User, error)
+	DoesUserHaveDevice(ctx context.Context, userID string) (bool, []*proto.Device, error)
+	UpdateLocation(ctx context.Context, data *proto.UpdateLocationReq) error
+	GetPins(ctx context.Context) ([]*proto.Pin, error)
+	GetCurrentTask(ctx context.Context, deviceID string) (*proto.CurrentTask, error)
+	GetDeviceTypes(ctx context.Context) ([]int32, error)
+	InsertDevice(ctx context.Context, device *proto.Device) error
 }

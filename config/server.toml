@@ -1,0 +1,4 @@
+# SERVER CONFIGURATION FILE
+
+[server]
+addr = ""

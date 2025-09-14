@@ -8,6 +8,7 @@ import (
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/google/uuid"
+	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -28,8 +29,6 @@ func (i *InfoUserScene) UpdateDescription() {
 	if currentUserIdx != -1 && currentUserIdx != i.userListSection.lastProcessedUserIdx {
 		user := i.userListSection.users[i.userListSection.usersList.IdxActiveElement]
 		i.userListSection.currSelectedUserID = user.Id
-		//TODO in the v2 version we need to track more than
-		// one unit ID
 		if _, ok := i.unitListSection.userToUnitCache[user.Id]; ok {
 			i.userListSection.isInUnit = true
 		} else {
@@ -73,7 +72,7 @@ func (i *InfoUserScene) AddToUnit() {
 				if err != nil {
 					//context error deadline
 				}
-				if _, ok := res.(*proto.SuccessOfAssign); ok {
+				if _, ok := res.(*proto.AcceptAssignUserToUnit); ok {
 					// TODO failure
 					i.unitListSection.userToUnitCache[i.userListSection.currSelectedUserID] = unit.Id
 					i.userListSection.isInUnit = true
@@ -121,7 +120,7 @@ func (i *InfoUserScene) RemoveFromUnit() {
 					//error context deadline exceeded
 				}
 
-				if _, ok := res.(*proto.SuccessOfDelete); ok {
+				if _, ok := res.(*proto.AcceptDeleteUserFromUnit); ok {
 					//TODO success
 
 					//TODO in v2 map str->[]str and then we have to iterate through
@@ -157,7 +156,7 @@ func (i *InfoUserScene) RemoveFromUnit() {
 func (i *InfoUserScene) SendMessage() {
 	if i.actionSection.showInboxModal {
 		res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.IsOnline{
-			Uuid: i.userListSection.currSelectedUserID,
+			UserID: i.userListSection.currSelectedUserID,
 		}))
 
 		if err != nil {
@@ -199,7 +198,7 @@ func (i *InfoUserScene) SendMessage() {
 			//ctx error
 		}
 		var cnvID string
-		if v, ok := res.(*proto.SuccessOfFillConversationID); ok {
+		if v, ok := res.(*proto.FilledConversationID); ok {
 			cnvID = v.Id
 		} else {
 			//todo
@@ -223,7 +222,7 @@ func (i *InfoUserScene) SendMessage() {
 			panic(err.Error())
 		}
 
-		if _, ok := res.(*proto.SuccessSend); !ok {
+		if _, ok := res.(*proto.AcceptSend); !ok {
 			//todo error
 		}
 
@@ -253,7 +252,10 @@ func (i *InfoUserScene) FetchUnits() {
 }
 
 func (i *InfoUserScene) FetchUsers() {
-	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetUserAboveLVL{Lvl: -1}))
+	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetUserAboveLVL{
+		Lower: -1,
+		Upper: 10,
+	})) //TODO
 	if err != nil {
 		// context deadline exceeded
 	}
@@ -283,7 +285,7 @@ func (i *InfoUserScene) FetchUsers() {
 			if err != nil {
 				//context deadline exceeded
 			}
-			if v, ok := res.(*proto.UserInUnit); ok {
+			if v, ok := res.(*proto.UserIsInUnit); ok {
 				cacheChan <- struct {
 					userID string
 					unitID string
@@ -299,4 +301,239 @@ func (i *InfoUserScene) FetchUsers() {
 	for v := range cacheChan {
 		i.unitListSection.userToUnitCache[v.userID] = v.unitID
 	}
+}
+
+// TODO add start point
+// this is going to fetch from some kind of cfg when we have to set a default city (now is only WRO)
+func (i *InfoUserScene) prepareMap() {
+	centerLat := 51.11080123267171
+	centerLon := 17.018041879680265
+	mapX, mapY := latLonToPixel(centerLat, centerLon, ZOOM)
+	i.trackUserLocationSection.LocationMap.camera = rl.Camera2D{
+		Offset: rl.Vector2{
+			X: i.trackUserLocationSection.mapModal.Core.Width/2 + (i.trackUserLocationSection.LocationMap.width)/2,
+			Y: i.trackUserLocationSection.mapModal.Core.Height/2 + (i.trackUserLocationSection.LocationMap.height)/2,
+		},
+		Target: rl.Vector2{
+			X: mapX,
+			Y: mapY,
+		},
+		Rotation: 0,
+		Zoom:     1,
+	}
+	i.trackUserLocationSection.LocationMap.tm.preloadNearbyTiles(
+		mapX,
+		mapY,
+	)
+
+}
+func (i *InfoUserScene) updateMap() {
+	if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
+		i.trackUserLocationSection.LocationMap.isDraggingCamera = true
+	}
+	if rl.IsMouseButtonReleased(rl.MouseLeftButton) {
+		i.trackUserLocationSection.LocationMap.isDraggingCamera = false
+	}
+	if i.trackUserLocationSection.LocationMap.isDraggingCamera {
+		delta := rl.GetMouseDelta()
+		i.trackUserLocationSection.LocationMap.camera.Target.X -= delta.X
+		i.trackUserLocationSection.LocationMap.camera.Target.Y -= delta.Y
+	}
+
+	select {
+	case tile := <-i.trackUserLocationSection.LocationMap.tm.tileQueue:
+		tile.loadTextureNow()
+	default:
+	}
+
+	i.trackUserLocationSection.LocationMap.tm.setVisibleTiles(
+		i.trackUserLocationSection.LocationMap.camera.Target.X,
+		i.trackUserLocationSection.LocationMap.camera.Target.Y,
+		int(i.trackUserLocationSection.LocationMap.width),
+		int(i.trackUserLocationSection.LocationMap.height))
+	i.trackUserLocationSection.LocationMap.tm.preloadNearbyTiles(
+		i.trackUserLocationSection.LocationMap.camera.Target.X,
+		i.trackUserLocationSection.LocationMap.camera.Target.Y,
+	)
+	i.trackUserLocationSection.LocationMap.tm.cleanupDistantTiles(
+		i.trackUserLocationSection.LocationMap.camera.Target.X,
+		i.trackUserLocationSection.LocationMap.camera.Target.Y,
+	)
+	//TODO
+	/*
+		tm.mu.Lock()
+		defer tm.mu.Unlock()
+		for _, tile := range tm.tiles {
+			tile.unload()
+		}
+	*/
+
+}
+
+func (i *InfoUserScene) FetchPins() {
+	res, err := utils.MakeRequest(utils.NewRequest(
+		i.cfg.Ctx,
+		i.cfg.ServerPID,
+		&proto.GetPins{}))
+	if err != nil {
+		//TODO
+	}
+	if v, ok := res.(*proto.Pins); !ok {
+		//error
+		return
+	} else {
+		//map with pins information
+		for _, p := range v.Pins {
+			x, y := latLonToPixel(p.Location.Latitude, p.Location.Longitude, ZOOM)
+			i.trackUserLocationSection.locationMapInformation.MapPinInformation[p.DeviceID] = &component.PinInformation{
+				Position:       rl.Vector2{X: x, Y: y},
+				DeviceID:       p.DeviceID,
+				OwnerName:      p.OwnerName,
+				OwnerSurname:   p.OwnerSurname,
+				LastTimeOnline: p.LastOnline.AsTime(),
+			}
+		}
+		//map with last task tab information
+		var waitGroup sync.WaitGroup
+		for _, p := range v.Pins {
+			go func(wg *sync.WaitGroup) {
+				wg.Add(1)
+				defer wg.Done()
+				res, err = utils.MakeRequest(
+					utils.NewRequest(
+						i.cfg.Ctx,
+						i.cfg.ServerPID,
+						&proto.GetCurrentTask{DeviceID: p.DeviceID}))
+				if err != nil {
+					//todo
+				} else {
+					if v, ok := res.(*proto.CurrentTask); ok {
+						i.trackUserLocationSection.locationMapInformation.MapCurrentTask[p.DeviceID] = &component.CurrentTaskTab{
+							OwnerID:        v.UserID,
+							OwnerName:      p.OwnerName,
+							OwnerSurname:   p.OwnerSurname,
+							DeviceID:       p.DeviceID,
+							LastTimeOnline: p.LastOnline.AsTime(),
+							Task:           v.Task,
+						}
+					}
+				}
+			}(&waitGroup)
+
+		}
+		waitGroup.Wait()
+	}
+
+}
+
+func (i *InfoUserScene) drawPins() {
+	for _, p := range i.trackUserLocationSection.locationMapInformation.MapPinInformation {
+		rl.DrawTexture(i.trackUserLocationSection.LocationMap.pinTexture, int32(p.Position.X), int32(p.Position.Y), rl.White)
+	}
+
+}
+func (i *InfoUserScene) showPinInformationOnCollision(mousePos rl.Vector2) {
+	for _, p := range i.trackUserLocationSection.locationMapInformation.MapPinInformation {
+		if checkMousePinCollision(p.Position, mousePos) {
+			drawInfoBox(p)
+		}
+	}
+
+}
+func (i *InfoUserScene) showTabInformationOnCollision(mousePos rl.Vector2) {
+	for _, p := range i.trackUserLocationSection.locationMapInformation.MapPinInformation {
+		if checkMousePinCollision(p.Position, mousePos) {
+			if _, ok := i.trackUserLocationSection.locationMapInformation.MapCurrentTask[p.DeviceID]; ok {
+				i.drawInfoTab(i.trackUserLocationSection.locationMapInformation.MapCurrentTask[p.DeviceID])
+			}
+		}
+	}
+
+}
+
+func checkMousePinCollision(pinPos, mousePos rl.Vector2) bool {
+	pinBox := rl.NewRectangle(
+		pinPos.X,
+		pinPos.Y,
+		32,
+		32,
+	)
+	return rl.CheckCollisionPointRec(mousePos, pinBox)
+
+}
+func (i *InfoUserScene) drawInfoTab(currentTaskTab *component.CurrentTaskTab) {
+	rl.DrawRectangle(
+		int32(i.trackUserLocationSection.currentTaskTab.X),
+		int32(i.trackUserLocationSection.currentTaskTab.Y),
+		int32(i.trackUserLocationSection.currentTaskTab.Width),
+		int32(i.trackUserLocationSection.currentTaskTab.Height),
+		rl.White)
+	rl.DrawText(
+		currentTaskTab.OwnerID+" "+currentTaskTab.OwnerName+" "+currentTaskTab.OwnerSurname+"\n",
+		int32(i.trackUserLocationSection.currentTaskTab.X),
+		int32(i.trackUserLocationSection.currentTaskTab.Y),
+		20,
+		rl.Black)
+
+	//TODO repair what if I dont have any current task
+	text := utils.WrapText(
+		int32(i.trackUserLocationSection.currentTaskTab.Width),
+		currentTaskTab.Task.Name+"\n"+currentTaskTab.Task.Description,
+		20)
+	rl.DrawText(
+		text,
+		int32(i.trackUserLocationSection.currentTaskTab.X),
+		int32(i.trackUserLocationSection.currentTaskTab.Y+35),
+		20,
+		rl.Black)
+}
+
+func drawInfoBox(pin *component.PinInformation) {
+	rl.SetMouseCursor(rl.MouseCursorPointingHand)
+	notificationBox := rl.NewRectangle(
+		pin.Position.X-64,
+		pin.Position.Y-64,
+		300,
+		64)
+
+	rl.DrawRectangle(
+		int32(notificationBox.X),
+		int32(notificationBox.Y),
+		int32(notificationBox.Width),
+		int32(notificationBox.Height),
+		rl.White)
+
+	rl.DrawText(
+		pin.OwnerName+pin.OwnerSurname+"\n"+pin.LastTimeOnline.Format("2006 01 02 15:04"),
+		int32(notificationBox.X+5),
+		int32(notificationBox.Y+20),
+		20,
+		rl.Black)
+}
+
+func (i *InfoUserScene) drawMap() rl.Vector2 {
+	rl.BeginMode2D(i.trackUserLocationSection.LocationMap.camera)
+	tiles := i.trackUserLocationSection.LocationMap.tm.getLoadedTiles()
+	for _, tile := range tiles {
+		if tile.isReady() {
+			rl.DrawTexture(tile.getTexture(),
+				int32(tile.x*TILESIZE),
+				int32(tile.y*TILESIZE),
+				rl.White)
+		}
+	}
+
+	if !i.trackUserLocationSection.LocationMap.isPinLoaded {
+		i.trackUserLocationSection.LocationMap.pinTexture = rl.LoadTexture("osm/output.png")
+		i.trackUserLocationSection.LocationMap.isPinLoaded = true
+	}
+	i.drawPins()
+	scale := float32(rl.GetRenderWidth()) / float32(rl.GetScreenWidth())
+	mouse := rl.GetMousePosition()
+	mouse.X *= scale
+	mouse.Y *= scale
+	mousePos := rl.GetScreenToWorld2D(mouse, i.trackUserLocationSection.LocationMap.camera)
+	i.showPinInformationOnCollision(mousePos)
+	rl.EndMode2D()
+	return mousePos
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
@@ -36,135 +37,128 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 	case actor.Stopped:
 		utils.Logger.Info("Conversation manager has stooped")
 	case *proto.CreateConversation:
-		c := context.Background()
-		go func() {
-			exists, _, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
-			if exists || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
-				utils.Logger.Error("Here x1", err, exists)
-				ctx.Respond(&proto.FailureOfCreateConversation{})
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		exists, _, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
+		if exists || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
+			utils.Logger.Error("Here x1", err, exists)
+			ctx.Respond(&proto.Error{Content: err.Error()})
+			return
+		}
+		cnv := &proto.Conversation{
+			Id:         msg.Id,
+			SenderID:   msg.SenderID,
+			ReceiverID: msg.ReceiverID,
+		}
+		err = cm.storage.CreateConversation(c, cnv)
+		if err != nil {
+			utils.Logger.Error("Here x2")
+
+			ctx.Respond(&proto.Error{Content: err.Error()})
+			return
+		} else {
+			utils.Logger.Error("Here x3")
+
+			ctx.Respond(&proto.AcceptCreateConversation{})
+			return
+		}
+	case *proto.OpenAndLoadConversation:
+		cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID), "conversation")
+		// db call
+		fmt.Println(cm.conversations)
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		msgs, err := cm.storage.LoadConversation(c, msg.ConversationID)
+		if err != nil {
+			//TODO
+		} else {
+			ctx.Respond(&proto.LoadedConversation{Messages: msgs})
+		}
+	case *proto.GetUserConversations:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		conversations, err := cm.storage.GetUserConversations(c, msg.Id)
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+			fmt.Println(err)
+			//TODO
+		} else {
+			ctx.Respond(&proto.UserConversations{ConvSummary: conversations})
+		}
+	case *proto.FillConversationID:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		ok, id, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
+		if err != nil {
+			if !errors.Is(err, sql.ErrNoRows) {
+				utils.Logger.Error("DB ERROR fillconversationDB x1", "ERR:", err)
+				ctx.Respond(&proto.Error{Content: err.Error()})
 				return
 			}
+		}
+		if !ok {
 			cnv := &proto.Conversation{
-				Id:         msg.Id,
+				Id:         uuid.New().String(),
 				SenderID:   msg.SenderID,
 				ReceiverID: msg.ReceiverID,
 			}
 			err = cm.storage.CreateConversation(c, cnv)
 			if err != nil {
-				utils.Logger.Error("Here x2")
-
-				ctx.Respond(&proto.FailureOfCreateConversation{})
-				return
-			} else {
-				utils.Logger.Error("Here x3")
-
-				ctx.Respond(&proto.SuccessOfCreateConversation{})
-				return
+				ctx.Respond(&proto.Error{Content: err.Error()})
+				utils.Logger.Error("DB ERROR fillconversationDB x2", "ERR", err)
 			}
-		}()
-	case *proto.OpenAndLoadConversation:
-		cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID), "conversation")
-		// db call
-		fmt.Println(cm.conversations)
-		go func() {
-			c := context.Background()
-			msgs, err := cm.storage.LoadConversation(c, msg.ConversationID)
-			if err != nil {
-				//TODO
-			} else {
-				ctx.Respond(&proto.SuccessOpenAndLoadConversation{Messages: msgs})
-			}
-		}()
-	case *proto.GetUserConversation:
-		c := context.Background()
-		go func() {
-			conversations, err := cm.storage.GetUserConversations(c, msg.Id)
-			if err != nil {
-				ctx.Respond(&proto.FailureGetUserConversation{})
-				fmt.Println(err)
-				//TODO
-			} else {
-				ctx.Respond(&proto.SuccessGetUserConversation{ConvSummary: conversations})
-			}
-		}()
-	case *proto.FillConversationID:
-		c := context.Background()
-		go func() {
-			ok, id, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
-			if err != nil {
-				if !errors.Is(err, sql.ErrNoRows) {
-					utils.Logger.Error("DB ERROR fillconversationDB x1", "ERR:", err)
-					ctx.Respond(&proto.FailureOfFillConversationID{})
-					return
-				}
-			}
-			if !ok {
-				cnv := &proto.Conversation{
-					Id:         uuid.New().String(),
-					SenderID:   msg.SenderID,
-					ReceiverID: msg.ReceiverID,
-				}
-				err = cm.storage.CreateConversation(c, cnv)
-				if err != nil {
-					ctx.Respond(&proto.FailureOfFillConversationID{})
-					utils.Logger.Error("DB ERROR fillconversationDB x2", "ERR", err)
-				}
-				ctx.Respond(&proto.SuccessOfFillConversationID{Id: cnv.Id})
-				return
-			}
-			ctx.Respond(&proto.SuccessOfFillConversationID{Id: id})
-		}()
+			ctx.Respond(&proto.FilledConversationID{Id: cnv.Id})
+			return
+		}
+		ctx.Respond(&proto.FilledConversationID{Id: id})
 	case *proto.GetPresence:
-		go func() {
-			resp := ctx.Request(ctx.Parent(), msg, utils.WaitTime)
-			res, _ := resp.Result()
-			if message, ok := res.(*proto.Presence); ok {
-				ctx.Respond(message)
-			} else {
-				ctx.Respond(message)
-			}
-		}()
+		resp := ctx.Request(ctx.Parent(), msg, utils.WaitTime)
+		res, _ := resp.Result()
+		if message, ok := res.(*proto.Presence); ok {
+			ctx.Respond(message)
+		} else {
+			ctx.Respond(message)
+		}
 	case *proto.SendMessage: // if no ok it means that sb is not online in chat
-		go func() {
-			if _, ok := cm.conversations[msg.Message.ConversationID]; !ok {
-				panic("XDDD")
-				//or sendign through profile also active this, like click send also actobve openadnload conv but in other message
-			}
-			orgSender := ctx.Sender()
-
-			//after ctx.Request->result ctx.Sender() is changing to actor that answering on request
-			resp := ctx.Request(cm.conversations[msg.Message.ConversationID], msg, utils.WaitTime)
-			res, err := resp.Result()
-			if err != nil {
-				panic(err.Error() + "cnv manager")
-			}
-			//here actor receive another message form this resp and change a orignal ctx of messageservicePID so cause of that
-			//we had to memorize orgSender
-			if message, ok := res.(*proto.SuccessSend); ok {
-				ctx.Send(orgSender, message)
-			} else {
-				ctx.Send(orgSender, message)
-			}
-			fmt.Println("SENDER po", ctx.Sender())
-		}()
+		if _, ok := cm.conversations[msg.Message.ConversationID]; !ok {
+			panic("XDDD")
+			//or sendign through profile also active this, like click send also actobve openadnload conv but in other message
+		}
+		orgSender := ctx.Sender()
+		//after ctx.Request->result ctx.Sender() is changing to actor that answering on request
+		resp := ctx.Request(cm.conversations[msg.Message.ConversationID], msg, utils.WaitTime)
+		res, err := resp.Result()
+		if err != nil {
+			panic(err.Error() + "cnv manager")
+		}
+		//here actor receive another message form this resp and change a orignal ctx of messageservicePID so cause of that
+		//we had to memorize orgSender
+		if message, ok := res.(*proto.AcceptSend); ok {
+			ctx.Send(orgSender, message)
+		} else {
+			ctx.Send(orgSender, message)
+		}
+		fmt.Println("SENDER po", ctx.Sender())
 	case *proto.StoreMessage:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := cm.storage.InsertMessage(c, msg.Message)
 		if err != nil {
-			ctx.Respond(&proto.FailureStoreMessage{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessStoreMessage{})
+			ctx.Respond(&proto.AcceptStoreMessage{})
 		}
 	case *proto.DeliverMessage:
 		fmt.Println("odebralem od cnv", msg.Message, ctx.Parent())
 		ctx.Send(ctx.Parent(), msg)
 	case *proto.GetUsersToNewConversation:
-		c := context.Background()
-		users, err := cm.storage.SelectUsersToNewConversation(c, msg.Id)
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		users, err := cm.storage.SelectUsersToNewConversation(c, msg.UserID)
 		if err != nil {
-			ctx.Respond(&proto.FailureUsersToNewConversation{})
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.SuccessUsersToNewConversation{Users: users})
+			ctx.Respond(&proto.UsersToNewConversation{Users: users})
 		}
 	default:
 		_ = msg

@@ -13,14 +13,15 @@ type InfoUserScene struct {
 	cfg          *utils.SharedConfig
 	stateManager *statesmanager.StateManager
 	//scheduler TODO
-	backButton          component.Button
-	unitListSection     UnitListSection
-	userListSection     UserListSection
-	descriptionSection  DescriptionSection
-	actionSection       ActionSection
-	addActionSection    AddActionSection
-	removeActionSection RemoveActionSection
-	sendMessageSection  SendMessageSection
+	backButton               component.Button
+	unitListSection          UnitListSection
+	userListSection          UserListSection
+	descriptionSection       DescriptionSection
+	actionSection            ActionSection
+	addActionSection         AddActionSection
+	removeActionSection      RemoveActionSection
+	sendMessageSection       SendMessageSection
+	trackUserLocationSection TrackUserLocationSection
 }
 
 type UnitListSection struct {
@@ -31,8 +32,8 @@ type UserListSection struct {
 	users                []*proto.User
 	usersList            component.ListSlider
 	lastProcessedUserIdx int32
-	currSelectedUserID   string
 	isInUnit             bool
+	currSelectedUserID   string
 }
 
 type DescriptionSection struct {
@@ -51,6 +52,8 @@ type ActionSection struct {
 	showRemoveModal     bool
 	inboxButton         component.Button
 	showInboxModal      bool
+	trackLocation       component.Button
+	showLocationModal   bool
 }
 
 type AddActionSection struct {
@@ -71,6 +74,18 @@ type SendMessageSection struct {
 	sendMessage                component.Button
 	activeUserCircle           component.Circle
 	isSendMessageButtonPressed bool
+}
+
+type TrackUserLocationSection struct {
+	LocationMap            LocationMap
+	mapModal               component.Modal
+	locationMapInformation component.LocationMapInformation
+	currentTaskTab         rl.Rectangle
+
+	// there is current task of each user
+	//and here we have to filter if he is in work or no
+
+	//or for now we can leave only a timestamp
 }
 
 func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cfg *utils.SharedConfig) {
@@ -141,6 +156,13 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 		i.actionSection.removeButton.Bounds.Width,
 		i.actionSection.removeButton.Bounds.Height), "Send message!", false)
 
+	i.actionSection.trackLocation = *component.NewButton(component.NewButtonConfig(),
+		rl.NewRectangle(
+			i.actionSection.inboxButton.Bounds.X+i.actionSection.inboxButton.Bounds.Width+10,
+			i.actionSection.inboxButton.Bounds.Y,
+			i.actionSection.inboxButton.Bounds.Width,
+			i.actionSection.inboxButton.Bounds.Height),
+		"Location", false)
 	if len(i.userListSection.users) > 0 {
 		i.userListSection.usersList.IdxActiveElement = 0
 	} else {
@@ -225,6 +247,29 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 		Y:      int32(i.sendMessageSection.inboxModal.Core.Y),
 		Radius: 10,
 	}
+	i.trackUserLocationSection.locationMapInformation = component.LocationMapInformation{
+		MapCurrentTask:    make(map[string]*component.CurrentTaskTab),
+		MapPinInformation: make(map[string]*component.PinInformation),
+	}
+	i.trackUserLocationSection.mapModal = component.Modal{
+		Background: rl.NewRectangle(0, 0, float32(rl.GetScreenWidth()), float32(rl.GetScreenHeight())),
+		BgColor:    rl.Fade(rl.Gray, 0.3),
+		Core:       rl.NewRectangle(float32(rl.GetScreenWidth()/2-400.0), float32(rl.GetScreenHeight()/2-225.0), 800, 450),
+	}
+	i.trackUserLocationSection.LocationMap = LocationMap{
+		width:  800,
+		height: 450,
+		tm:     NewTileManager(),
+	}
+
+	i.trackUserLocationSection.currentTaskTab = rl.NewRectangle(
+		i.trackUserLocationSection.mapModal.Core.X,
+		i.trackUserLocationSection.mapModal.Core.Y+i.trackUserLocationSection.mapModal.Core.Height,
+		i.trackUserLocationSection.mapModal.Core.Width,
+		150,
+	)
+
+	i.prepareMap()
 
 	i.backButton = *component.NewButton(
 		component.NewButtonConfig(),
@@ -244,7 +289,8 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 	modalAddOpen := i.actionSection.showAddModal
 	modalRemoveOpen := i.actionSection.showRemoveModal
 	modalSendOpen := i.actionSection.showInboxModal
-	cond := !modalAddOpen && !modalRemoveOpen && !modalSendOpen
+	modalLocationOpen := i.actionSection.showLocationModal
+	cond := !modalAddOpen && !modalRemoveOpen && !modalSendOpen && !modalLocationOpen
 	i.sendMessageSection.inboxInput.SetActive(cond)
 	i.actionSection.addButton.SetActive(cond)
 	i.actionSection.removeButton.SetActive(cond)
@@ -252,6 +298,7 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 	i.addActionSection.acceptAddButton.SetActive(cond)
 	i.removeActionSection.acceptRemoveButton.SetActive(cond)
 	i.sendMessageSection.sendMessage.SetActive(cond)
+	i.actionSection.trackLocation.SetActive(cond)
 	i.backButton.SetActive(cond)
 
 	i.sendMessageSection.inboxInput.Update()
@@ -265,6 +312,10 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 	if i.actionSection.inboxButton.Update() {
 		i.actionSection.showInboxModal = true
 	}
+	if i.actionSection.trackLocation.Update() {
+		i.FetchPins()
+		i.actionSection.showLocationModal = true
+	}
 
 	i.addActionSection.isConfirmAddButtonPressed = i.addActionSection.acceptAddButton.Update()
 	i.removeActionSection.isConfirmRemoveButtonPressed = i.removeActionSection.acceptRemoveButton.Update()
@@ -273,7 +324,9 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 		i.stateManager.Add(statesmanager.GoBackState)
 		return
 	}
-
+	if i.actionSection.showLocationModal {
+		i.updateMap()
+	}
 	i.UpdateDescription()
 	//TODO in v2 version add ability to have more than one unit by commanders type
 	//and here change layout when he has more than one unit modal shows up with all units
@@ -300,6 +353,7 @@ func (i *InfoUserScene) RenderInfoUserState() {
 	i.actionSection.addButton.Render()
 	i.actionSection.removeButton.Render()
 	i.actionSection.inboxButton.Render()
+	i.actionSection.trackLocation.Render()
 
 	gui.ListViewEx(
 		i.userListSection.usersList.Bounds,
@@ -377,6 +431,32 @@ func (i *InfoUserScene) RenderInfoUserState() {
 		i.sendMessageSection.inboxInput.Render()
 
 	}
+
+	if i.actionSection.showLocationModal {
+		rl.DrawRectangle(
+			int32(i.trackUserLocationSection.mapModal.Background.X),
+			int32(i.trackUserLocationSection.mapModal.Background.Y),
+			int32(i.trackUserLocationSection.mapModal.Background.Width),
+			int32(i.trackUserLocationSection.mapModal.Background.Height),
+			i.trackUserLocationSection.mapModal.BgColor)
+
+		rl.BeginScissorMode(
+			int32(i.trackUserLocationSection.mapModal.Core.X),
+			int32(i.trackUserLocationSection.mapModal.Core.Y),
+			int32(i.trackUserLocationSection.mapModal.Core.Width),
+			int32(i.trackUserLocationSection.mapModal.Core.Height))
+
+		mousePos := i.drawMap()
+		rl.EndScissorMode()
+		i.showTabInformationOnCollision(mousePos)
+		rl.DrawRectangleLines(
+			int32(i.trackUserLocationSection.mapModal.Core.X),
+			int32(i.trackUserLocationSection.mapModal.Core.Y),
+			int32(i.trackUserLocationSection.mapModal.Core.Width),
+			int32(i.trackUserLocationSection.mapModal.Core.Height),
+			rl.Black)
+	}
+	//TODO add exit button
 
 }
 

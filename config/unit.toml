@@ -1,0 +1,6 @@
+# UNIT CONFIGURATION FILE
+
+[unit]
+addr   = ""
+serverAddr = ""
+unitID = ""

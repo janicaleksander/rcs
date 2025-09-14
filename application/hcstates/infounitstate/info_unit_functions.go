@@ -37,12 +37,12 @@ func (i *InfoUnitScene) FetchUnits() {
 		go func(wGroup *sync.WaitGroup, id string) {
 			defer wGroup.Done()
 
-			res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetAllUsersInUnit{Id: id}))
+			res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetUsersInUnit{UnitID: id}))
 			if err != nil {
 				//todo error ctx deadline exceeded
 			}
 
-			if v, ok := res.(*proto.AllUsersInUnit); ok {
+			if v, ok := res.(*proto.UsersInUnit); ok {
 				cacheChan <- struct {
 					id   string
 					data []*proto.User

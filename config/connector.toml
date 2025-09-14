@@ -1,0 +1,5 @@
+# CONNECTOR CONFIGURATION FILE
+[connector]
+addrDevice = ""
+addrHTTP =""
+serverAddr = ""

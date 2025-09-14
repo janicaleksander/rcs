@@ -6,9 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/janicaleksander/bcs/types/User"
 	"github.com/janicaleksander/bcs/types/proto"
+	"github.com/janicaleksander/bcs/types/user"
 	"github.com/janicaleksander/bcs/utils"
 	_ "github.com/lib/pq"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -42,34 +41,57 @@ func (p *Postgres) InsertUser(ctx context.Context, user *proto.User) error {
 	}
 	return nil
 }
-
-func (p *Postgres) LoginUser(ctx context.Context, email, password string) (string, int, error) {
-	rows, err := p.Conn.Query(`SELECT id, password,rule_level FROM users WHERE (email=$1)`, email)
-	if err != nil {
-		return "", -1, err
+func (p *Postgres) GetUser(ctx context.Context, userID string) (*proto.User, error) {
+	row := p.Conn.QueryRowContext(ctx,
+		`SELECT
+    				u.id,u.email,u.rule_level,u.last_time_online,
+    				p.name,p.surname
+				FROM users u 
+				INNER JOIN personal p
+				ON u.id = p.user_id
+				WHERE (u.id = $1);
+    `, userID)
+	u := &proto.User{
+		Id:            "",
+		Email:         "",
+		RuleLvl:       0,
+		LasTimeOnline: nil,
+		Personal: &proto.Personal{
+			Name:    "",
+			Surname: "",
+		},
 	}
-	defer rows.Close()
+	var timestamp sql.NullTime
+	if err := row.Scan(&u.Id, &u.Email, &u.RuleLvl, &timestamp, &u.Personal.Name, &u.Personal.Surname); err != nil {
+		return nil, err
+	}
+	if timestamp.Valid {
+		u.LasTimeOnline = timestamppb.New(timestamp.Time)
+	}
+	return u, nil
+
+}
+func (p *Postgres) LoginUser(ctx context.Context, email, password string) (string, int, error) {
+	row := p.Conn.QueryRowContext(ctx, `SELECT id, password,rule_level FROM users WHERE (email=$1)`, email)
 	var id string
 	var pwd string
 	var role int
-	for rows.Next() {
-		if err = rows.Scan(&id, &pwd, &role); err != nil {
-			return "", -1, err
-		}
+	if err := row.Scan(&id, &pwd, &role); err != nil {
+		return "", -1, err
 	}
 	if !user.DecryptHash(password, pwd) {
 		return "", -1, errors.New("invalid credentials")
 	}
-
 	return id, role, nil
 }
 
-func (p *Postgres) GetUsersWithLVL(ctx context.Context, lvl int) ([]*proto.User, error) {
-	rows, err := p.Conn.Query(
-		`SELECT users.id,users.email,users.rule_level,name,surname 
-				FROM users
-				INNER JOIN personal p on users.id = p.user_id
-				WHERE (rule_level>=$1)`, lvl)
+// lower and upper are inclusive
+func (p *Postgres) GetUsersWithLVL(ctx context.Context, lower, upper int) ([]*proto.User, error) {
+	rows, err := p.Conn.QueryContext(ctx,
+		`SELECT u.id,u.email,u.rule_level,u.last_time_online,p.name,p.surname 
+				FROM users u 
+				INNER JOIN personal p on u.id = p.user_id
+				WHERE (rule_level>=$1 AND rule_level <= $2)`, lower, upper)
 	if err != nil {
 		return nil, err
 	}
@@ -77,24 +99,38 @@ func (p *Postgres) GetUsersWithLVL(ctx context.Context, lvl int) ([]*proto.User,
 	users := make([]*proto.User, 0, 64)
 
 	for rows.Next() {
-		user := &proto.User{Personal: &proto.Personal{}}
-		if err := rows.Scan(&user.Id, &user.Email, &user.RuleLvl, &user.Personal.Name, &user.Personal.Surname); err != nil {
-			return nil, err
+		u := &proto.User{
+			Id:            "",
+			Email:         "",
+			RuleLvl:       0,
+			LasTimeOnline: nil,
+			Personal: &proto.Personal{
+				Name:    "",
+				Surname: "",
+			},
 		}
-		users = append(users, user)
+		var timestamp sql.NullTime
+		if err = rows.Scan(&u.Id, &u.Email, &u.RuleLvl, &timestamp, &u.Personal.Name, &u.Personal.Surname); err != nil {
+			utils.Logger.Error(err.Error())
+			continue
+		}
+		if timestamp.Valid {
+			u.LasTimeOnline = timestamppb.New(timestamp.Time)
+		}
+		users = append(users, u)
+	}
+	if len(users) == 0 {
+		return nil, errors.New("no users")
 	}
 	return users, nil
 }
 
-func (p *Postgres) InsertUnit(ctx context.Context, nameUnit string, isConfigured bool, userID string) error {
-	// TODO user can be in the same time in one unit
-
+func (p *Postgres) InsertUnit(ctx context.Context, unit *proto.Unit, userID string) error {
 	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	//check if user is unique in table
 	var exists bool
 	err = tx.QueryRowContext(ctx,
 		`SELECT EXISTS (SELECT 1 FROM user_to_unit WHERE user_id = $1)`, userID).Scan(&exists)
@@ -106,13 +142,12 @@ func (p *Postgres) InsertUnit(ctx context.Context, nameUnit string, isConfigured
 	}
 
 	//making row in unit table
-	ID := uuid.New().String()
-	_, err = tx.ExecContext(ctx, `INSERT INTO unit (id,name,is_configured) VALUES ($1,$2,$3)`, ID, nameUnit, isConfigured)
+	_, err = tx.ExecContext(ctx, `INSERT INTO unit (id,name) VALUES ($1,$2)`, unit.Id, unit.Name)
 	if err != nil {
 		return err
 	}
-	//making row in user to generated unit
-	_, err = tx.ExecContext(ctx, `INSERT INTO user_to_unit (user_id,unit_id) VALUES ($1,$2)`, userID, ID)
+
+	_, err = tx.ExecContext(ctx, `INSERT INTO user_to_unit (user_id,unit_id) VALUES ($1,$2)`, userID, unit.Id)
 	if err != nil {
 		return err
 	}
@@ -120,66 +155,85 @@ func (p *Postgres) InsertUnit(ctx context.Context, nameUnit string, isConfigured
 		return err
 	}
 	return nil
-
 }
 
 func (p *Postgres) GetAllUnits(ctx context.Context) ([]*proto.Unit, error) {
-	rows, err := p.Conn.Query(`SELECT id,name,is_configured FROM unit`)
+	rows, err := p.Conn.QueryContext(ctx, `SELECT id,name FROM unit`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	units := make([]*proto.Unit, 0, 64)
 	for rows.Next() {
-		unit := &proto.Unit{}
-		err = rows.Scan(&unit.Id, &unit.Name, &unit.IsConfigured)
+		unit := &proto.Unit{
+			Id:   "",
+			Name: "",
+		}
+		err = rows.Scan(&unit.Id, &unit.Name)
 		if err != nil {
-			//log error
+			utils.Logger.Error(err.Error())
 			continue
 		}
 		units = append(units, unit)
 	}
+	if len(units) == 0 {
+		return nil, errors.New("no units")
+	}
 	return units, nil
 }
 
-// TODO maybe add more personal infos
-func (p *Postgres) GetUsersInUnit(ctx context.Context, id string) ([]*proto.User, error) {
-	rows, err := p.Conn.Query(
+func (p *Postgres) GetUsersInUnit(ctx context.Context, unitID string) ([]*proto.User, error) {
+	rows, err := p.Conn.QueryContext(ctx,
 		`
-	SELECT u.id, u.email, u.rule_level, personal.name, personal.surname  
-	FROM personal
-	INNER JOIN users u ON personal.user_id = u.id
-	INNER JOIN user_to_unit utu ON u.id = utu.user_id 
-	WHERE utu.unit_id = $1
-`, id)
+				SELECT u.id, u.email, u.rule_level, u.last_time_online,p.name, p.surname  
+				FROM personal p
+				INNER JOIN users u ON p.user_id = u.id
+				INNER JOIN user_to_unit utu ON u.id = utu.user_id 
+				WHERE (utu.unit_id = $1)
+`, unitID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	users := make([]*proto.User, 0, 64)
 	for rows.Next() {
-		user := &proto.User{Personal: &proto.Personal{}}
-		err = rows.Scan(&user.Id, &user.Email, &user.RuleLvl, &user.Personal.Name, &user.Personal.Surname)
+		u := &proto.User{
+			Id:            "",
+			Email:         "",
+			RuleLvl:       0,
+			LasTimeOnline: nil,
+			Personal:      &proto.Personal{},
+		}
+		var timestamp sql.NullTime
+		err = rows.Scan(&u.Id, &u.Email, &u.RuleLvl, &timestamp, &u.Personal.Name, &u.Personal.Surname)
 		if err != nil {
-			//log error
+			utils.Logger.Error(err.Error())
 			continue
 		}
-		users = append(users, user)
+		if timestamp.Valid {
+			u.LasTimeOnline = timestamppb.New(timestamp.Time)
+		}
+		users = append(users, u)
+	}
+	if len(users) == 0 {
+		return nil, errors.New("no users")
 	}
 	return users, nil
 }
 
-func (p *Postgres) IsUserInUnit(ctx context.Context, id string) (bool, string, error) {
-	var exists bool
+func (p *Postgres) IsUserInUnit(ctx context.Context, userID string) (bool, string, error) {
 	var unitID string
-	err := p.Conn.QueryRow(`SELECT unit_id FROM user_to_unit WHERE user_id = $1 LIMIT 1`, id).Scan(&unitID)
-	if errors.Is(err, sql.ErrNoRows) || err != nil {
-		exists = false
-	} else {
-		exists = true
+	err := p.Conn.QueryRowContext(ctx, `SELECT unit_id FROM user_to_unit WHERE (user_id = $1)`, userID).Scan(&unitID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, "", sql.ErrNoRows
 	}
-	return exists, unitID, err
+	if err != nil {
+		return false, "", err
+	}
+
+	return true, unitID, err
 }
+
 func (p *Postgres) AssignUserToUnit(ctx context.Context, userID string, unitID string) error {
 	tx, err := p.Conn.BeginTx(ctx, nil)
 	if err != nil {
@@ -212,22 +266,37 @@ func (p *Postgres) DeleteUserFromUnit(ctx context.Context, userID string, unitID
 	return nil
 }
 
-// MESSAGE SERVICE SQL
-// Return:
-// - true if exists false otherwise
-// - string id of conversation between two user
-// - error
+func (p *Postgres) UpdateUserLastTimeOnline(ctx context.Context, id string, t time.Time) error {
+	tx, err := p.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, `UPDATE users SET last_time_online = $1 WHERE (id = $2);`, t, id)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p *Postgres) DoConversationExists(ctx context.Context, sender, receiver string) (bool, string, error) {
 	var conversationID string
-	err := p.Conn.QueryRow(`
+	err := p.Conn.QueryRowContext(ctx, `
     SELECT uc1.conversation_id
     FROM user_conversation uc1
     JOIN user_conversation uc2 
         ON uc1.conversation_id = uc2.conversation_id
-    WHERE uc1.user_id = $1 
-      AND uc2.user_id = $2
+    WHERE (uc1.user_id = $1 
+      AND uc2.user_id = $2)
     LIMIT 1
 `, sender, receiver).Scan(&conversationID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, "", sql.ErrNoRows
+	}
+
 	if err != nil {
 		return false, "", err
 	}
@@ -251,7 +320,6 @@ func (p *Postgres) CreateConversation(ctx context.Context, cnv *proto.Conversati
 		cnv.SenderID, cnv.Id, nil,
 		cnv.ReceiverID,
 	)
-	//TODO do this last message idk now how to do this and for what this is
 	if err != nil {
 		return err
 	}
@@ -276,7 +344,7 @@ func (p *Postgres) InsertMessage(ctx context.Context, msg *proto.Message) error 
 	_, err = tx.ExecContext(ctx,
 		`UPDATE user_conversation 
 				SET last_seen_message_id=$1
-				WHERE (conversation_id=$1) `, msg.Id)
+				WHERE (conversation_id=$2) `, msg.Id, msg.ConversationID)
 	if err != nil {
 		return err
 	}
@@ -285,9 +353,6 @@ func (p *Postgres) InsertMessage(ctx context.Context, msg *proto.Message) error 
 	}
 	return nil
 }
-
-//TODO make a one place where i set a uuid of sth e.g message or conversation and other
-//every ID i setting in backend, to do this we have to give to fb funcs a proto structs (full with everything during creating)
 
 func (p *Postgres) GetUserConversations(ctx context.Context, id string) ([]*proto.ConversationSummary, error) {
 	rows, err := p.Conn.QueryContext(ctx,
@@ -329,7 +394,7 @@ ORDER BY m.sent_at DESC NULLS LAST ;`, id)
 				SentAt:         nil,
 			},
 		}
-		//TODO make it in other places
+
 		var messageID sql.NullString
 		var sender sql.NullString
 		var content sql.NullString
@@ -338,11 +403,10 @@ ORDER BY m.sent_at DESC NULLS LAST ;`, id)
 		var surname string
 		err = rows.Scan(&cs.ConversationId, &messageID, &sender, &content, &sentAt, &cs.WithID, &name, &surname)
 		if err != nil {
-			//TODO
+			utils.Logger.Error(err.Error())
+			continue
 		}
-
 		if messageID.Valid {
-
 			cs.LastMessage.Id = messageID.String
 		}
 		if sender.Valid {
@@ -353,24 +417,27 @@ ORDER BY m.sent_at DESC NULLS LAST ;`, id)
 		}
 		if sentAt.Valid {
 			cs.LastMessage.SentAt = timestamppb.New(sentAt.Time)
-		} else {
-			cs.LastMessage.SentAt = nil
 		}
 		cs.Nametag = name + " " + surname
 		conversationsSummary = append(conversationsSummary, cs)
+	}
+
+	if len(conversationsSummary) == 0 {
+		return nil, errors.New("no cnvs summary")
 	}
 	return conversationsSummary, nil
 
 }
 
-func (p *Postgres) LoadConversation(ctx context.Context, id string) ([]*proto.Message, error) {
-	rows, err := p.Conn.Query(
+func (p *Postgres) LoadConversation(ctx context.Context, cnvID string) ([]*proto.Message, error) {
+	rows, err := p.Conn.QueryContext(ctx,
 		`SELECT id,user_id,conversation_id,content,sent_at 
 				FROM message 
-				WHERE conversation_id=$1 ORDER BY sent_at`, id)
+				WHERE conversation_id=$1 ORDER BY sent_at`, cnvID)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	messages := make([]*proto.Message, 0, 64)
 	for rows.Next() {
 		m := &proto.Message{
@@ -382,23 +449,30 @@ func (p *Postgres) LoadConversation(ctx context.Context, id string) ([]*proto.Me
 		}
 		var timestamp time.Time
 		err = rows.Scan(&m.Id, &m.SenderID, &m.ConversationID, &m.Content, &timestamp)
-		m.SentAt = timestamppb.New(timestamp)
 		if err != nil {
 			utils.Logger.Error(err.Error())
+			continue
 		}
+		m.SentAt = timestamppb.New(timestamp)
 		messages = append(messages, m)
+	}
+	if len(messages) == 0 {
+		return nil, errors.New("no messages")
 	}
 	return messages, nil
 }
-
 func (p *Postgres) SelectUsersToNewConversation(ctx context.Context, userID string) ([]*proto.User, error) {
-	rows, err := p.Conn.Query(
-		`SELECT 
-    				u.id,u.email, p.name, p.surname 
-				FROM users u 
-				INNER JOIN personal p 
-				    ON u.id = p.user_id
-				WHERE (u.id <> $1)`, userID)
+	rows, err := p.Conn.QueryContext(ctx,
+		`SELECT u.id, u.email, p.name, p.surname 
+				FROM users u
+				INNER JOIN personal p ON u.id = p.user_id
+				WHERE u.id <> $1
+				AND NOT EXISTS (
+					SELECT 1 
+					FROM user_conversation uc1
+					INNER JOIN user_conversation uc2 ON uc1.conversation_id = uc2.conversation_id
+					WHERE uc1.user_id = u.id AND uc2.user_id = $1);
+`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -416,9 +490,194 @@ func (p *Postgres) SelectUsersToNewConversation(ctx context.Context, userID stri
 		}
 		err = rows.Scan(&usr.Id, &usr.Email, &usr.Personal.Name, &usr.Personal.Surname)
 		if err != nil {
-			//TODO
+			utils.Logger.Error(err.Error())
+			continue
 		}
 		users = append(users, usr)
 	}
+	if len(users) == 0 {
+		return nil, errors.New("no users")
+	}
 	return users, nil
+}
+
+// THIS IS ONLY WHEN users is in one unit
+func (p *Postgres) DoesUserHaveDevice(ctx context.Context, userID string) (bool, []*proto.Device, error) {
+	rows, err := p.Conn.QueryContext(ctx, `SELECT d.id,d.name,d.last_time_online,d.owner,d.type FROM device d 
+						    INNER JOIN users u 
+						    ON d.owner = u.id
+						    WHERE (u.id = $1);`, userID)
+	if err != nil {
+		return false, nil, err
+	}
+	devices := make([]*proto.Device, 0, 8)
+	for rows.Next() {
+		d := &proto.Device{
+			Id:             "",
+			Name:           "",
+			Owner:          "",
+			LastTimeOnline: nil,
+			Type:           0,
+		}
+		var lastTimeOnline sql.NullTime
+		err = rows.Scan(&d.Id, &d.Name, &lastTimeOnline, &d.Owner, &d.Type)
+		if err != nil {
+			utils.Logger.Error(err.Error())
+			continue
+		}
+		if lastTimeOnline.Valid {
+			d.LastTimeOnline = timestamppb.New(lastTimeOnline.Time)
+		}
+		devices = append(devices, d)
+	}
+
+	if err != nil {
+		return false, nil, err
+	}
+	if len(devices) == 0 {
+		return false, nil, errors.New("no devices")
+	}
+	return true, devices, nil
+}
+
+func (p *Postgres) UpdateLocation(ctx context.Context, data *proto.UpdateLocationReq) error {
+	tx, err := p.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(ctx, `     
+        INSERT INTO device_location (device_id, location, changed_at)
+        VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326),$4)`,
+		data.DeviceID,
+		data.Location.Longitude,
+		data.Location.Latitude,
+		time.Now(),
+	)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Postgres) GetPins(ctx context.Context) ([]*proto.Pin, error) {
+	rows, err := p.Conn.QueryContext(ctx, `SELECT DISTINCT ON (device_id) p.name,p.surname, device_id, 
+    								ST_Y(location::geometry) as lat,
+    								ST_X(location::geometry) as lng, 
+                               		changed_at
+									FROM device_location
+									INNER JOIN device d ON d.id = device_id
+									INNER JOIN users u ON d.owner = u.id
+									INNER JOIN personal p on u.id = p.user_id
+									ORDER BY device_id, changed_at DESC;`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	pins := make([]*proto.Pin, 0, 32)
+	for rows.Next() {
+		pin := &proto.Pin{
+			DeviceID:     "",
+			OwnerName:    "",
+			OwnerSurname: "",
+			Location:     &proto.Location{},
+			LastOnline:   nil,
+		}
+		var tmp time.Time
+		err = rows.Scan(&pin.OwnerName, &pin.OwnerSurname, &pin.DeviceID, &pin.Location.Latitude, &pin.Location.Longitude, &tmp)
+		if err != nil {
+			utils.Logger.Error(err.Error())
+			continue
+		}
+		pin.LastOnline = timestamppb.New(tmp)
+		pins = append(pins, pin)
+	}
+	if len(pins) == 0 {
+		return nil, errors.New("no pins")
+	}
+	return pins, nil
+}
+
+func (p *Postgres) GetCurrentTask(ctx context.Context, deviceID string) (*proto.CurrentTask, error) {
+	row := p.Conn.QueryRowContext(ctx,
+		`SELECT
+    					d.owner,t.id,t.name,t.description,t.state,t.completion_date,t.deadline
+				FROM device d
+				INNER JOIN current_user_task cut ON d.owner = cut.user_id
+				INNER JOIN task t ON t.id = cut.task_id
+				WHERE d.id = $1`, deviceID)
+	t := &proto.CurrentTask{
+		Task: &proto.Task{
+			Id:             "",
+			Name:           "",
+			Description:    "",
+			State:          0,
+			CompletionDate: nil,
+			Deadline:       nil,
+		},
+		UserID: "",
+	}
+	var taskCompletionDate sql.NullTime
+	var deadline sql.NullTime
+	err := row.Scan(&t.UserID, &t.Task.Id, &t.Task.Name, &t.Task.Description, &t.Task.State, &taskCompletionDate, &deadline)
+	if err != nil {
+		return nil, err
+	}
+	if taskCompletionDate.Valid {
+		t.Task.CompletionDate = timestamppb.New(taskCompletionDate.Time)
+	}
+	if deadline.Valid {
+		t.Task.Deadline = timestamppb.New(deadline.Time)
+	}
+	return t, nil
+}
+
+func (p *Postgres) GetDeviceTypes(ctx context.Context) ([]int32, error) {
+	rows, err := p.Conn.QueryContext(ctx, `SELECT type FROM device_type`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	types := make([]int32, 0, 2)
+	for rows.Next() {
+		var t int32
+		err = rows.Scan(&t)
+		if err != nil {
+			utils.Logger.Error(err.Error())
+			continue
+		}
+		types = append(types, t)
+	}
+	if len(types) == 0 {
+		return nil, errors.New("no types")
+	}
+	return types, nil
+}
+
+func (p *Postgres) InsertDevice(ctx context.Context, device *proto.Device) error {
+	tx, err := p.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx,
+		`INSERT INTO device (id,name,last_time_online,owner,type) 
+				   VALUES ($1,$2,$3,$4,$5)`,
+		device.Id,
+		device.Name,
+		nil,
+		device.Owner,
+		device.Type,
+	)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
 }

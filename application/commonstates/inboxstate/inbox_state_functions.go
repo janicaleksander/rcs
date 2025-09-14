@@ -9,6 +9,7 @@ import (
 	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (i *InboxScene) Reset() {
@@ -43,14 +44,14 @@ func (i *InboxScene) GetLoggedID() {
 func (i *InboxScene) GetUserConversation() {
 
 	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID,
-		&proto.GetUserConversation{
+		&proto.GetUserConversations{
 			Id: i.tempUserID},
 	))
 	if err != nil {
 		//TODO error ctx deadline exceeded
 	}
 
-	if v, ok := res.(*proto.SuccessGetUserConversation); ok {
+	if v, ok := res.(*proto.UserConversations); ok {
 		i.conversationSection.usersConversations = v.ConvSummary
 	} else {
 		// maybe one message proto.Error with msg
@@ -59,12 +60,15 @@ func (i *InboxScene) GetUserConversation() {
 }
 
 func (i *InboxScene) GetUserToNewConversation() {
-	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.GetUsersToNewConversation{Id: i.tempUserID}))
+	res, err := utils.MakeRequest(utils.NewRequest(
+		i.cfg.Ctx,
+		i.cfg.MessageServicePID,
+		&proto.GetUsersToNewConversation{UserID: i.tempUserID}))
 	if err != nil {
 		//TODO error ctx deadline exceeded
 	}
 
-	if v, ok := res.(*proto.SuccessUsersToNewConversation); ok {
+	if v, ok := res.(*proto.UsersToNewConversation); ok {
 		i.modalSection.users = v.Users
 	} else {
 		// maybe one message proto.Error with msg
@@ -128,7 +132,7 @@ func (i *InboxScene) addNewConversation() {
 
 		}
 
-		if _, ok := res.(*proto.SuccessOfCreateConversation); ok {
+		if _, ok := res.(*proto.AcceptCreateConversation); ok {
 			i.refreshConversationsPanel()
 		} else {
 			i.modalSection.isErrorModal = true
@@ -143,13 +147,14 @@ func (i *InboxScene) addNewConversation() {
 func (i *InboxScene) refreshConversationsPanel() {
 	i.conversationSection.activeConversation = -1
 	i.conversationSection.conversationsTabs = i.conversationSection.conversationsTabs[:0]
-	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID,
-		&proto.GetUserConversation{Id: i.tempUserID}))
+	res, err := utils.MakeRequest(utils.NewRequest(
+		i.cfg.Ctx,
+		i.cfg.MessageServicePID,
+		&proto.GetUserConversations{Id: i.tempUserID}))
 	if err != nil {
 		//TODO context deadline exceeded
 	}
-
-	if v, ok := res.(*proto.SuccessGetUserConversation); ok {
+	if v, ok := res.(*proto.UserConversations); ok {
 		fmt.Println(v.ConvSummary)
 		i.conversationSection.usersConversations = v.ConvSummary
 	} else {
@@ -180,5 +185,56 @@ func (i *InboxScene) refreshConversationsPanel() {
 		i.conversationSection.conversationPanel.Content.Height = i.conversationSection.conversationPanelLayout.currHeight
 		i.conversationSection.conversationPanel.Scroll.Y = i.conversationSection.conversationPanel.Content.Height
 
+	}
+}
+
+func (i *InboxScene) LoadMessages(tab *component.ConversationTab) {
+	//open conversation
+	i.cfg.Ctx.Send(i.cfg.MessageServicePID, &proto.UpdatePresence{
+		Id: i.tempUserID,
+		Presence: &proto.PresenceType{
+			Type: &proto.PresenceType_Inbox{
+				Inbox: &proto.Inbox{
+					WithID: tab.WithID}}},
+	})
+	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.OpenAndLoadConversation{
+		UserID:         i.tempUserID,
+		ReceiverID:     tab.WithID,
+		ConversationID: tab.ConversationID,
+	},
+	))
+	if err != nil {
+		//TODO context deadline exceeded
+	}
+	i.MessageSection.messages = i.MessageSection.messages[:0]
+	i.MessageSection.messagePanelLayout.currHeight = i.MessageSection.messagePanel.Bounds.Y + 3*i.MessageSection.messagePanelLayout.padding
+	if v, ok := res.(*proto.LoadedConversation); ok {
+		for _, msg := range v.Messages {
+			i.AppendMessage(msg)
+		}
+	} else {
+		//TODO err
+	}
+}
+
+func (i *InboxScene) SendMessage() {
+	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.SendMessage{
+		Receiver: i.conversationSection.activeWithID,
+		Message: &proto.Message{
+			Id:             uuid.New().String(),
+			SenderID:       i.tempUserID,
+			ConversationID: i.conversationSection.activeConversationID,
+			Content:        i.MessageSection.textInput.GetText(),
+			SentAt:         timestamppb.Now(),
+		},
+	}))
+	if err != nil {
+		// context deadline exceed
+	}
+
+	if v, ok := res.(*proto.DeliverMessage); ok {
+		i.AppendMessage(v.Message)
+	} else {
+		//error
 	}
 }
