@@ -31,7 +31,7 @@ func (l *LoginScene) LoginSceneSetup(state *statesmanager.StateManager, cfg *uti
 	l.loginButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2),
-		200, 40,
+		200, 50,
 	), "Login", false)
 
 	l.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
