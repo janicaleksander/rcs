@@ -31,7 +31,7 @@ func (l *LoginScene) LoginSceneSetup(state *statesmanager.StateManager, cfg *uti
 	l.loginButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2),
-		200, 40,
+		200, 50,
 	), "Login", false)
 
 	l.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
@@ -45,11 +45,11 @@ func (l *LoginScene) LoginSceneSetup(state *statesmanager.StateManager, cfg *uti
 		float32(rl.GetScreenHeight()/2-80),
 		200, 30,
 	))
-	l.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
+	l.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPERRORBG)), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2.0-100.0),
-		float32(rl.GetScreenHeight()/2.0+40.0),
+		float32(rl.GetScreenHeight()/2.0+60.0),
 		200,
-		100), &l.errorSection.loginErrorMessage)
+		40), &l.errorSection.loginErrorMessage)
 }
 
 func (l *LoginScene) UpdateLoginState() {
@@ -60,7 +60,6 @@ func (l *LoginScene) UpdateLoginState() {
 
 	if l.isLoginButtonPressed {
 		//i have to do check services and then mark this somehow to show that user can use it
-
 		//and maybe use this to not make other request we have to wait if goruitne change this var to false and then???
 		//thiis is to set own presence to cut all messsage service from app
 		l.Login()
@@ -75,8 +74,9 @@ func (l *LoginScene) UpdateLoginState() {
 // TODO (user can be offline but also error with messageSrvies is reason to set his status to offline
 // even he is logged in
 func (l *LoginScene) RenderLoginState() {
-
-	rl.DrawText("Login Page", 50, 50, 20, rl.DarkGray)
+	rl.ClearBackground(utils.LOGINBGCOLOR)
+	rl.DrawText("LOGIN PAGE", int32(rl.GetScreenWidth()/2)-rl.MeasureText("LOGIN PAGE", 80)/2, 50, 80, rl.DarkGray)
+	rl.DrawText("remote command system", int32(rl.GetScreenWidth()/2)-rl.MeasureText("LOGIN PAGE", 50)/4, 110, 50, rl.DarkGray)
 
 	l.errorSection.errorPopup.Render()
 	//TODO: secret password inboxInput box

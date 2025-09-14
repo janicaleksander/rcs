@@ -3,11 +3,15 @@ package component
 import rl "github.com/gen2brain/raylib-go/raylib"
 
 type Button struct {
-	Bounds  rl.Rectangle
-	Text    string
-	Focus   bool
-	Enabled bool
-	Cfg     ButtonConfig
+	Bounds               rl.Rectangle
+	Text                 string
+	Focus                bool
+	Enabled              bool
+	Cfg                  ButtonConfig
+	Texture              rl.Texture2D
+	isTextureLoaded      bool
+	HoverTexture         rl.Texture2D
+	isHoverTextureLoaded bool
 }
 
 type ButtonConfig struct {
@@ -77,14 +81,37 @@ func (b *Button) Update() bool {
 	return false
 }
 
+// TODO move this mousePos to func arg
 func (b *Button) Render() {
-	rl.DrawRectangle(
-		int32(b.Bounds.X),
-		int32(b.Bounds.Y),
-		int32(b.Bounds.Width),
-		int32(b.Bounds.Height),
-		b.Cfg.ButtonColor,
-	)
+	mousePos := rl.GetMousePosition()
+	if rl.CheckCollisionPointRec(mousePos, b.Bounds) {
+		if !b.isHoverTextureLoaded {
+			b.HoverTexture = rl.LoadTexture("assets/Hover.png")
+			b.isHoverTextureLoaded = true
+		}
+		rl.DrawTexturePro(
+			b.HoverTexture,
+			rl.NewRectangle(0, 0, float32(b.HoverTexture.Width), float32(b.HoverTexture.Height)),
+			rl.NewRectangle(b.Bounds.X, b.Bounds.Y, b.Bounds.Width, b.Bounds.Height),
+			rl.NewVector2(0, 0),
+			0,
+			rl.White,
+		)
+	} else {
+		if !b.isTextureLoaded {
+			b.Texture = rl.LoadTexture("assets/Default.png")
+			b.isTextureLoaded = true
+		}
+		rl.DrawTexturePro(
+			b.Texture,
+			rl.NewRectangle(0, 0, float32(b.Texture.Width), float32(b.Texture.Height)),
+			rl.NewRectangle(b.Bounds.X, b.Bounds.Y, b.Bounds.Width, b.Bounds.Height),
+			rl.NewVector2(0, 0),
+			0,
+			rl.White,
+		)
+
+	}
 	textWidth := rl.MeasureText(b.Text, b.Cfg.TextFontSize)
 	textX := int32(b.Bounds.X + (b.Bounds.Width-float32(textWidth))/2)
 	textY := int32(b.Bounds.Y + (b.Bounds.Height-float32(b.Cfg.TextFontSize))/2)
