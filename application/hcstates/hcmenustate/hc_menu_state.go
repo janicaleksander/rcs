@@ -10,11 +10,10 @@ import (
 type HCMenuScene struct {
 	cfg *utils.SharedConfig
 	//scheduler
-	stateManager     *statesmanager.StateManager
-	profileRectangle rl.Rectangle
-	unitSection      UnitSection
-	userSection      UserSection
-	inboxSection     InboxSection
+	stateManager *statesmanager.StateManager
+	unitSection  UnitSection
+	userSection  UserSection
+	inboxSection InboxSection
 }
 
 type UnitSection struct {
@@ -45,13 +44,6 @@ func (h *HCMenuScene) MenuHCSceneSetup(state *statesmanager.StateManager, cfg *u
 	h.cfg = cfg
 	h.stateManager = state
 	//profile
-	profileSide := 100
-	h.profileRectangle = rl.NewRectangle(
-		float32(rl.GetScreenWidth())-float32(profileSide),
-		25,
-		float32(profileSide),
-		float32(profileSide),
-	)
 
 	padding := 30
 	height := 0.25 * float32(rl.GetScreenHeight())
@@ -59,7 +51,7 @@ func (h *HCMenuScene) MenuHCSceneSetup(state *statesmanager.StateManager, cfg *u
 
 	//unit
 	h.unitSection.unitRectangle = rl.NewRectangle(
-		float32(padding),
+		100+float32(padding),
 		height,
 		float32(width/4),
 		0.75*float32(rl.GetScreenHeight()),
@@ -75,58 +67,59 @@ func (h *HCMenuScene) MenuHCSceneSetup(state *statesmanager.StateManager, cfg *u
 	h.inboxSection.inboxRectangle = rl.NewRectangle(
 		h.userSection.userRectangle.X+h.userSection.userRectangle.Width+float32(padding),
 		h.userSection.userRectangle.Y,
-		float32(width/2),
+		h.unitSection.unitRectangle.Width,
 		h.unitSection.unitRectangle.Height,
 	)
 
 	//create unit
 	h.unitSection.createUnitButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-		10+h.unitSection.unitRectangle.X,
-		10+h.unitSection.unitRectangle.Y,
+		h.unitSection.unitRectangle.X+(h.unitSection.unitRectangle.Width/2)-float32(100),
+		float32(padding)+h.unitSection.unitRectangle.Y,
 		200,
-		40,
-	), "Create unit", false)
+		50,
+	), "CREATE UNIT", false)
 
 	//info about units
 	h.unitSection.infoUnitButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-		10+h.unitSection.unitRectangle.X,
-		80+h.unitSection.unitRectangle.Y,
+		h.unitSection.createUnitButton.Bounds.X,
+		float32(padding)+h.unitSection.createUnitButton.Bounds.Y+h.unitSection.createUnitButton.Bounds.Height,
 		200,
-		40,
-	), "Units info", false)
+		50,
+	), "INFO", false)
 
 	// create user
 	h.userSection.createUserButton = *component.NewButton(component.NewButtonConfig(),
 		rl.NewRectangle(
-			h.userSection.userRectangle.X,
-			h.userSection.userRectangle.Y,
+			h.userSection.userRectangle.X+(h.userSection.userRectangle.Width/2)-float32(100),
+			float32(padding)+h.userSection.userRectangle.Y,
 			200,
-			40),
-		"Create User", false)
+			50),
+		"CREATE USER", false)
 
 	//info about users
 	//TODO add to user info delete device
 	h.userSection.infoUserButton = *component.NewButton(component.NewButtonConfig(),
 		rl.NewRectangle(
-			h.userSection.userRectangle.X,
-			h.userSection.userRectangle.Y+80,
+			h.userSection.createUserButton.Bounds.X,
+			float32(padding)+h.userSection.createUserButton.Bounds.Y+h.userSection.createUserButton.Bounds.Height,
 			200,
-			40),
-		"Users info", false)
+			50),
+		"INFO", false)
 	//create and assign device
 	h.userSection.createDeviceButton = *component.NewButton(component.NewButtonConfig(),
 		rl.NewRectangle(
-			h.userSection.userRectangle.X,
-			h.userSection.userRectangle.Y+160,
+			h.userSection.createUserButton.Bounds.X,
+			float32(padding)+h.userSection.infoUserButton.Bounds.Y+h.userSection.infoUserButton.Bounds.Height,
 			200,
-			40),
-		"Add device", false)
+			50),
+		"ADD DEVICE", false)
 
+	//open inbox
 	h.inboxSection.openInboxButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-		h.inboxSection.inboxRectangle.X,
-		h.inboxSection.inboxRectangle.Y+80,
+		h.inboxSection.inboxRectangle.X+(h.inboxSection.inboxRectangle.Width/2)-float32(100),
+		float32(padding)+h.inboxSection.inboxRectangle.Y,
 		200,
-		40), "Open inbox", false)
+		50), "OPEN INBOX", false)
 
 }
 func (h *HCMenuScene) UpdateHCMenuState() {
@@ -154,34 +147,47 @@ func (h *HCMenuScene) UpdateHCMenuState() {
 	}
 }
 func (h *HCMenuScene) RenderHCMenuState() {
-	rl.DrawText("HC Menu Page", 50, 50, 20, rl.DarkGray)
-	//profile
-	rl.DrawRectangle(
-		int32(h.profileRectangle.X),
-		int32(h.profileRectangle.Y),
-		int32(h.profileRectangle.Width),
-		int32(h.profileRectangle.Height), rl.Green)
-
+	rl.ClearBackground(utils.HCMENUBG)
+	rl.DrawText("MENU PAGE", int32(rl.GetScreenWidth()/2)-rl.MeasureText("MENU PAGE", 50)/2, 50, 50, rl.DarkGray)
 	//unit
 	rl.DrawRectangle(
 		int32(h.unitSection.unitRectangle.X),
 		int32(h.unitSection.unitRectangle.Y),
 		int32(h.unitSection.unitRectangle.Width),
-		int32(h.unitSection.unitRectangle.Height), rl.Green)
-
+		int32(h.unitSection.unitRectangle.Height), utils.HCPARTSBGS)
+	rl.DrawText(
+		"UNIT SECTION",
+		int32(h.unitSection.unitRectangle.X)+int32(h.unitSection.unitRectangle.Width)/2-rl.MeasureText("UNIT SECTION", 20)/2,
+		int32(h.unitSection.unitRectangle.Y)+int32(h.unitSection.unitRectangle.Height)-50,
+		20,
+		rl.Black,
+	)
 	//user
 	rl.DrawRectangle(
 		int32(h.userSection.userRectangle.X),
 		int32(h.userSection.userRectangle.Y),
 		int32(h.userSection.userRectangle.Width),
-		int32(h.userSection.userRectangle.Height), rl.Green)
-
+		int32(h.userSection.userRectangle.Height), utils.HCPARTSBGS)
+	rl.DrawText(
+		"USER SECTION",
+		int32(h.userSection.userRectangle.X)+int32(h.userSection.userRectangle.Width)/2-rl.MeasureText("USER SECTION", 20)/2,
+		int32(h.userSection.userRectangle.Y)+int32(h.userSection.userRectangle.Height)-50,
+		20,
+		rl.Black,
+	)
 	//inbox
 	rl.DrawRectangle(
 		int32(h.inboxSection.inboxRectangle.X),
 		int32(h.inboxSection.inboxRectangle.Y),
 		int32(h.inboxSection.inboxRectangle.Width),
-		int32(h.inboxSection.inboxRectangle.Height), rl.Green)
+		int32(h.inboxSection.inboxRectangle.Height), utils.HCPARTSBGS)
+	rl.DrawText(
+		"INBOX SECTION",
+		int32(h.inboxSection.inboxRectangle.X)+int32(h.inboxSection.inboxRectangle.Width)/2-rl.MeasureText("INBOX SECTION", 20)/2,
+		int32(h.inboxSection.inboxRectangle.Y)+int32(h.inboxSection.inboxRectangle.Height)-50,
+		20,
+		rl.Black,
+	)
 
 	h.unitSection.createUnitButton.Render()
 	h.unitSection.infoUnitButton.Render()
