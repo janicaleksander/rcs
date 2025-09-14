@@ -75,8 +75,9 @@ func (l *LoginScene) UpdateLoginState() {
 // TODO (user can be offline but also error with messageSrvies is reason to set his status to offline
 // even he is logged in
 func (l *LoginScene) RenderLoginState() {
-
-	rl.DrawText("Login Page", 50, 50, 20, rl.DarkGray)
+	rl.ClearBackground(utils.LOGINBACKGROUNDCOLOR)
+	rl.DrawText("LOGIN PAGE", int32(rl.GetScreenWidth()/2)-rl.MeasureText("LOGIN PAGE", 80)/2, 50, 80, rl.DarkGray)
+	rl.DrawText("remote command system", int32(rl.GetScreenWidth()/2)-rl.MeasureText("LOGIN PAGE", 50)/4, 110, 50, rl.DarkGray)
 
 	l.errorSection.errorPopup.Render()
 	//TODO: secret password inboxInput box

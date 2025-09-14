@@ -147,7 +147,7 @@ func (i *InputBox) Render() {
 	rl.DrawRectangleRec(i.Bounds, rl.White)
 
 	if i.focused {
-		rl.DrawRectangleLinesEx(i.Bounds, i.cfg.lineThick, rl.Blue) // Highlight focused input
+		rl.DrawRectangleLinesEx(i.Bounds, i.cfg.lineThick, rl.Gray) // Highlight focused input
 	} else {
 		rl.DrawRectangleLinesEx(i.Bounds, i.cfg.lineThick, i.cfg.lineColor)
 	}

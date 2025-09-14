@@ -11,6 +11,10 @@ import (
 	"github.com/janicaleksander/bcs/customerror"
 )
 
+//COLORS
+
+var LOGINBACKGROUNDCOLOR = rl.NewColor(235, 237, 216, 255)
+
 var Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
 const (
