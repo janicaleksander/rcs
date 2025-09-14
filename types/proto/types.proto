@@ -369,7 +369,7 @@ message GetDeviceTypes {
 }
 
 message DeviceTypes {
-  repeated string types =1;
+  repeated int32 types =1;
 }
 
 message CreateDevice{

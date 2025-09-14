@@ -2,11 +2,10 @@ package token
 
 import (
 	"errors"
-	"os"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"
 )
 
 type UserClaims struct {
@@ -16,10 +15,16 @@ type UserClaims struct {
 }
 
 func getSecretKey() (string, error) {
-	if err := godotenv.Load(); err != nil {
+	config := struct {
+		General struct {
+			JwtKey string `toml:"jwtKey"`
+		}
+	}{}
+	_, err := toml.DecodeFile("configproduction/general.toml", &config)
+	if err != nil {
 		return "", err
 	}
-	return os.Getenv("JWT_KEY"), nil
+	return config.General.JwtKey, nil
 }
 
 func CreateToken(id, email string) (string, error) {

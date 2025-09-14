@@ -1,40 +1,46 @@
 package main
 
 import (
-	"flag"
-	"os"
+	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
 	"github.com/janicaleksander/bcs/application"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
+	config := struct {
+		Application struct {
+			Addr               string `toml:"addr"`
+			MessageserviceAddr string `toml:"messageserviceAddr"`
+			ServerAddr         string `toml:"serverAddr"`
+		}
+	}{}
+	_, err := toml.DecodeFile("configproduction/application.toml", &config)
 	if err != nil {
-		utils.Logger.Error("Error with loading .env file")
+		utils.Logger.Error(err.Error())
 		return
 	}
-	appAddrFlag := flag.String("address", "", "Type here IP address of application")
-	flag.Parse()
-	if len(*appAddrFlag) <= 0 {
-		utils.Logger.Error("Type value of flag")
+	if len(strings.TrimSpace(config.Application.Addr)) == 0 ||
+		len(strings.TrimSpace(config.Application.MessageserviceAddr)) == 0 ||
+		len(strings.TrimSpace(config.Application.ServerAddr)) == 0 {
+		utils.Logger.Error("bad application cfg file")
 		return
 	}
 	//Setup remote access
-	r := remote.New(*appAddrFlag, remote.NewConfig())
+	r := remote.New(config.Application.Addr, remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
 		utils.Logger.Error(err.Error())
 		return
 	}
 
-	utils.Logger.Info("application is running on:", "Addr:", *appAddrFlag)
-	messageServicePID := actor.NewPID(os.Getenv("MESSAGE_SERVICE_ADDR"), "messageService/primary")
-	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
+	utils.Logger.Info("application is running on:", "Addr:", config.Application.Addr)
+	messageServicePID := actor.NewPID(config.Application.MessageserviceAddr, "messageService/primary")
+	serverPID := actor.NewPID(config.Application.ServerAddr, "server/primary")
 	//ping server
 	resp := e.Request(serverPID, &proto.IsServerRunning{}, utils.WaitTime)
 	_, err = resp.Result()

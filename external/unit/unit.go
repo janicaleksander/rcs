@@ -3,6 +3,7 @@ package unit
 import (
 	"context"
 	"reflect"
+	"time"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/janicaleksander/bcs/database"
@@ -65,7 +66,8 @@ func (u *Unit) Receive(ctx *actor.Context) {
 		})
 
 	case *proto.UpdateLocationReq:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := u.storage.UpdateLocation(c, msg)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})

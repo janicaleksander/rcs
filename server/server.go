@@ -18,16 +18,14 @@ import (
 // but this 5 see this 0 in his lists of person in system (maybe)
 type Server struct {
 	storage            db.Storage
-	listenAddr         string                // IP of (one) main server
 	connections        map[string]*actor.PID // uuid to PID
 	reverseConnections map[string]string     //PIDstring to -> uuid
 }
 
-func NewServer(listenAddr string, storage db.Storage) actor.Producer {
+func NewServer(storage db.Storage) actor.Producer {
 	return func() actor.Receiver {
 		return &Server{
 			storage:            storage,
-			listenAddr:         listenAddr,
 			connections:        make(map[string]*actor.PID),
 			reverseConnections: make(map[string]string),
 		}
@@ -68,7 +66,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 		s.connections[msg.UnitID] = pid                  //pid to uuid
 		s.reverseConnections[pid.String()] = msg.UnitID
 	case *proto.LoginUser:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		id, role, err := s.storage.LoginUser(c, msg.Email, msg.Password)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -85,13 +84,15 @@ func (s *Server) Receive(ctx *actor.Context) {
 		id := s.reverseConnections[pid.String()]
 		ctx.Respond(&proto.LoggedInUUID{Id: id})
 	case *proto.GetUserAboveLVL:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		users, err := s.storage.GetUsersWithLVL(c, int(msg.Lower), int(msg.Upper))
 		if err == nil {
 			ctx.Respond(&proto.UsersAboveLVL{Users: users})
 		}
 	case *proto.CreateUnit:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := s.storage.InsertUnit(c, msg.Unit, msg.UserID)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -99,14 +100,16 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.AcceptCreateUnit{})
 		}
 	case *proto.GetAllUnits:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		units, err := s.storage.GetAllUnits(c)
 		if err == nil {
 			ctx.Respond(&proto.AllUnits{Units: units})
 		}
 
 	case *proto.GetUsersInUnit:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		unitID := msg.UnitID
 		users, err := s.storage.GetUsersInUnit(c, unitID)
 		if err == nil {
@@ -114,7 +117,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.UsersInUnit{Users: users})
 		}
 	case *proto.CreateUser:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := s.storage.InsertUser(c, msg.User)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -122,7 +126,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.AcceptCreateUser{})
 		}
 	case *proto.IsUserInUnit:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		isInUnit, unitID, err := s.storage.IsUserInUnit(c, msg.Id)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -132,7 +137,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.Error{Content: err.Error()})
 		}
 	case *proto.AssignUserToUnit:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := s.storage.AssignUserToUnit(c, msg.UserID, msg.UnitID)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -140,7 +146,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.AcceptAssignUserToUnit{})
 		}
 	case *proto.DeleteUserFromUnit:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := s.storage.DeleteUserFromUnit(c, msg.UserID, msg.UnitID)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -148,7 +155,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.AcceptDeleteUserFromUnit{})
 		}
 	case *proto.HTTPSpawnDevice:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		userID, _, err := s.storage.LoginUser(c, msg.Email, msg.Password)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -188,7 +196,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 			}
 		}
 	case *proto.GetPins:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		pins, err := s.storage.GetPins(c)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -196,7 +205,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.Pins{Pins: pins})
 		}
 	case *proto.GetCurrentTask:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		currentTask, err := s.storage.GetCurrentTask(c, msg.DeviceID)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -204,7 +214,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(currentTask)
 		}
 	case *proto.GetDeviceTypes:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		types, err := s.storage.GetDeviceTypes(c)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -212,7 +223,8 @@ func (s *Server) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.DeviceTypes{Types: types})
 		}
 	case *proto.CreateDevice:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := s.storage.InsertDevice(c, msg.Device)
 		if err != nil {
 			fmt.Println(err)

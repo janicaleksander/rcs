@@ -1,41 +1,45 @@
 package main
 
 import (
-	"flag"
-	"log"
-	"os"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
 	db "github.com/janicaleksander/bcs/database"
 	"github.com/janicaleksander/bcs/external/unit"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalln("Cant load .evn file")
-		return
-	}
-	unitAddrFlag := flag.String("address", "", "Type here IP address of application")
-	unitIDFlag := flag.String("unitID", "", "Type here ID unit to what you want to connect")
-	flag.Parse()
-	if len(strings.TrimSpace(*unitAddrFlag)) <= 0 || len(strings.TrimSpace(*unitIDFlag)) <= 0 {
-		utils.Logger.Error("Type value of flag")
-		return
-	}
 	//Setup remote access
-	r := remote.New(*unitAddrFlag, remote.NewConfig())
+	config := struct {
+		Server struct {
+			Addr       string `toml:"addr"`
+			ServerAddr string `toml:"serverAddr"`
+			UnitID     string `toml:"unitID"`
+		}
+	}{}
+	_, err := toml.DecodeFile("configproduction/unit.toml", &config)
+	if err != nil {
+		utils.Logger.Error(err.Error())
+		return
+	}
+	if len(strings.TrimSpace(config.Server.Addr)) == 0 ||
+		len(strings.TrimSpace(config.Server.ServerAddr)) == 0 ||
+		len(strings.TrimSpace(config.Server.UnitID)) == 0 {
+		utils.Logger.Error("bad unit cfg file")
+		return
+	}
+	r := remote.New(config.Server.ServerAddr, remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
 		utils.Logger.Error(err.Error())
 		return
 	}
-	utils.Logger.Info("unit is running on:", "Addr:", *unitAddrFlag)
-	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
+	utils.Logger.Info("unit is running on:", "Addr:", config.Server.Addr)
+	serverPID := actor.NewPID(config.Server.ServerAddr, "server/primary")
 	//ping server
 	resp := e.Request(serverPID, &proto.IsServerRunning{}, utils.WaitTime)
 	_, err = resp.Result()
@@ -45,11 +49,11 @@ func main() {
 	}
 	dbManager, err := db.GetDBManager(db.WithConnectionTimeout(10))
 	if err != nil {
-		utils.Logger.Error("Error with loading .env file")
+		utils.Logger.Error(err.Error())
 		return
 	}
 	dbase := dbManager.GetDB()
 	pg := &db.Postgres{Conn: dbase}
-	_ = e.Spawn(unit.NewUnit(*unitIDFlag, serverPID, pg), "device", actor.WithID(*unitIDFlag))
+	_ = e.Spawn(unit.NewUnit(config.Server.UnitID, serverPID, pg), "device", actor.WithID(config.Server.UnitID))
 	select {}
 }

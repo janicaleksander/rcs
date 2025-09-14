@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/DataDog/gostackparse v0.7.0 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/ebitengine/purego v0.8.2 // indirect

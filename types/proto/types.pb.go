@@ -4057,7 +4057,7 @@ func (*GetDeviceTypes) Descriptor() ([]byte, []int) {
 
 type DeviceTypes struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Types         []string               `protobuf:"bytes,1,rep,name=types,proto3" json:"types,omitempty"`
+	Types         []int32                `protobuf:"varint,1,rep,packed,name=types,proto3" json:"types,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4092,7 +4092,7 @@ func (*DeviceTypes) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{84}
 }
 
-func (x *DeviceTypes) GetTypes() []string {
+func (x *DeviceTypes) GetTypes() []int32 {
 	if x != nil {
 		return x.Types
 	}
@@ -4414,7 +4414,7 @@ const file_types_proto_rawDesc = "" +
 	"\x06userID\x18\x02 \x01(\tR\x06userID\"\x10\n" +
 	"\x0eGetDeviceTypes\"#\n" +
 	"\vDeviceTypes\x12\x14\n" +
-	"\x05types\x18\x01 \x03(\tR\x05types\"5\n" +
+	"\x05types\x18\x01 \x03(\x05R\x05types\"5\n" +
 	"\fCreateDevice\x12%\n" +
 	"\x06device\x18\x01 \x01(\v2\r.types.DeviceR\x06device\"\x14\n" +
 	"\x12AcceptCreateDeviceB&Z$github.com/janicaleksander/bcs/protob\x06proto3"

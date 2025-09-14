@@ -4,13 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/janicaleksander/bcs/types/proto"
-	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -25,17 +24,26 @@ var dbManager *DBManager
 
 func GetDBManager(options ...func(*string)) (*DBManager, error) {
 	if dbManager == nil {
-		err := godotenv.Load()
+		config := struct {
+			Database struct {
+				Dbname   string `toml:"dbname"`
+				Host     string `toml:"host"`
+				Port     int    `toml:"port"`
+				User     string `toml:"user"`
+				Password string `toml:"password"`
+				Sslmode  string `toml:"sslmode"`
+			}
+		}{}
+		_, err := toml.DecodeFile("configproduction/database.toml", &config)
 		if err != nil {
-			//make error
 			return nil, err
 		}
-		dbname := os.Getenv("DBNAME")
-		host := os.Getenv("HOST")
-		port := os.Getenv("PORT")
-		user := os.Getenv("USER")
-		password := os.Getenv("PASSWORD")
-		ssl := os.Getenv("SSLMODE")
+		dbname := config.Database.Dbname
+		host := config.Database.Host
+		port := config.Database.Port
+		user := config.Database.User
+		password := config.Database.Password
+		ssl := config.Database.Sslmode
 		dbManager = &DBManager{}
 		dbManager.once.Do(func() {
 			cfg := &Config{

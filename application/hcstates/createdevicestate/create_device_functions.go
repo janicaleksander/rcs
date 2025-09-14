@@ -1,6 +1,7 @@
 package createdevicestate
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,7 +15,10 @@ func (d *CreateDeviceScene) Reset() {
 }
 
 func (d *CreateDeviceScene) FetchUsers() {
-	res, err := utils.MakeRequest(utils.NewRequest(d.cfg.Ctx, d.cfg.ServerPID, &proto.GetUserAboveLVL{Lvl: -1}))
+	res, err := utils.MakeRequest(utils.NewRequest(d.cfg.Ctx, d.cfg.ServerPID, &proto.GetUserAboveLVL{
+		Lower: 0,
+		Upper: 0,
+	})) //TODO
 	if err != nil {
 		// context deadline exceeded
 		return
@@ -39,12 +43,12 @@ func (d *CreateDeviceScene) FetchDeviceTypes() {
 		//context deadline error
 		return
 	}
-	d.newDeviceSection.deviceTypes = make([]string, 0, 64)
+	d.newDeviceSection.deviceTypes = make([]int, 0, 64)
 	d.newDeviceSection.typeSlider.Strings = make([]string, 0, 64)
 	if v, ok := res.(*proto.DeviceTypes); ok {
 		for _, t := range v.Types {
-			d.newDeviceSection.deviceTypes = append(d.newDeviceSection.deviceTypes, t)
-			d.newDeviceSection.typeSlider.Strings = append(d.newDeviceSection.typeSlider.Strings, t)
+			d.newDeviceSection.deviceTypes = append(d.newDeviceSection.deviceTypes, int(t))
+			d.newDeviceSection.typeSlider.Strings = append(d.newDeviceSection.typeSlider.Strings, strconv.Itoa(int(t)))
 		}
 	} else {
 		//error
@@ -73,7 +77,7 @@ func (d *CreateDeviceScene) CreateDevice() {
 		Name:           name,
 		Owner:          owner,
 		LastTimeOnline: nil,
-		Type:           t,
+		Type:           int32(t),
 	}
 
 	res, err := utils.MakeRequest(

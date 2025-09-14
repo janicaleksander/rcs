@@ -3,6 +3,7 @@ package createunitstate
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
@@ -16,7 +17,10 @@ func (c *CreateUnitScene) Reset() {
 }
 func (c *CreateUnitScene) FetchUsers() {
 	//TODO get proper lvl value
-	res, err := utils.MakeRequest(utils.NewRequest(c.cfg.Ctx, c.cfg.ServerPID, &proto.GetUserAboveLVL{Lvl: -1}))
+	res, err := utils.MakeRequest(utils.NewRequest(c.cfg.Ctx, c.cfg.ServerPID, &proto.GetUserAboveLVL{
+		Lower: -1,
+		Upper: 10,
+	})) //TODO
 	if err != nil {
 		//context deadline exceeded
 		//do sth with that
@@ -48,7 +52,10 @@ func (c *CreateUnitScene) CreateUnit() {
 	} else {
 		//user can be only in one unit in the same time -> error
 		res, err := utils.MakeRequest(utils.NewRequest(c.cfg.Ctx, c.cfg.ServerPID, &proto.CreateUnit{
-			Name:   name,
+			Unit: &proto.Unit{
+				Id:   uuid.New().String(),
+				Name: name,
+			},
 			UserID: c.newUnitSection.usersDropdown.Strings[user],
 		}))
 

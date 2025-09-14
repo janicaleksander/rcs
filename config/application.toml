@@ -1,0 +1,6 @@
+# APPLICATION CONFIGURATION FILE
+
+[application]
+addr = ""
+messageserviceAddr = ""
+serverAddr = ""

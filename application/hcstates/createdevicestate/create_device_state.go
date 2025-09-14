@@ -21,7 +21,7 @@ type CreateDeviceScene struct {
 
 type NewDeviceSection struct {
 	users        []*proto.User
-	deviceTypes  []string
+	deviceTypes  []int
 	nameInput    component.InputBox
 	ownerSlider  component.ListSlider
 	typeSlider   component.ListSlider

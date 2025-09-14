@@ -1,24 +1,35 @@
 package main
 
 import (
-	"os"
+	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/anthdm/hollywood/actor"
 	"github.com/anthdm/hollywood/remote"
 	db "github.com/janicaleksander/bcs/database"
 	"github.com/janicaleksander/bcs/messageservice"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
+	config := struct {
+		Messageservice struct {
+			Addr       string `toml:"addr"`
+			ServerAddr string `toml:"serverAddr"`
+		}
+	}{}
+	_, err := toml.DecodeFile("configproduction/messageservice.toml", &config)
 	if err != nil {
-		utils.Logger.Error("Can't load .env file")
+		utils.Logger.Error(err.Error())
 		return
 	}
-	r := remote.New(os.Getenv("MESSAGE_SERVICE_ADDR"), remote.NewConfig())
+	if len(strings.TrimSpace(config.Messageservice.Addr)) == 0 ||
+		len(strings.TrimSpace(config.Messageservice.ServerAddr)) == 0 {
+		utils.Logger.Error("bad server cfg file")
+		return
+	}
+	r := remote.New(config.Messageservice.Addr, remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
 		utils.Logger.Error("Error with engine configuration")
@@ -26,13 +37,13 @@ func main() {
 	}
 	dbManager, err := db.GetDBManager(db.WithConnectionTimeout(10))
 	if err != nil {
-		utils.Logger.Error("Error with loading .env file")
+		utils.Logger.Error(err.Error())
 		return
 	}
 	dbase := dbManager.GetDB()
 	pg := &db.Postgres{Conn: dbase}
 	//TODO I don't know if i need a connection between MSSVC and server
-	serverPID := actor.NewPID(os.Getenv("SERVER_ADDR"), "server/primary")
+	serverPID := actor.NewPID(config.Messageservice.ServerAddr, "server/primary")
 	//ping server
 	resp := e.Request(serverPID, &proto.IsServerRunning{}, utils.WaitTime)
 	_, err = resp.Result()
@@ -40,7 +51,7 @@ func main() {
 		utils.Logger.Error("server is not running", "err: ", err)
 		return
 	}
-	utils.Logger.Info("messageservice is running on: ", "Address: ", os.Getenv("MESSAGE_SERVICE_ADDR"))
+	utils.Logger.Info("messageservice is running on: ", "Address: ", config.Messageservice.Addr)
 	messageService := messageservice.NewMessageService(serverPID, pg)
 	e.Spawn(messageService, "messageService", actor.WithID("primary")) //this is creating new app
 

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/google/uuid"
@@ -36,7 +37,8 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 	case actor.Stopped:
 		utils.Logger.Info("Conversation manager has stooped")
 	case *proto.CreateConversation:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		exists, _, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
 		if exists || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
 			utils.Logger.Error("Here x1", err, exists)
@@ -64,7 +66,8 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID), "conversation")
 		// db call
 		fmt.Println(cm.conversations)
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		msgs, err := cm.storage.LoadConversation(c, msg.ConversationID)
 		if err != nil {
 			//TODO
@@ -72,7 +75,8 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.LoadedConversation{Messages: msgs})
 		}
 	case *proto.GetUserConversations:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		conversations, err := cm.storage.GetUserConversations(c, msg.Id)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -82,7 +86,8 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.UserConversations{ConvSummary: conversations})
 		}
 	case *proto.FillConversationID:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		ok, id, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
@@ -135,7 +140,8 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		}
 		fmt.Println("SENDER po", ctx.Sender())
 	case *proto.StoreMessage:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		err := cm.storage.InsertMessage(c, msg.Message)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
@@ -146,7 +152,8 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		fmt.Println("odebralem od cnv", msg.Message, ctx.Parent())
 		ctx.Send(ctx.Parent(), msg)
 	case *proto.GetUsersToNewConversation:
-		c := context.Background()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		users, err := cm.storage.SelectUsersToNewConversation(c, msg.UserID)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})

@@ -1,0 +1,11 @@
+# DATABASE CONFIGURATION FILE
+
+[database]
+dbname = ""
+host = ""
+port = -1
+user = ""
+password = ""
+sslmode = ""
+
+

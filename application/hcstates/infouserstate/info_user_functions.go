@@ -252,7 +252,10 @@ func (i *InfoUserScene) FetchUnits() {
 }
 
 func (i *InfoUserScene) FetchUsers() {
-	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetUserAboveLVL{Lvl: -1}))
+	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetUserAboveLVL{
+		Lower: -1,
+		Upper: 10,
+	})) //TODO
 	if err != nil {
 		// context deadline exceeded
 	}
