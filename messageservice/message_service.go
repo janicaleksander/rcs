@@ -74,11 +74,11 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 		//todo idk if i have to make this type check because i never send and if error will be ctx error
 	case *proto.OpenAndLoadConversation:
 		resp := ctx.Request(ms.conversationManger, msg, utils.WaitTime)
-		res, err := resp.Result()
-		if message, ok := res.(*proto.OpenAndLoadConversation); ok {
+		res, _ := resp.Result()
+		if message, ok := res.(*proto.LoadedConversation); ok {
 			ctx.Respond(message)
 		} else {
-			utils.Logger.Error("Error in MSSVC OpenAndLoadConversation" + err.Error())
+			utils.Logger.Error("Error in MSSVC OpenAndLoadConversation")
 			ctx.Respond(message)
 		}
 

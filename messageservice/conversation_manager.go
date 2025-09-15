@@ -68,6 +68,7 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		fmt.Println(cm.conversations)
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
+		fmt.Println(msg.ConversationID)
 		msgs, err := cm.storage.LoadConversation(c, msg.ConversationID)
 		if err != nil {
 			//TODO
