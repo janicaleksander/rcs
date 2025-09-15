@@ -24,7 +24,7 @@ type NewDeviceSection struct {
 	deviceTypes  []int
 	nameInput    component.InputBox
 	ownerSlider  component.ListSlider
-	typeSlider   component.ListSlider
+	typesToggle  component.ToggleGroup
 	acceptButton component.Button
 }
 type ErrorSection struct {
@@ -47,46 +47,48 @@ func (d *CreateDeviceScene) CreateDeviceSceneSetup(stateManager *statesmanager.S
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(rl.GetScreenWidth()/2-120),
-			float32(rl.GetScreenHeight()/2-80),
+			float32(rl.GetScreenHeight()/2)-100,
 			240, 40),
 	)
 	d.newDeviceSection.ownerSlider.IdxScroll = 0
 	d.newDeviceSection.ownerSlider.IdxActiveElement = 0
 	d.newDeviceSection.ownerSlider.Bounds = rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2-120),
-		float32(rl.GetScreenHeight()/2),
-		240, 50,
+		d.newDeviceSection.nameInput.Bounds.X,
+		d.newDeviceSection.nameInput.Bounds.Y+d.newDeviceSection.nameInput.Bounds.Height+10,
+		240, 80,
 	)
 
-	d.newDeviceSection.typeSlider.IdxScroll = 0
-	d.newDeviceSection.typeSlider.IdxActiveElement = 0
-	d.newDeviceSection.typeSlider.Bounds = rl.NewRectangle(
+	d.newDeviceSection.typesToggle.Labels = []string{"Mobile (0)"}
+	d.newDeviceSection.typesToggle.Bounds = []rl.Rectangle{rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-120),
-		float32(rl.GetScreenHeight()/2+80),
-		240, 50,
-	)
+		d.newDeviceSection.ownerSlider.Bounds.Y+d.newDeviceSection.ownerSlider.Bounds.Height+20,
+		100, 40)}
 
 	d.newDeviceSection.acceptButton = *component.NewButton(component.NewButtonConfig(),
 		rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2-120),
-			float32(rl.GetScreenHeight()/2+160),
-			240, 80), "Create", false)
+			d.newDeviceSection.nameInput.Bounds.X,
+			d.newDeviceSection.typesToggle.Bounds[0].Y+50,
+			240, 50), "CREATE", false)
 
 	d.backButton = *component.NewButton(component.NewButtonConfig(),
-		rl.NewRectangle(float32(rl.GetScreenWidth()/2-120),
-			float32(rl.GetScreenHeight()/2+240), 80, 80), "Go back", false)
+		rl.NewRectangle(
+			float32(rl.GetScreenWidth()-110),
+			float32(rl.GetScreenHeight()-50),
+			100,
+			40,
+		), "GO BACK", false)
 
-	d.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2.0-100.0),
-		float32(rl.GetScreenHeight()/2.0+40.0),
-		200,
+	d.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPERRORBG)), rl.NewRectangle(
+		d.newDeviceSection.acceptButton.Bounds.X,
+		d.newDeviceSection.acceptButton.Bounds.Y+d.newDeviceSection.acceptButton.Bounds.Height+10,
+		d.newDeviceSection.acceptButton.Bounds.Width,
 		100), &d.errorSection.error)
 
-	d.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2.0-100.0),
-		float32(rl.GetScreenHeight()/2.0+40.0),
-		200,
-		100), &d.infoSection.info)
+	d.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPINFOBG)), rl.NewRectangle(
+		d.newDeviceSection.acceptButton.Bounds.X,
+		d.newDeviceSection.acceptButton.Bounds.Y+d.newDeviceSection.acceptButton.Bounds.Height+10,
+		d.newDeviceSection.acceptButton.Bounds.Width,
+		60), &d.infoSection.info)
 }
 func (d *CreateDeviceScene) UpdateCreateDeviceState() {
 	d.scheduler.Update(float64(rl.GetFrameTime()))
@@ -96,27 +98,54 @@ func (d *CreateDeviceScene) UpdateCreateDeviceState() {
 		d.state.Add(statesmanager.GoBackState)
 		return
 	}
-	if d.newDeviceSection.acceptButton.Update() {
-		d.CreateDevice()
+	for i := range d.newDeviceSection.typesToggle.Labels {
+		toggleState := d.newDeviceSection.typesToggle.Selected == i
+		if gui.Toggle(
+			d.newDeviceSection.typesToggle.Bounds[i],
+			d.newDeviceSection.typesToggle.Labels[i],
+			toggleState,
+		) {
+			d.newDeviceSection.typesToggle.Selected = i
+		}
+		if d.newDeviceSection.acceptButton.Update() {
+			d.CreateDevice()
+		}
 	}
+
 }
 func (d *CreateDeviceScene) RenderCreateDeviceState() {
+	rl.ClearBackground(utils.CREATEDEVICEBG)
 	d.backButton.Render()
 	d.newDeviceSection.acceptButton.Render()
 	d.newDeviceSection.nameInput.Render()
-
+	rl.DrawText(
+		"NAME",
+		int32(d.newDeviceSection.nameInput.Bounds.X)-180,
+		int32(d.newDeviceSection.nameInput.Bounds.Y)+10,
+		25,
+		rl.DarkGray,
+	)
+	rl.DrawText(
+		"OWNER",
+		int32(d.newDeviceSection.ownerSlider.Bounds.X)-180,
+		int32(d.newDeviceSection.ownerSlider.Bounds.Y)+10,
+		25,
+		rl.DarkGray,
+	)
+	rl.DrawText(
+		"TYPE",
+		int32(d.newDeviceSection.typesToggle.Bounds[0].X)-180,
+		int32(d.newDeviceSection.typesToggle.Bounds[0].Y)+10,
+		25,
+		rl.DarkGray,
+	)
 	gui.ListViewEx(
 		d.newDeviceSection.ownerSlider.Bounds,
 		d.newDeviceSection.ownerSlider.Strings,
 		&d.newDeviceSection.ownerSlider.IdxScroll,
 		&d.newDeviceSection.ownerSlider.IdxActiveElement,
 		d.newDeviceSection.ownerSlider.Focus)
-	gui.ListViewEx(
-		d.newDeviceSection.typeSlider.Bounds,
-		d.newDeviceSection.typeSlider.Strings,
-		&d.newDeviceSection.typeSlider.IdxScroll,
-		&d.newDeviceSection.typeSlider.IdxActiveElement,
-		d.newDeviceSection.typeSlider.Focus)
+
 	d.errorSection.errorPopup.Render()
 	d.infoSection.infoPopup.Render()
 }
