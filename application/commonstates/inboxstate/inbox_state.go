@@ -11,6 +11,7 @@ import (
 	"github.com/janicaleksander/bcs/utils"
 )
 
+// TODO add here scheduler and repair error in modal and other place
 type ToolboxSection struct {
 	toolboxArea                rl.Rectangle     // area with navigation buttons
 	backButton                 component.Button // go back button
@@ -109,9 +110,9 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 	i.toolboxSection.backButton = *component.NewButton(
 		component.NewButtonConfig(),
 		rl.NewRectangle(
-			i.toolboxSection.toolboxArea.X+toolboxButtonPadding,
-			i.toolboxSection.toolboxArea.Y+toolboxButtonPadding,
-			toolBoxButtonWidth,
+			i.toolboxSection.toolboxArea.X+2*toolboxButtonPadding,
+			i.toolboxSection.toolboxArea.Y+2*toolboxButtonPadding,
+			80,
 			toolBoxButtonHeight),
 		"GO BACK",
 		false)
@@ -119,12 +120,20 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 	i.toolboxSection.addConversationButton = *component.NewButton(
 		component.NewButtonConfig(),
 		rl.NewRectangle(
-			i.toolboxSection.backButton.Bounds.X+i.toolboxSection.backButton.Bounds.Width+toolboxButtonPadding,
-			i.toolboxSection.toolboxArea.Y+toolboxButtonPadding,
+			i.toolboxSection.backButton.Bounds.X+i.toolboxSection.backButton.Bounds.Width+2*toolboxButtonPadding,
+			i.toolboxSection.backButton.Bounds.Y,
 			toolBoxButtonWidth,
 			toolBoxButtonHeight),
-		"Add \n conversation",
+		"NEW CONVERSATION",
 		false)
+	i.toolboxSection.refreshConversationsButton = *component.NewButton(
+		component.NewButtonConfig(),
+		rl.NewRectangle(
+			i.toolboxSection.addConversationButton.Bounds.X+i.toolboxSection.addConversationButton.Bounds.Width+2*toolboxButtonPadding,
+			i.toolboxSection.backButton.Bounds.Y,
+			toolBoxButtonWidth,
+			toolBoxButtonHeight),
+		"GET CONVERSATIONS", false)
 
 	i.modalSection.addConversationModal = component.Modal{
 		Background: rl.NewRectangle(
@@ -139,9 +148,9 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 	i.modalSection.usersSlider = component.ListSlider{
 		Strings: make([]string, 0, 64),
 		Bounds: rl.NewRectangle(
-			i.modalSection.addConversationModal.Core.X+i.modalSection.addConversationModal.Core.Width/2-(i.modalSection.addConversationModal.Core.Width/2)/2,
+			i.modalSection.addConversationModal.Core.X+i.modalSection.addConversationModal.Core.Width/2-(i.modalSection.addConversationModal.Core.Width/2)/2-10,
 			i.modalSection.addConversationModal.Core.Y+2*addConversationModalPadding,
-			i.modalSection.addConversationModal.Core.Width/2,
+			i.modalSection.addConversationModal.Core.Width/1.5,
 			80),
 		IdxActiveElement: 0,
 		Focus:            0,
@@ -152,7 +161,6 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 		i.modalSection.usersSlider.Strings = append(i.modalSection.usersSlider.Strings,
 			user.Email+"\n"+user.Personal.Name+user.Personal.Name)
 	}
-
 	i.modalSection.acceptAddConversationButton = *component.NewButton(
 		component.NewButtonConfig(),
 		rl.NewRectangle(
@@ -167,15 +175,6 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 		i.modalSection.usersSlider.Bounds.Y+8*addConversationModalPadding,
 		i.modalSection.usersSlider.Bounds.Width,
 		75)
-
-	i.toolboxSection.refreshConversationsButton = *component.NewButton(
-		component.NewButtonConfig(),
-		rl.NewRectangle(
-			i.toolboxSection.addConversationButton.Bounds.X+i.toolboxSection.addConversationButton.Bounds.Width+toolboxButtonPadding,
-			i.toolboxSection.toolboxArea.Y+toolboxButtonPadding,
-			toolBoxButtonWidth,
-			toolBoxButtonHeight),
-		"Fetch \n conversations", false)
 
 	//conversationPanel slider
 	i.conversationSection.conversationPanel.Bounds = rl.NewRectangle(
@@ -213,7 +212,7 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 	i.MessageSection.messagePanelLayout.padding = 20.0
 	i.MessageSection.messagePanelLayout.middle = i.MessageSection.messagePanel.Bounds.X + (i.MessageSection.messagePanel.Bounds.Width)/2.0
 	i.MessageSection.messagePanelLayout.currHeight = i.MessageSection.messagePanel.Bounds.Y + 3*i.MessageSection.messagePanelLayout.padding
-	i.MessageSection.messagePanelLayout.messageWidth = 150
+	i.MessageSection.messagePanelLayout.messageWidth = 200
 	i.MessageSection.messagePanelLayout.messageFontSize = 20
 	i.MessageSection.messagePanelLayout.leftSide = i.MessageSection.messagePanel.Bounds.X + i.MessageSection.messagePanelLayout.padding
 	i.MessageSection.messagePanelLayout.rightSide = i.MessageSection.messagePanelLayout.middle + i.MessageSection.messagePanelLayout.padding
@@ -319,7 +318,7 @@ func (i *InboxScene) RenderInboxState() {
 		int32(i.toolboxSection.toolboxArea.Y),
 		int32(i.toolboxSection.toolboxArea.Width),
 		int32(i.toolboxSection.toolboxArea.Height),
-		rl.Gray)
+		rl.NewColor(165, 168, 123, 255))
 
 	//toolbox button section
 	i.toolboxSection.backButton.Render()
@@ -348,10 +347,10 @@ func (i *InboxScene) RenderInboxState() {
 			int32(movingY),
 			int32(i.MessageSection.messages[k].Bounds.Width),
 			int32(i.MessageSection.messages[k].Bounds.Height),
-			rl.SkyBlue)
+			rl.NewColor(159, 165, 95, 255))
 		rl.DrawText(
 			i.MessageSection.messages[k].Content,
-			int32(i.MessageSection.messages[k].Bounds.X),
+			int32(i.MessageSection.messages[k].Bounds.X)+5,
 			int32(movingY),
 			15,
 			rl.White)
@@ -385,7 +384,11 @@ func (i *InboxScene) RenderInboxState() {
 			int32(movingYTabs),
 			int32(i.conversationSection.conversationsTabs[k].Bounds.Width),
 			int32(i.conversationSection.conversationsTabs[k].Bounds.Height),
-			rl.Red)
+			rl.NewColor(207, 209, 190, 255))
+		rl.DrawRectangleLinesEx(rl.NewRectangle(i.conversationSection.conversationsTabs[k].Bounds.X,
+			movingYTabs,
+			i.conversationSection.conversationsTabs[k].Bounds.Width,
+			i.conversationSection.conversationsTabs[k].Bounds.Height), 1, rl.Black)
 		rl.DrawText(
 			i.conversationSection.conversationsTabs[k].Nametag,
 			int32(i.conversationSection.conversationsTabs[k].Bounds.X),
@@ -394,7 +397,7 @@ func (i *InboxScene) RenderInboxState() {
 			rl.Black)
 		movingYButtons := movingYTabs
 
-		i.conversationSection.conversationsTabs[k].EnterConversation.Bounds.Y = movingYButtons
+		i.conversationSection.conversationsTabs[k].EnterConversation.Bounds.Y = movingYButtons + 20
 		i.conversationSection.conversationsTabs[k].EnterConversation.Render()
 	}
 

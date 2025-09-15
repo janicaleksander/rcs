@@ -175,11 +175,13 @@ func (i *InboxScene) refreshConversationsPanel() {
 			),
 			OriginalY: i.conversationSection.conversationPanelLayout.currHeight,
 			Nametag:   conversation.Nametag,
-			EnterConversation: *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-				(3.0/4.0)*i.toolboxSection.toolboxArea.Width,
-				i.conversationSection.conversationPanelLayout.currHeight,
-				80,
-				40), "ENTER", true),
+			EnterConversation: *component.NewButton(
+				component.NewButtonConfig(),
+				rl.NewRectangle(
+					(3.0/4.0)*i.toolboxSection.toolboxArea.Width,
+					i.conversationSection.conversationPanelLayout.currHeight,
+					80,
+					40), "ENTER", true),
 		})
 		i.conversationSection.conversationPanelLayout.currHeight += i.conversationSection.conversationPanelLayout.panelHeight
 		i.conversationSection.conversationPanel.Content.Height = i.conversationSection.conversationPanelLayout.currHeight

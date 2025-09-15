@@ -437,6 +437,7 @@ func (p *Postgres) LoadConversation(ctx context.Context, cnvID string) ([]*proto
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 	messages := make([]*proto.Message, 0, 64)
 	for rows.Next() {
