@@ -74,3 +74,9 @@ type CurrentTaskTab struct {
 	LastTimeOnline time.Time
 	Task           *proto.Task
 }
+
+type ToggleGroup struct {
+	Selected int
+	Labels   []string
+	Bounds   []rl.Rectangle
+}
