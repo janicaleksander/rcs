@@ -15,7 +15,6 @@ func (c *CreateUserScene) Reset() {
 	c.newUserSection.emailInput.Clear()
 	c.newUserSection.passwordInput.Clear()
 	c.newUserSection.rePasswordInput.Clear()
-	c.newUserSection.ruleLevelInput.Clear()
 	c.newUserSection.nameInput.Clear()
 	c.newUserSection.surnameInput.Clear()
 }
@@ -24,13 +23,13 @@ func (c *CreateUserScene) CreateUser() {
 	email := c.newUserSection.emailInput.GetText()
 	password := c.newUserSection.passwordInput.GetText()
 	rePassword := c.newUserSection.rePasswordInput.GetText()
-	ruleLevel := c.newUserSection.ruleLevelInput.GetText()
+	//	ruleLevel := c.newUserSection.ruleLevelInput.GetText()
 	name := c.newUserSection.nameInput.GetText()
 	surname := c.newUserSection.surnameInput.GetText()
 
 	//check inboxInput
 	if len(email) <= 0 || len(password) <= 0 ||
-		len(rePassword) <= 0 || len(ruleLevel) <= 0 ||
+		len(rePassword) <= 0 || len("x") <= 0 ||
 		len(name) <= 0 || len(surname) <= 0 {
 		c.errorSection.errorMessage = "Zero length error"
 		c.scheduler.After((3 * time.Second).Seconds(), func() {
@@ -39,7 +38,7 @@ func (c *CreateUserScene) CreateUser() {
 		c.errorSection.errorPopup.Show()
 		return
 	}
-	lvl, err := strconv.Atoi(ruleLevel)
+	lvl, err := strconv.Atoi("3")
 	// TODO curr max lvl
 	if lvl > 5 || err != nil {
 		c.errorSection.errorMessage = "Bad ruleLVL inboxInput"
@@ -70,7 +69,7 @@ func (c *CreateUserScene) CreateUser() {
 		c.newUserSection.emailInput.Clear()
 		c.newUserSection.passwordInput.Clear()
 		c.newUserSection.rePasswordInput.Clear()
-		c.newUserSection.ruleLevelInput.Clear()
+		//c.newUserSection.ruleLevelInput.Clear()
 		c.newUserSection.nameInput.Clear()
 		c.newUserSection.surnameInput.Clear()
 	} else {

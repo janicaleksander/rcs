@@ -1,6 +1,7 @@
 package createuserstate
 
 import (
+	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/application/component"
 	"github.com/janicaleksander/bcs/application/statesmanager"
@@ -17,14 +18,14 @@ type CreateUserScene struct {
 	infoSection    InfoSection
 }
 type NewUserSection struct {
-	emailInput      component.InputBox
-	passwordInput   component.InputBox
-	rePasswordInput component.InputBox
-	ruleLevelInput  component.InputBox
-	nameInput       component.InputBox
-	surnameInput    component.InputBox
-	acceptButton    component.Button
-	isAcceptPressed bool
+	emailInput           component.InputBox
+	passwordInput        component.InputBox
+	rePasswordInput      component.InputBox
+	ruleLevelToggleGroup component.ToggleGroup
+	nameInput            component.InputBox
+	surnameInput         component.InputBox
+	acceptButton         component.Button
+	isAcceptPressed      bool
 }
 type ErrorSection struct {
 	errorPopup   component.Popup
@@ -41,14 +42,13 @@ func (c *CreateUserScene) CreateUserSceneSetup(state *statesmanager.StateManager
 	c.Reset()
 	c.scheduler.Update(float64(rl.GetFrameTime()))
 
-	//set constse.g maxLength
 	c.newUserSection.emailInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
 			float32(rl.GetScreenWidth()/2)-100,
 			float32(rl.GetScreenHeight()/2-300),
 			200,
-			60,
+			40,
 		))
 
 	c.newUserSection.passwordInput = *component.NewInputBox(
@@ -57,7 +57,7 @@ func (c *CreateUserScene) CreateUserSceneSetup(state *statesmanager.StateManager
 			float32(rl.GetScreenWidth()/2)-100,
 			float32(rl.GetScreenHeight()/2)-200,
 			200,
-			60))
+			40))
 
 	c.newUserSection.rePasswordInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
@@ -65,16 +65,18 @@ func (c *CreateUserScene) CreateUserSceneSetup(state *statesmanager.StateManager
 			float32(rl.GetScreenWidth()/2)-100,
 			float32(rl.GetScreenHeight()/2)-100,
 			200,
-			60))
+			40))
 
-	c.newUserSection.ruleLevelInput = *component.NewInputBox(
-		component.NewInputBoxConfig(),
-		rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2)-100,
-			float32(rl.GetScreenHeight()/2),
-			200,
-			60,
-		))
+	c.newUserSection.ruleLevelToggleGroup = component.ToggleGroup{
+		Selected: 0,
+		Labels:   []string{"Mobile user", "Unit member", "Unit commander", "Head Commander"},
+		Bounds: []rl.Rectangle{
+			rl.NewRectangle(432, 370, 100, 40),
+			rl.NewRectangle(532, 370, 100, 40),
+			rl.NewRectangle(632, 370, 100, 40),
+			rl.NewRectangle(732, 370, 100, 40),
+		},
+	}
 
 	c.newUserSection.nameInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
@@ -82,7 +84,7 @@ func (c *CreateUserScene) CreateUserSceneSetup(state *statesmanager.StateManager
 			float32(rl.GetScreenWidth()/2)-100,
 			float32(rl.GetScreenHeight()/2)+100,
 			200,
-			60))
+			40))
 
 	c.newUserSection.surnameInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
@@ -90,33 +92,35 @@ func (c *CreateUserScene) CreateUserSceneSetup(state *statesmanager.StateManager
 			float32(rl.GetScreenWidth()/2)-100,
 			float32(rl.GetScreenHeight()/2)+200,
 			200,
-			60,
+			40,
 		))
 
 	c.newUserSection.acceptButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2)-100,
 		float32(rl.GetScreenHeight()/2+280),
 		200,
-		60), "Accept", false)
+		50), "ACCEPT", false)
 
 	c.backButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2)-150,
-		float32(rl.GetScreenHeight()/2+380),
-		200,
-		60), "Go back", false)
+		float32(10),
+		float32(rl.GetScreenHeight()-65),
+		150,
+		50), "GO BACK", false)
 
 	c.errorSection.errorPopup = *component.NewPopup(
-		component.NewPopupConfig(),
-		rl.NewRectangle(float32(rl.GetScreenWidth()/2)-150,
-			float32(rl.GetScreenHeight()/2+480),
+		component.NewPopupConfig(component.WithBgColor(utils.POPUPERRORBG)),
+		rl.NewRectangle(
+			float32(rl.GetScreenWidth()/2)-100,
+			float32(rl.GetScreenHeight()/2+280),
 			200,
-			60),
+			50),
 		&c.errorSection.errorMessage)
-	c.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(),
-		rl.NewRectangle(float32(rl.GetScreenWidth()/2)-150,
-			float32(rl.GetScreenHeight()/2+480),
+	c.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPINFOBG)),
+		rl.NewRectangle(
+			float32(rl.GetScreenWidth()/2)-100,
+			float32(rl.GetScreenHeight()/2+280),
 			200,
-			60),
+			50),
 		&c.infoSection.acceptMessage)
 }
 
@@ -125,7 +129,16 @@ func (c *CreateUserScene) UpdateCreateUserState() {
 	c.newUserSection.emailInput.Update()
 	c.newUserSection.passwordInput.Update()
 	c.newUserSection.rePasswordInput.Update()
-	c.newUserSection.ruleLevelInput.Update()
+	for i := range c.newUserSection.ruleLevelToggleGroup.Labels {
+		toggleState := c.newUserSection.ruleLevelToggleGroup.Selected == i
+		if gui.Toggle(
+			c.newUserSection.ruleLevelToggleGroup.Bounds[i],
+			c.newUserSection.ruleLevelToggleGroup.Labels[i],
+			toggleState,
+		) {
+			c.newUserSection.ruleLevelToggleGroup.Selected = i
+		}
+	}
 	c.newUserSection.nameInput.Update()
 	c.newUserSection.surnameInput.Update()
 	c.newUserSection.isAcceptPressed = c.newUserSection.acceptButton.Update()
@@ -142,13 +155,20 @@ func (c *CreateUserScene) UpdateCreateUserState() {
 }
 
 func (c *CreateUserScene) RenderCreateUserState() {
-
+	rl.ClearBackground(utils.CREATEUSERBG)
+	rl.DrawText("EMAIL", int32(c.newUserSection.emailInput.Bounds.X)-300, int32(c.newUserSection.emailInput.Bounds.Y)+int32(c.newUserSection.emailInput.Bounds.Height)/5, 25, rl.LightGray)
+	rl.DrawText("PASSWORD", int32(c.newUserSection.passwordInput.Bounds.X)-300, int32(c.newUserSection.passwordInput.Bounds.Y)+int32(c.newUserSection.emailInput.Bounds.Height)/5, 25, rl.LightGray)
+	rl.DrawText("RE-PASSWORD", int32(c.newUserSection.rePasswordInput.Bounds.X)-300, int32(c.newUserSection.rePasswordInput.Bounds.Y)+int32(c.newUserSection.emailInput.Bounds.Height)/5, 25, rl.LightGray)
+	rl.DrawText("RULE LVL", int32(c.newUserSection.rePasswordInput.Bounds.X)-300, int32(c.newUserSection.ruleLevelToggleGroup.Bounds[0].Y)+int32(c.newUserSection.emailInput.Bounds.Height)/5, 25, rl.LightGray)
+	rl.DrawText("NAME", int32(c.newUserSection.nameInput.Bounds.X)-300, int32(c.newUserSection.nameInput.Bounds.Y)+int32(c.newUserSection.emailInput.Bounds.Height)/5, 25, rl.LightGray)
+	rl.DrawText("SURNAME", int32(c.newUserSection.surnameInput.Bounds.X)-300, int32(c.newUserSection.surnameInput.Bounds.Y)+int32(c.newUserSection.emailInput.Bounds.Height)/5, 25, rl.LightGray)
 	c.newUserSection.emailInput.Render()
 	c.newUserSection.passwordInput.Render()
 	c.newUserSection.rePasswordInput.Render()
-	c.newUserSection.ruleLevelInput.Render()
 	c.newUserSection.nameInput.Render()
 	c.newUserSection.surnameInput.Render()
 	c.newUserSection.acceptButton.Render()
+	c.errorSection.errorPopup.Render()
+	c.infoSection.infoPopup.Render()
 	c.backButton.Render()
 }
