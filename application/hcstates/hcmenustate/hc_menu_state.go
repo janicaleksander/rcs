@@ -154,7 +154,7 @@ func (h *HCMenuScene) RenderHCMenuState() {
 		int32(h.unitSection.unitRectangle.X),
 		int32(h.unitSection.unitRectangle.Y),
 		int32(h.unitSection.unitRectangle.Width),
-		int32(h.unitSection.unitRectangle.Height), utils.HCPARTSBGS)
+		int32(h.unitSection.unitRectangle.Height), utils.HCPARTSBG)
 	rl.DrawText(
 		"UNIT SECTION",
 		int32(h.unitSection.unitRectangle.X)+int32(h.unitSection.unitRectangle.Width)/2-rl.MeasureText("UNIT SECTION", 20)/2,
@@ -167,7 +167,7 @@ func (h *HCMenuScene) RenderHCMenuState() {
 		int32(h.userSection.userRectangle.X),
 		int32(h.userSection.userRectangle.Y),
 		int32(h.userSection.userRectangle.Width),
-		int32(h.userSection.userRectangle.Height), utils.HCPARTSBGS)
+		int32(h.userSection.userRectangle.Height), utils.HCPARTSBG)
 	rl.DrawText(
 		"USER SECTION",
 		int32(h.userSection.userRectangle.X)+int32(h.userSection.userRectangle.Width)/2-rl.MeasureText("USER SECTION", 20)/2,
@@ -180,7 +180,7 @@ func (h *HCMenuScene) RenderHCMenuState() {
 		int32(h.inboxSection.inboxRectangle.X),
 		int32(h.inboxSection.inboxRectangle.Y),
 		int32(h.inboxSection.inboxRectangle.Width),
-		int32(h.inboxSection.inboxRectangle.Height), utils.HCPARTSBGS)
+		int32(h.inboxSection.inboxRectangle.Height), utils.HCPARTSBG)
 	rl.DrawText(
 		"INBOX SECTION",
 		int32(h.inboxSection.inboxRectangle.X)+int32(h.inboxSection.inboxRectangle.Width)/2-rl.MeasureText("INBOX SECTION", 20)/2,

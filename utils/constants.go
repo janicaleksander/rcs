@@ -14,13 +14,15 @@ import (
 //COLORS
 
 var (
-	POPUPERRORBG = rl.NewColor(250, 120, 120, 255)
-	POPUPINFOBG  = rl.NewColor(141, 235, 166, 255)
-	LOGINBGCOLOR = rl.NewColor(235, 237, 216, 255)
-	HCPARTSBGS   = rl.NewColor(207, 209, 190, 255)
-	HCMENUBG     = rl.NewColor(235, 237, 216, 255)
-	CREATEUNITBG = rl.NewColor(235, 237, 216, 255)
-	CREATEUSERBG = rl.NewColor(235, 237, 216, 255)
+	POPUPERRORBG  = rl.NewColor(250, 120, 120, 255)
+	POPUPINFOBG   = rl.NewColor(141, 235, 166, 255)
+	LOGINBGCOLOR  = rl.NewColor(235, 237, 216, 255)
+	HCPARTSBG     = rl.NewColor(207, 209, 190, 255)
+	HCMENUBG      = rl.NewColor(235, 237, 216, 255)
+	CREATEUNITBG  = rl.NewColor(235, 237, 216, 255)
+	CREATEUSERBG  = rl.NewColor(235, 237, 216, 255)
+	USERDESCBG    = rl.NewColor(235, 237, 216, 255)
+	USERBUTTONSBG = rl.NewColor(207, 209, 190, 255)
 )
 var Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
