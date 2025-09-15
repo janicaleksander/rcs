@@ -37,10 +37,15 @@ type UserListSection struct {
 }
 
 type DescriptionSection struct {
-	descriptionBounds  rl.Rectangle
-	descriptionName    string
-	descriptionSurname string
-	descriptionLVL     string
+	descriptionBounds     rl.Rectangle
+	descriptionID         string
+	descriptionEmail      string
+	descriptionName       string
+	descriptionSurname    string
+	descriptionLVL        string
+	descriptionUnitPart   string
+	descriptionDevicePart string
+	descriptionTaskPart   string
 }
 type ActionSection struct {
 	actionButtonArea    rl.Rectangle
@@ -93,8 +98,8 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 	i.stateManager = state
 	i.Reset()
 	i.FetchUnits()
-	//TODO get proper lvl
 	i.FetchUsers()
+
 	i.userListSection.usersList = component.ListSlider{
 		Strings: make([]string, 0, 64),
 		Bounds: rl.NewRectangle(
@@ -110,26 +115,17 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 	for _, user := range i.userListSection.users {
 		i.userListSection.usersList.Strings = append(i.userListSection.usersList.Strings, user.Personal.Name+"\n"+user.Personal.Surname)
 	}
-
 	i.descriptionSection.descriptionBounds = rl.NewRectangle(
 		i.userListSection.usersList.Bounds.Width,
 		i.userListSection.usersList.Bounds.Y,
 		(7.0/9.0)*float32(rl.GetScreenWidth()),
 		(7.0/9.0)*float32(rl.GetScreenHeight()),
 	)
-
 	i.actionSection.actionButtonArea = rl.NewRectangle(
 		i.descriptionSection.descriptionBounds.X,
 		i.descriptionSection.descriptionBounds.Y+i.descriptionSection.descriptionBounds.Height,
 		i.descriptionSection.descriptionBounds.Width,
 		(2.0/9.0)*float32(rl.GetScreenHeight()))
-	var padding float32 = 80
-	//add to unit button
-	i.actionSection.addButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-		i.actionSection.actionButtonArea.X+padding,
-		i.actionSection.actionButtonArea.Y,
-		100,
-		80), "+", false)
 
 	i.actionSection.inUnitBackground = rl.NewRectangle(
 		i.actionSection.addButton.Bounds.X,
@@ -137,32 +133,59 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 		i.actionSection.addButton.Bounds.Width,
 		i.actionSection.addButton.Bounds.Height)
 
-	//remove from unit
-	i.actionSection.removeButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-		i.actionSection.actionButtonArea.X+padding+i.actionSection.addButton.Bounds.Width,
-		i.actionSection.actionButtonArea.Y,
-		100,
-		80), "-", false)
-
 	i.actionSection.notInUnitBackground = rl.NewRectangle(
 		i.actionSection.removeButton.Bounds.X,
 		i.actionSection.removeButton.Bounds.Y,
 		i.actionSection.removeButton.Bounds.Width,
 		i.actionSection.removeButton.Bounds.Height)
 
-	i.actionSection.inboxButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-		i.actionSection.removeButton.Bounds.X+padding,
-		i.actionSection.removeButton.Bounds.Y,
-		i.actionSection.removeButton.Bounds.Width,
-		i.actionSection.removeButton.Bounds.Height), "Send message!", false)
+	var padding float32 = 20
+	var btnWidth float32 = 120
+	var btnHeight float32 = 65
 
-	i.actionSection.trackLocation = *component.NewButton(component.NewButtonConfig(),
+	startX := i.actionSection.actionButtonArea.X + padding*2
+	startY := i.actionSection.actionButtonArea.Y + padding*2
+
+	// add to unit (+)
+	i.actionSection.addButton = *component.NewButton(
+		component.NewButtonConfig(),
+		rl.NewRectangle(startX, startY, btnWidth, btnHeight),
+		"+", false)
+
+	// remove from unit (-)
+	i.actionSection.removeButton = *component.NewButton(
+		component.NewButtonConfig(),
 		rl.NewRectangle(
-			i.actionSection.inboxButton.Bounds.X+i.actionSection.inboxButton.Bounds.Width+10,
-			i.actionSection.inboxButton.Bounds.Y,
-			i.actionSection.inboxButton.Bounds.Width,
-			i.actionSection.inboxButton.Bounds.Height),
+			i.actionSection.addButton.Bounds.X+i.actionSection.addButton.Bounds.Width+padding,
+			startY, btnWidth, btnHeight),
+		"-", false)
+
+	// send message
+	i.actionSection.inboxButton = *component.NewButton(
+		component.NewButtonConfig(),
+		rl.NewRectangle(
+			i.actionSection.removeButton.Bounds.X+i.actionSection.removeButton.Bounds.Width+padding,
+			startY, btnWidth, btnHeight),
+		"Send message!", false)
+
+	// location
+	i.actionSection.trackLocation = *component.NewButton(
+		component.NewButtonConfig(),
+		rl.NewRectangle(
+			i.actionSection.inboxButton.Bounds.X+i.actionSection.inboxButton.Bounds.Width+padding,
+			startY, btnWidth, btnHeight),
 		"Location", false)
+
+	i.backButton = *component.NewButton(
+		component.NewButtonConfig(),
+		rl.NewRectangle(
+			float32(rl.GetScreenWidth()-110),
+			float32(rl.GetScreenHeight()-68),
+			100,
+			50,
+		),
+		"Go back",
+		false)
 	if len(i.userListSection.users) > 0 {
 		i.userListSection.usersList.IdxActiveElement = 0
 	} else {
@@ -271,17 +294,6 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 
 	i.prepareMap()
 
-	i.backButton = *component.NewButton(
-		component.NewButtonConfig(),
-		rl.NewRectangle(
-			float32(rl.GetScreenWidth()-100),
-			float32(rl.GetScreenHeight()-50),
-			100,
-			50,
-		),
-		"Go back",
-		false)
-
 }
 
 func (i *InfoUserScene) UpdateInfoUserState() {
@@ -349,36 +361,79 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 // slider two
 // input box
 func (i *InfoUserScene) RenderInfoUserState() {
-	i.backButton.Render()
-	i.actionSection.addButton.Render()
-	i.actionSection.removeButton.Render()
-	i.actionSection.inboxButton.Render()
-	i.actionSection.trackLocation.Render()
+	rl.ClearBackground(rl.White)
+
+	upperBox := rl.NewRectangle(
+		i.descriptionSection.descriptionBounds.X+2,
+		i.descriptionSection.descriptionBounds.Y+5,
+		i.descriptionSection.descriptionBounds.Width-5,
+		i.descriptionSection.descriptionBounds.Height,
+	)
+	rl.DrawRectangle(int32(upperBox.X), int32(upperBox.Y), int32(upperBox.Width), int32(upperBox.Height), utils.USERDESCBG)
+	rl.DrawRectangleLinesEx(upperBox, 2, rl.NewColor(203, 212, 205, 255))
+
+	infoItems := []struct {
+		label string
+		value string
+	}{
+		{"USER ID:", i.descriptionSection.descriptionID},
+		{"USER EMAIL:", i.descriptionSection.descriptionEmail},
+		{"USER NAME:", i.descriptionSection.descriptionName},
+		{"USER SURNAME:", i.descriptionSection.descriptionSurname},
+		{"USER RULE LEVEL:", i.descriptionSection.descriptionLVL},
+		{"UNIT:", i.descriptionSection.descriptionUnitPart},
+		{"DEVICE:", i.descriptionSection.descriptionTaskPart},
+	}
+
+	itemHeight := float32(45)
+	padding := float32(10)
+	labelWidth := float32(210)
+	startY := upperBox.Y + 80
+
+	for idx, item := range infoItems {
+		y := startY + float32(idx)*(itemHeight+padding)
+
+		labelRect := rl.NewRectangle(
+			upperBox.X+padding,
+			y,
+			labelWidth,
+			itemHeight,
+		)
+		rl.DrawRectangle(int32(labelRect.X), int32(labelRect.Y), int32(labelRect.Width), int32(labelRect.Height), rl.NewColor(220, 220, 220, 255))
+		rl.DrawRectangleLinesEx(labelRect, 2, rl.DarkGray)
+		rl.DrawText(item.label, int32(labelRect.X+8), int32(labelRect.Y+10), 20, rl.Black)
+
+		valueRect := rl.NewRectangle(
+			labelRect.X+labelRect.Width+padding,
+			y,
+			upperBox.Width-3*padding-labelWidth,
+			itemHeight,
+		)
+		rl.DrawRectangle(int32(valueRect.X), int32(valueRect.Y), int32(valueRect.Width), int32(valueRect.Height), rl.NewColor(245, 245, 245, 255))
+		rl.DrawRectangleLinesEx(valueRect, 2, rl.Gray)
+		rl.DrawText(item.value, int32(valueRect.X+8), int32(valueRect.Y+10), 20, rl.Black)
+	}
+
+	lowerBox := rl.NewRectangle(
+		i.descriptionSection.descriptionBounds.X+2,
+		i.descriptionSection.descriptionBounds.Y+i.descriptionSection.descriptionBounds.Height+10,
+		i.descriptionSection.descriptionBounds.Width-5,
+		float32(rl.GetScreenHeight())-i.descriptionSection.descriptionBounds.Height-20,
+	)
+	rl.DrawRectangle(int32(lowerBox.X), int32(lowerBox.Y), int32(lowerBox.Width), int32(lowerBox.Height), utils.USERBUTTONSBG)
+	rl.DrawRectangleLinesEx(lowerBox, 2, rl.NewColor(203, 212, 205, 255))
 
 	gui.ListViewEx(
 		i.userListSection.usersList.Bounds,
 		i.userListSection.usersList.Strings,
 		&i.userListSection.usersList.IdxScroll,
 		&i.userListSection.usersList.IdxActiveElement,
-		i.userListSection.usersList.Focus)
-	rl.DrawRectangle(
-		int32(i.descriptionSection.descriptionBounds.X),
-		int32(i.descriptionSection.descriptionBounds.Y),
-		int32(i.descriptionSection.descriptionBounds.Width),
-		int32(i.descriptionSection.descriptionBounds.Height),
-		rl.White)
+		i.userListSection.usersList.Focus,
+	)
 
-	rl.DrawText(
-		i.descriptionSection.descriptionName+"\n"+
-			i.descriptionSection.descriptionSurname+"\n"+
-			i.descriptionSection.descriptionLVL+"\n",
-		int32(i.descriptionSection.descriptionBounds.X),
-		int32(i.descriptionSection.descriptionBounds.Y),
-		43, rl.Yellow)
-
+	// --- Render modali i przycisków ---
 	if i.actionSection.showAddModal {
-		rl.DrawRectangle(
-			int32(i.addActionSection.addModal.Background.X),
+		rl.DrawRectangle(int32(i.addActionSection.addModal.Background.X),
 			int32(i.addActionSection.addModal.Background.Y),
 			int32(i.addActionSection.addModal.Background.Width),
 			int32(i.addActionSection.addModal.Background.Height),
@@ -394,11 +449,10 @@ func (i *InfoUserScene) RenderInfoUserState() {
 			&i.addActionSection.unitsToAssignSlider.IdxActiveElement,
 			i.addActionSection.unitsToAssignSlider.Focus)
 		i.addActionSection.acceptAddButton.Render()
-
 	}
+
 	if i.actionSection.showRemoveModal {
-		rl.DrawRectangle(
-			int32(i.removeActionSection.removeModal.Background.X),
+		rl.DrawRectangle(int32(i.removeActionSection.removeModal.Background.X),
 			int32(i.removeActionSection.removeModal.Background.Y),
 			int32(i.removeActionSection.removeModal.Background.Width),
 			int32(i.removeActionSection.removeModal.Background.Height),
@@ -407,58 +461,74 @@ func (i *InfoUserScene) RenderInfoUserState() {
 			i.actionSection.showRemoveModal = false
 			i.removeActionSection.usersUnitsSlider.Strings = i.removeActionSection.usersUnitsSlider.Strings[:0]
 		}
-
-		gui.ListViewEx(i.removeActionSection.usersUnitsSlider.Bounds,
+		gui.ListViewEx(
+			i.removeActionSection.usersUnitsSlider.Bounds,
 			i.removeActionSection.usersUnitsSlider.Strings,
 			&i.removeActionSection.usersUnitsSlider.IdxScroll,
 			&i.removeActionSection.usersUnitsSlider.IdxActiveElement,
 			i.removeActionSection.usersUnitsSlider.Focus)
 		i.removeActionSection.acceptRemoveButton.Render()
-
 	}
 
 	if i.actionSection.showInboxModal {
 		if gui.WindowBox(i.sendMessageSection.inboxModal.Core, "TITLE") {
 			i.actionSection.showInboxModal = false
 		}
-		rl.DrawCircle(
-			i.sendMessageSection.activeUserCircle.X,
+		rl.DrawCircle(i.sendMessageSection.activeUserCircle.X,
 			i.sendMessageSection.activeUserCircle.Y,
 			i.sendMessageSection.activeUserCircle.Radius,
 			i.sendMessageSection.activeUserCircle.Color)
-
 		i.sendMessageSection.sendMessage.Render()
 		i.sendMessageSection.inboxInput.Render()
-
 	}
 
 	if i.actionSection.showLocationModal {
-		rl.DrawRectangle(
-			int32(i.trackUserLocationSection.mapModal.Background.X),
+		rl.DrawRectangle(int32(i.trackUserLocationSection.mapModal.Background.X),
 			int32(i.trackUserLocationSection.mapModal.Background.Y),
 			int32(i.trackUserLocationSection.mapModal.Background.Width),
 			int32(i.trackUserLocationSection.mapModal.Background.Height),
 			i.trackUserLocationSection.mapModal.BgColor)
-
-		rl.BeginScissorMode(
-			int32(i.trackUserLocationSection.mapModal.Core.X),
+		rl.BeginScissorMode(int32(i.trackUserLocationSection.mapModal.Core.X),
 			int32(i.trackUserLocationSection.mapModal.Core.Y),
 			int32(i.trackUserLocationSection.mapModal.Core.Width),
 			int32(i.trackUserLocationSection.mapModal.Core.Height))
-
 		mousePos := i.drawMap()
 		rl.EndScissorMode()
 		i.showTabInformationOnCollision(mousePos)
-		rl.DrawRectangleLines(
-			int32(i.trackUserLocationSection.mapModal.Core.X),
+		rl.DrawRectangleLines(int32(i.trackUserLocationSection.mapModal.Core.X),
 			int32(i.trackUserLocationSection.mapModal.Core.Y),
 			int32(i.trackUserLocationSection.mapModal.Core.Width),
 			int32(i.trackUserLocationSection.mapModal.Core.Height),
 			rl.Black)
 	}
-	//TODO add exit button
 
+	// --- Przyciski ---
+	i.backButton.Render()
+	i.actionSection.addButton.Render()
+	i.actionSection.removeButton.Render()
+	i.actionSection.inboxButton.Render()
+	i.actionSection.trackLocation.Render()
 }
 
 //BIG TODO: remove a currently logged in user from e.g user info (cant send to myself message)
 // and from other places
+
+/*
+
+ID
+email
+Imie
+Nazisko
+LVL
+Czy w unit/Czy jaki unit commander:
+a) User ### is in unit ###id
+b) User ### is not in unit
+c) User ### is commander of ### unit
+
+Czy ma device/jaki ma device:
+a) User doesnt have device
+b) User has: x y z
+Wykonane taski/all assignedc
+a): User doesnt have task
+b) User has done  x/y tasks
+*/
