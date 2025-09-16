@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/google/uuid"
 	"github.com/janicaleksander/bcs/application/component"
@@ -303,11 +304,27 @@ func (i *InfoUserScene) FetchUsers() {
 	}
 }
 
-// TODO add start point
-// this is going to fetch from some kind of cfg when we have to set a default city (now is only WRO)
 func (i *InfoUserScene) prepareMap() {
-	centerLat := 51.11080123267171
-	centerLon := 17.018041879680265
+	cfg := struct {
+		General struct {
+			Place string `toml:"place"`
+		}
+	}{}
+	var startPoint = utils.STARTPLACE
+	var centerLat = 0.0
+	var centerLon = 0.0
+	_, err := toml.DecodeFile("configproduction/general.toml", &cfg)
+	if err != nil {
+		utils.Logger.Error(err.Error())
+	} else {
+		startPoint = cfg.General.Place
+	}
+	switch startPoint {
+	case "WRO":
+		centerLat = 51.11080123267171
+		centerLon = 17.018041879680265
+	}
+
 	mapX, mapY := latLonToPixel(centerLat, centerLon, ZOOM)
 	i.trackUserLocationSection.LocationMap.camera = rl.Camera2D{
 		Offset: rl.Vector2{
@@ -462,29 +479,119 @@ func checkMousePinCollision(pinPos, mousePos rl.Vector2) bool {
 
 }
 func (i *InfoUserScene) drawInfoTab(currentTaskTab *component.CurrentTaskTab) {
+	//upper box - users info
+	rl.DrawRectangle(
+		int32(i.trackUserLocationSection.userInfoTab.X),
+		int32(i.trackUserLocationSection.userInfoTab.Y),
+		int32(i.trackUserLocationSection.userInfoTab.Width),
+		int32(i.trackUserLocationSection.userInfoTab.Height),
+		rl.NewColor(250, 250, 250, 255))
+	height := int32(i.trackUserLocationSection.userInfoTab.Y)
+	// Owner ID
+	rl.DrawText(
+		"Owner ID:",
+		int32(i.trackUserLocationSection.userInfoTab.X),
+		height,
+		16,
+		rl.Gray)
+	rl.DrawText(
+		currentTaskTab.OwnerID,
+		int32(i.trackUserLocationSection.userInfoTab.X)+200,
+		height,
+		16,
+		rl.Black)
+
+	// Last Online
+	rl.DrawText(
+		"Last Online:",
+		int32(i.trackUserLocationSection.userInfoTab.X),
+		height+25,
+		16,
+		rl.Gray)
+	rl.DrawText(
+		currentTaskTab.LastTimeOnline.Format("2006.01.02 -*- 15:04"),
+		int32(i.trackUserLocationSection.userInfoTab.X)+200,
+		height+25,
+		16,
+		rl.Black)
+
+	// Device ID
+	rl.DrawText(
+		"Device ID:",
+		int32(i.trackUserLocationSection.userInfoTab.X),
+		height+50,
+		16,
+		rl.Gray)
+	rl.DrawText(
+		currentTaskTab.DeviceID,
+		int32(i.trackUserLocationSection.userInfoTab.X)+200,
+		height+50,
+		16,
+		rl.Black)
+
+	// Owner Name
+	rl.DrawText(
+		"Owner Name:",
+		int32(i.trackUserLocationSection.userInfoTab.X),
+		height+75,
+		16,
+		rl.Gray)
+	rl.DrawText(
+		currentTaskTab.OwnerName,
+		int32(i.trackUserLocationSection.userInfoTab.X)+200,
+		height+75,
+		16,
+		rl.Black)
+
+	// Owner Surname
+	rl.DrawText(
+		"Owner Surname:",
+		int32(i.trackUserLocationSection.userInfoTab.X),
+		height+100,
+		16,
+		rl.Gray)
+	rl.DrawText(
+		currentTaskTab.OwnerSurname,
+		int32(i.trackUserLocationSection.userInfoTab.X)+200,
+		height+100,
+		16,
+		rl.Black)
+
+	//lower box - current task info
 	rl.DrawRectangle(
 		int32(i.trackUserLocationSection.currentTaskTab.X),
 		int32(i.trackUserLocationSection.currentTaskTab.Y),
 		int32(i.trackUserLocationSection.currentTaskTab.Width),
 		int32(i.trackUserLocationSection.currentTaskTab.Height),
-		rl.White)
-	rl.DrawText(
-		currentTaskTab.OwnerID+" "+currentTaskTab.OwnerName+" "+currentTaskTab.OwnerSurname+"\n",
-		int32(i.trackUserLocationSection.currentTaskTab.X),
-		int32(i.trackUserLocationSection.currentTaskTab.Y),
-		20,
-		rl.Black)
+		rl.NewColor(250, 250, 250, 255))
 
 	//TODO repair what if I dont have any current task
 	text := utils.WrapText(
 		int32(i.trackUserLocationSection.currentTaskTab.Width),
-		currentTaskTab.Task.Name+"\n"+currentTaskTab.Task.Description,
-		20)
+		currentTaskTab.Task.Description,
+		15)
+
+	//name
+	rl.DrawText(
+		"TASK NAME: ",
+		int32(i.trackUserLocationSection.currentTaskTab.X),
+		int32(i.trackUserLocationSection.currentTaskTab.Y+5),
+		15,
+		rl.LightGray)
+	rl.DrawText(
+		currentTaskTab.Task.Name,
+		int32(i.trackUserLocationSection.currentTaskTab.X)+100,
+		int32(i.trackUserLocationSection.currentTaskTab.Y+5),
+		15,
+		rl.Black)
+
+	//TODO max 500chars here
+	//desc
 	rl.DrawText(
 		text,
 		int32(i.trackUserLocationSection.currentTaskTab.X),
 		int32(i.trackUserLocationSection.currentTaskTab.Y+35),
-		20,
+		15,
 		rl.Black)
 }
 
@@ -493,21 +600,18 @@ func drawInfoBox(pin *component.PinInformation) {
 	notificationBox := rl.NewRectangle(
 		pin.Position.X-64,
 		pin.Position.Y-64,
-		300,
+		350,
 		64)
-
-	rl.DrawRectangle(
-		int32(notificationBox.X),
-		int32(notificationBox.Y),
-		int32(notificationBox.Width),
-		int32(notificationBox.Height),
-		rl.White)
+	text := pin.OwnerName + "\n" + pin.OwnerSurname
+	textWidth := rl.MeasureText(text, 25)
+	rl.DrawRectangle(int32(notificationBox.X), int32(notificationBox.Y), int32(notificationBox.Width), int32(notificationBox.Height), rl.White)
+	x := int32(float32(notificationBox.X) + float32(notificationBox.Width)/2 - float32(textWidth)/2)
 
 	rl.DrawText(
-		pin.OwnerName+pin.OwnerSurname+"\n"+pin.LastTimeOnline.Format("2006 01 02 15:04"),
-		int32(notificationBox.X+5),
-		int32(notificationBox.Y+20),
-		20,
+		text,
+		x,
+		int32(notificationBox.Y),
+		25,
 		rl.Black)
 }
 

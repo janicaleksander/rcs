@@ -85,6 +85,7 @@ type TrackUserLocationSection struct {
 	LocationMap            LocationMap
 	mapModal               component.Modal
 	locationMapInformation component.LocationMapInformation
+	userInfoTab            rl.Rectangle
 	currentTaskTab         rl.Rectangle
 
 	// there is current task of each user
@@ -285,13 +286,19 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 		tm:     NewTileManager(),
 	}
 
+	var boxHeight float32 = 120
 	i.trackUserLocationSection.currentTaskTab = rl.NewRectangle(
 		i.trackUserLocationSection.mapModal.Core.X,
-		i.trackUserLocationSection.mapModal.Core.Y+i.trackUserLocationSection.mapModal.Core.Height,
+		i.trackUserLocationSection.mapModal.Core.Y+i.trackUserLocationSection.mapModal.Core.Height+5,
 		i.trackUserLocationSection.mapModal.Core.Width,
-		150,
+		boxHeight,
 	)
-
+	i.trackUserLocationSection.userInfoTab = rl.NewRectangle(
+		i.trackUserLocationSection.mapModal.Core.X,
+		i.trackUserLocationSection.mapModal.Core.Y-boxHeight-5,
+		i.trackUserLocationSection.mapModal.Core.Width,
+		boxHeight,
+	)
 	i.prepareMap()
 
 }
@@ -328,7 +335,9 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 		i.FetchPins()
 		i.actionSection.showLocationModal = true
 	}
-
+	if rl.IsKeyPressed(rl.KeyQ) {
+		i.actionSection.showLocationModal = false
+	}
 	i.addActionSection.isConfirmAddButtonPressed = i.addActionSection.acceptAddButton.Update()
 	i.removeActionSection.isConfirmRemoveButtonPressed = i.removeActionSection.acceptRemoveButton.Update()
 	i.sendMessageSection.isSendMessageButtonPressed = i.sendMessageSection.sendMessage.Update()
@@ -348,18 +357,6 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 	i.SendMessage()
 }
 
-//goback
-// add to unit
-// remove from unit
-// send message
-
-// modal remove
-// modal add
-// modal send
-
-// slider one
-// slider two
-// input box
 func (i *InfoUserScene) RenderInfoUserState() {
 	rl.ClearBackground(rl.White)
 
@@ -423,6 +420,12 @@ func (i *InfoUserScene) RenderInfoUserState() {
 	rl.DrawRectangle(int32(lowerBox.X), int32(lowerBox.Y), int32(lowerBox.Width), int32(lowerBox.Height), utils.USERBUTTONSBG)
 	rl.DrawRectangleLinesEx(lowerBox, 2, rl.NewColor(203, 212, 205, 255))
 
+	i.backButton.Render()
+	i.actionSection.addButton.Render()
+	i.actionSection.removeButton.Render()
+	i.actionSection.inboxButton.Render()
+	i.actionSection.trackLocation.Render()
+
 	gui.ListViewEx(
 		i.userListSection.usersList.Bounds,
 		i.userListSection.usersList.Strings,
@@ -431,7 +434,6 @@ func (i *InfoUserScene) RenderInfoUserState() {
 		i.userListSection.usersList.Focus,
 	)
 
-	// --- Render modali i przycisków ---
 	if i.actionSection.showAddModal {
 		rl.DrawRectangle(int32(i.addActionSection.addModal.Background.X),
 			int32(i.addActionSection.addModal.Background.Y),
@@ -502,12 +504,6 @@ func (i *InfoUserScene) RenderInfoUserState() {
 			rl.Black)
 	}
 
-	// --- Przyciski ---
-	i.backButton.Render()
-	i.actionSection.addButton.Render()
-	i.actionSection.removeButton.Render()
-	i.actionSection.inboxButton.Render()
-	i.actionSection.trackLocation.Render()
 }
 
 //BIG TODO: remove a currently logged in user from e.g user info (cant send to myself message)

@@ -26,6 +26,7 @@ var (
 	CREATEDEVICEBG = rl.NewColor(235, 237, 216, 255)
 )
 var Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+var STARTPLACE = "WRO"
 
 const (
 	WaitTime = 3 * time.Second
@@ -57,16 +58,34 @@ func MakeRequest(r *Request) (any, error) {
 func WrapText(maxWidth int32, input string, fontSize int32) string {
 	var output strings.Builder
 	var line strings.Builder
-	for _, char := range input {
-		line.WriteString(string(char))
-		width := rl.MeasureText(line.String(), fontSize)
-		if width >= maxWidth {
+
+	words := strings.Fields(input)
+
+	for i, word := range words {
+		testLine := line.String()
+		if line.Len() > 0 {
+			testLine += " " + word
+		} else {
+			testLine = word
+		}
+
+		width := rl.MeasureText(testLine, fontSize)
+		if width > maxWidth && line.Len() > 0 {
+			output.WriteString(line.String())
 			output.WriteString("\n")
 			line.Reset()
+			line.WriteString(word)
+		} else {
+			if line.Len() > 0 {
+				line.WriteString(" ")
+			}
+			line.WriteString(word)
 		}
-		output.WriteString(string(char))
-	}
 
+		if i == len(words)-1 {
+			output.WriteString(line.String())
+		}
+	}
 	return output.String()
 }
 
