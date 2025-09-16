@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile/location/location_service.dart';
 import 'package:mobile/themes/home_page/colors.dart';
 import 'package:get_it/get_it.dart';
@@ -15,10 +16,21 @@ class _HomePageState extends State<HomePage> {
   //1-> home
   //2->messages
   int _selectedIndex = 1; // HOME is selected by default
-  void _onItemTapped(int index) {
+  void _onItemTapped(int index,BuildContext ctx) {
     setState(() {
       _selectedIndex = index;
     });
+    switch (index) {
+      case 0: // TASKS
+        ctx.push('/tasks');
+        break;
+      case 1: // HOME
+        ctx.push('/home');
+        break;
+      case 2: // SEND / MESSAGES
+      // np. context.go('/messages');
+        break;
+    }
   }
 
   @override
@@ -191,7 +203,7 @@ class _HomePageState extends State<HomePage> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: _onItemTapped,
+        onDestinationSelected: (index) => _onItemTapped(index, context),
         backgroundColor: Colors.white,
         indicatorColor: Colors.transparent,
         height: 70,
