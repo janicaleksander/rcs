@@ -54,7 +54,7 @@ func (h *Handler) loadRoutes() {
 
 func (h *Handler) RunHTTP() {
 	// load routes
-	log.Printf("Server is runnig on: %v \n", h.listenAddr)
+	log.Printf("HTTP server is runnig on: %v \n", h.listenAddr)
 	log.Fatalln(http.ListenAndServe(h.listenAddr, h.router))
 }
 

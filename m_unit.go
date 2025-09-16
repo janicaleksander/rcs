@@ -15,7 +15,7 @@ import (
 func main() {
 	//Setup remote access
 	config := struct {
-		Server struct {
+		Unit struct {
 			Addr       string `toml:"addr"`
 			ServerAddr string `toml:"serverAddr"`
 			UnitID     string `toml:"unitID"`
@@ -26,20 +26,20 @@ func main() {
 		utils.Logger.Error(err.Error())
 		return
 	}
-	if len(strings.TrimSpace(config.Server.Addr)) == 0 ||
-		len(strings.TrimSpace(config.Server.ServerAddr)) == 0 ||
-		len(strings.TrimSpace(config.Server.UnitID)) == 0 {
+	if len(strings.TrimSpace(config.Unit.Addr)) == 0 ||
+		len(strings.TrimSpace(config.Unit.ServerAddr)) == 0 ||
+		len(strings.TrimSpace(config.Unit.UnitID)) == 0 {
 		utils.Logger.Error("bad unit cfg file")
 		return
 	}
-	r := remote.New(config.Server.ServerAddr, remote.NewConfig())
+	r := remote.New(config.Unit.Addr, remote.NewConfig())
 	e, err := actor.NewEngine(actor.NewEngineConfig().WithRemote(r))
 	if err != nil {
 		utils.Logger.Error(err.Error())
 		return
 	}
-	utils.Logger.Info("unit is running on:", "Addr:", config.Server.Addr)
-	serverPID := actor.NewPID(config.Server.ServerAddr, "server/primary")
+	utils.Logger.Info("unit is running on:", "Addr:", config.Unit.Addr)
+	serverPID := actor.NewPID(config.Unit.ServerAddr, "server/primary")
 	//ping server
 	resp := e.Request(serverPID, &proto.IsServerRunning{}, utils.WaitTime)
 	_, err = resp.Result()
@@ -54,6 +54,6 @@ func main() {
 	}
 	dbase := dbManager.GetDB()
 	pg := &db.Postgres{Conn: dbase}
-	_ = e.Spawn(unit.NewUnit(config.Server.UnitID, serverPID, pg), "device", actor.WithID(config.Server.UnitID))
+	_ = e.Spawn(unit.NewUnit(config.Unit.UnitID, serverPID, pg), "device", actor.WithID(config.Unit.UnitID))
 	select {}
 }

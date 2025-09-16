@@ -65,6 +65,7 @@ func (s *Server) Receive(ctx *actor.Context) {
 		pid := actor.NewPID(msg.Pid.Address, msg.Pid.Id) //unit PID
 		s.connections[msg.UnitID] = pid                  //pid to uuid
 		s.reverseConnections[pid.String()] = msg.UnitID
+		fmt.Println(s.connections)
 	case *proto.LoginUser:
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
