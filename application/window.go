@@ -7,6 +7,7 @@ import (
 
 	"github.com/anthdm/hollywood/actor"
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/janicaleksander/bcs/application/commonstates/createtaskstate"
 	"github.com/janicaleksander/bcs/application/commonstates/inboxstate"
 	"github.com/janicaleksander/bcs/application/commonstates/loginstate"
 	"github.com/janicaleksander/bcs/application/hcstates/createdevicestate"
@@ -43,6 +44,7 @@ type Window struct {
 	infoUserScene     infouserstate.InfoUserScene
 	inboxScene        inboxstate.InboxScene
 	createDeviceScene createdevicestate.CreateDeviceScene
+	createTaskScene   createtaskstate.CreateTaskScene
 	Flow              chan statesmanager.GameState
 	Done              chan bool
 }
@@ -146,6 +148,8 @@ func (w *Window) setupSceneForState(state statesmanager.GameState) {
 		w.createDeviceScene.CreateDeviceSceneSetup(&w.stateManager, &w.sharedCfg)
 	case statesmanager.InfoUserState:
 		w.infoUserScene.InfoUserSceneSetup(&w.stateManager, &w.sharedCfg)
+	case statesmanager.CreateTaskState:
+		w.createTaskScene.CreateTaskSceneSetup(&w.stateManager, &w.sharedCfg)
 	case statesmanager.InboxState:
 		w.inboxScene.SetupInboxScene(&w.stateManager, &w.sharedCfg)
 	}
@@ -167,6 +171,8 @@ func (w *Window) update() {
 		w.createDeviceScene.UpdateCreateDeviceState()
 	case statesmanager.InfoUserState:
 		w.infoUserScene.UpdateInfoUserState()
+	case statesmanager.CreateTaskState:
+		w.createTaskScene.UpdateCreateTaskState()
 	case statesmanager.InboxState:
 		w.inboxScene.UpdateInboxState()
 	}
@@ -190,6 +196,8 @@ func (w *Window) render() {
 		w.infoUserScene.RenderInfoUserState()
 	case statesmanager.CreateDeviceState:
 		w.createDeviceScene.RenderCreateDeviceState()
+	case statesmanager.CreateTaskState:
+		w.createTaskScene.RenderCreateTaskState()
 	case statesmanager.InboxState:
 		w.inboxScene.RenderInboxState()
 	default:

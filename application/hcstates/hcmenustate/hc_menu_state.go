@@ -32,6 +32,8 @@ type UserSection struct {
 	isInfoUserPressed     bool
 	createDeviceButton    component.Button
 	isCreateDevicePressed bool
+	createTaskButton      component.Button
+	isCreateTaskPressed   bool
 }
 
 type InboxSection struct {
@@ -114,6 +116,14 @@ func (h *HCMenuScene) MenuHCSceneSetup(state *statesmanager.StateManager, cfg *u
 			50),
 		"ADD DEVICE", false)
 
+	h.userSection.createTaskButton = *component.NewButton(component.NewButtonConfig(),
+		rl.NewRectangle(
+			h.userSection.createUserButton.Bounds.X,
+			float32(padding)+h.userSection.createDeviceButton.Bounds.Y+h.userSection.createDeviceButton.Bounds.Height,
+			200,
+			50),
+		"ADD TASK", false)
+
 	//open inbox
 	h.inboxSection.openInboxButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 		h.inboxSection.inboxRectangle.X+(h.inboxSection.inboxRectangle.Width/2)-float32(100),
@@ -128,6 +138,7 @@ func (h *HCMenuScene) UpdateHCMenuState() {
 	h.userSection.isCreateUserPressed = h.userSection.createUserButton.Update()
 	h.userSection.isInfoUserPressed = h.userSection.infoUserButton.Update()
 	h.userSection.isCreateDevicePressed = h.userSection.createDeviceButton.Update()
+	h.userSection.isCreateTaskPressed = h.userSection.createTaskButton.Update()
 	h.inboxSection.isOpenInboxPressed = h.inboxSection.openInboxButton.Update()
 
 	if h.unitSection.isInfoUnitPressed {
@@ -140,6 +151,8 @@ func (h *HCMenuScene) UpdateHCMenuState() {
 		h.stateManager.Add(statesmanager.InfoUserState)
 	} else if h.userSection.isCreateDevicePressed {
 		h.stateManager.Add(statesmanager.CreateDeviceState)
+	} else if h.userSection.isCreateTaskPressed {
+		h.stateManager.Add(statesmanager.CreateTaskState)
 	} else if h.inboxSection.isOpenInboxPressed {
 		h.stateManager.Add(statesmanager.InboxState)
 	} else if h.inboxSection.isOpenInboxPressed {
@@ -194,6 +207,7 @@ func (h *HCMenuScene) RenderHCMenuState() {
 	h.userSection.createUserButton.Render()
 	h.userSection.infoUserButton.Render()
 	h.userSection.createDeviceButton.Render()
+	h.userSection.createTaskButton.Render()
 	h.inboxSection.openInboxButton.Render()
 
 }

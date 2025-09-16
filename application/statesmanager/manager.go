@@ -11,6 +11,7 @@ const (
 	InfoUserState
 	InboxState
 	CreateDeviceState
+	CreateTaskState
 	GoBackState
 )
 
