@@ -2,6 +2,7 @@ package token
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -16,15 +17,16 @@ type UserClaims struct {
 
 func getSecretKey() (string, error) {
 	config := struct {
-		General struct {
+		Connector struct {
 			JwtKey string `toml:"jwtKey"`
 		}
 	}{}
-	_, err := toml.DecodeFile("configproduction/general.toml", &config)
+	_, err := toml.DecodeFile("configproduction/connector.toml", &config)
 	if err != nil {
+		fmt.Println(err)
 		return "", err
 	}
-	return config.General.JwtKey, nil
+	return config.Connector.JwtKey, nil
 }
 
 func CreateToken(id, email string) (string, error) {
