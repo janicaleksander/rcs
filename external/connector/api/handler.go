@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/anthdm/hollywood/actor"
 	"github.com/go-chi/chi/v5"
@@ -114,6 +115,76 @@ func (h *Handler) updateLocation(w http.ResponseWriter, r *http.Request) {
 	}
 	resp := &proto.UpdateLocationRes{
 		Message: "Updated",
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&resp)
+}
+
+/*
+GET req /task/{taskID}?deviceID=123
+{}
+*/
+
+func (h *Handler) userTask(w http.ResponseWriter, r *http.Request) {
+	taskID := chi.URLParam(r, "taskID")
+	deviceID := r.URL.Query().Get("deviceID")
+	if len(strings.TrimSpace(taskID)) == 0 || len(strings.TrimSpace(deviceID)) == 0 {
+		render.Render(w, r, ErrBadQueryParam(errors.New("taskID or device param is empty")))
+		return
+	}
+	res, err := utils.MakeRequest(
+		utils.NewRequest(
+			h.ctx,
+			h.ctx.PID(),
+			&proto.UserTaskReq{
+				DeviceID: deviceID,
+				TaskID:   taskID}),
+	)
+	if err != nil {
+		render.Render(w, r, ErrActorMakeRequest(err))
+		return
+	}
+	var resp *proto.UserTaskRes
+	if v, ok := res.(*proto.UserTaskRes); !ok {
+		render.Render(w, r, ErrGetUserTask(errors.ErrUnsupported))
+		return
+	} else {
+		resp = v
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&resp)
+}
+
+/*
+GET req: /tasks/{deviceID}
+{}
+*/
+
+func (h *Handler) userTasks(w http.ResponseWriter, r *http.Request) {
+	deviceID := chi.URLParam(r, "deviceID")
+	if len(strings.TrimSpace(deviceID)) == 0 {
+		render.Render(w, r, ErrBadQueryParam(errors.New("userID param is empty")))
+		return
+	}
+	res, err := utils.MakeRequest(
+		utils.NewRequest(
+			h.ctx,
+			h.ctx.PID(),
+			&proto.UserTasksReq{
+				DeviceID: deviceID},
+		))
+	if err != nil {
+		render.Render(w, r, ErrActorMakeRequest(err))
+		return
+	}
+	var resp *proto.UserTasksRes
+	if v, ok := res.(*proto.UserTasksRes); !ok {
+		render.Render(w, r, ErrGetUserTask(errors.ErrUnsupported))
+		return
+	} else {
+		resp = v
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

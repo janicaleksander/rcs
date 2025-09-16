@@ -78,3 +78,18 @@ func ErrUpdateLocation(err error) render.Renderer {
 		err.Error(),
 	)
 }
+
+func ErrBadQueryParam(err error) render.Renderer {
+	return NewErrorResponse(
+		http.StatusBadRequest,
+		"Bad query param",
+		err.Error(),
+	)
+}
+func ErrGetUserTask(err error) render.Renderer {
+	return NewErrorResponse(
+		http.StatusBadRequest,
+		"Can't fetch user task",
+		err.Error(),
+	)
+}

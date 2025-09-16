@@ -49,6 +49,8 @@ func (h *Handler) loadRoutes() {
 		r.Use(GetAuthMiddlewareFunc())
 		r.Get("/home", h.Home)
 		r.Post("/location", h.updateLocation)
+		r.Get("/task/{taskID}", h.userTask) // /task/{taskID}?deviceID=123
+		r.Get("/tasks/{deviceID}", h.userTasks)
 	})
 }
 

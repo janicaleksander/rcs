@@ -378,3 +378,20 @@ message CreateDevice{
 
 message AcceptCreateDevice{}
 
+
+message UserTaskReq{
+  string deviceID = 1;
+  string taskID = 2;
+}
+
+message UserTaskRes{
+  Task task =1;
+}
+
+message UserTasksReq{
+  string deviceID = 1;
+}
+
+message UserTasksRes{
+  repeated Task tasks =1;
+}

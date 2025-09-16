@@ -637,6 +637,77 @@ func (p *Postgres) GetCurrentTask(ctx context.Context, deviceID string) (*proto.
 	return t, nil
 }
 
+func (p *Postgres) GetTask(ctx context.Context, taskID string) (*proto.Task, error) {
+	row := p.Conn.QueryRowContext(ctx, `SELECT t.id,t.name,t.description,t.state,t.completion_date,t.deadline
+				FROM task t 
+				WHERE t.id = $1`, taskID)
+
+	t := &proto.Task{
+		Id:             "",
+		Name:           "",
+		Description:    "",
+		State:          0,
+		CompletionDate: nil,
+		Deadline:       nil,
+	}
+	var completion sql.NullTime
+	var deadline sql.NullTime
+	err := row.Scan(&t.Id, &t.Name, &t.Description, &t.State, &completion, &deadline)
+	if err != nil {
+		return nil, err
+	}
+	if completion.Valid {
+		t.CompletionDate = timestamppb.New(completion.Time)
+	}
+	if deadline.Valid {
+		t.Deadline = timestamppb.New(deadline.Time)
+	}
+	return t, err
+}
+
+func (p *Postgres) GetUserTasks(ctx context.Context, deviceID string) ([]*proto.Task, error) {
+	rows, err := p.Conn.QueryContext(ctx,
+		`SELECT t.id,t.name,t.description,t.state,t.completion_date,t.deadline
+				FROM task t
+				INNER JOIN user_to_task utt ON utt.task_id  = t.id
+				INNER JOIN device d ON d.owner = utt.user_id
+				WHERE d.id = $1;
+				`, deviceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	tasks := make([]*proto.Task, 0, 16)
+	var completion sql.NullTime
+	var deadline sql.NullTime
+	for rows.Next() {
+		t := &proto.Task{
+			Id:             "",
+			Name:           "",
+			Description:    "",
+			State:          0,
+			CompletionDate: nil,
+			Deadline:       nil,
+		}
+		err = rows.Scan(&t.Id, &t.Name, &t.Description, &t.State, &completion, &deadline)
+		if completion.Valid {
+			t.CompletionDate = timestamppb.New(completion.Time)
+		}
+		if deadline.Valid {
+			t.Deadline = timestamppb.New(deadline.Time)
+		}
+		if err != nil {
+			utils.Logger.Error(err.Error())
+			continue
+		}
+		tasks = append(tasks, t)
+	}
+	if len(tasks) == 0 {
+		return nil, errors.New("no tasks")
+	}
+	return tasks, nil
+}
+
 func (p *Postgres) GetDeviceTypes(ctx context.Context) ([]int32, error) {
 	rows, err := p.Conn.QueryContext(ctx, `SELECT type FROM device_type`)
 	if err != nil {

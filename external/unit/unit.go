@@ -74,6 +74,24 @@ func (u *Unit) Receive(ctx *actor.Context) {
 		} else {
 			ctx.Respond(&proto.AcceptUpdateLocationReq{})
 		}
+	case *proto.UserTaskReq:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		t, err := u.storage.GetTask(c, msg.TaskID)
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(&proto.UserTaskRes{Task: t})
+		}
+	case *proto.UserTasksReq:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		tasks, err := u.storage.GetUserTasks(c, msg.DeviceID)
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(&proto.UserTasksRes{Tasks: tasks})
+		}
 
 	default:
 		utils.Logger.Warn("Unit got unknown message", "Type", reflect.TypeOf(msg).String())

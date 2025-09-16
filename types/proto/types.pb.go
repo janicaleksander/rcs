@@ -4179,6 +4179,190 @@ func (*AcceptCreateDevice) Descriptor() ([]byte, []int) {
 	return file_types_proto_rawDescGZIP(), []int{86}
 }
 
+type UserTaskReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DeviceID      string                 `protobuf:"bytes,1,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
+	TaskID        string                 `protobuf:"bytes,2,opt,name=taskID,proto3" json:"taskID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserTaskReq) Reset() {
+	*x = UserTaskReq{}
+	mi := &file_types_proto_msgTypes[87]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserTaskReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserTaskReq) ProtoMessage() {}
+
+func (x *UserTaskReq) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[87]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserTaskReq.ProtoReflect.Descriptor instead.
+func (*UserTaskReq) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{87}
+}
+
+func (x *UserTaskReq) GetDeviceID() string {
+	if x != nil {
+		return x.DeviceID
+	}
+	return ""
+}
+
+func (x *UserTaskReq) GetTaskID() string {
+	if x != nil {
+		return x.TaskID
+	}
+	return ""
+}
+
+type UserTaskRes struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Task          *Task                  `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserTaskRes) Reset() {
+	*x = UserTaskRes{}
+	mi := &file_types_proto_msgTypes[88]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserTaskRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserTaskRes) ProtoMessage() {}
+
+func (x *UserTaskRes) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[88]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserTaskRes.ProtoReflect.Descriptor instead.
+func (*UserTaskRes) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{88}
+}
+
+func (x *UserTaskRes) GetTask() *Task {
+	if x != nil {
+		return x.Task
+	}
+	return nil
+}
+
+type UserTasksReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DeviceID      string                 `protobuf:"bytes,1,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserTasksReq) Reset() {
+	*x = UserTasksReq{}
+	mi := &file_types_proto_msgTypes[89]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserTasksReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserTasksReq) ProtoMessage() {}
+
+func (x *UserTasksReq) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[89]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserTasksReq.ProtoReflect.Descriptor instead.
+func (*UserTasksReq) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{89}
+}
+
+func (x *UserTasksReq) GetDeviceID() string {
+	if x != nil {
+		return x.DeviceID
+	}
+	return ""
+}
+
+type UserTasksRes struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tasks         []*Task                `protobuf:"bytes,1,rep,name=tasks,proto3" json:"tasks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserTasksRes) Reset() {
+	*x = UserTasksRes{}
+	mi := &file_types_proto_msgTypes[90]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserTasksRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserTasksRes) ProtoMessage() {}
+
+func (x *UserTasksRes) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[90]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserTasksRes.ProtoReflect.Descriptor instead.
+func (*UserTasksRes) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{90}
+}
+
+func (x *UserTasksRes) GetTasks() []*Task {
+	if x != nil {
+		return x.Tasks
+	}
+	return nil
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
@@ -4417,7 +4601,16 @@ const file_types_proto_rawDesc = "" +
 	"\x05types\x18\x01 \x03(\x05R\x05types\"5\n" +
 	"\fCreateDevice\x12%\n" +
 	"\x06device\x18\x01 \x01(\v2\r.types.DeviceR\x06device\"\x14\n" +
-	"\x12AcceptCreateDeviceB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
+	"\x12AcceptCreateDevice\"A\n" +
+	"\vUserTaskReq\x12\x1a\n" +
+	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\x12\x16\n" +
+	"\x06taskID\x18\x02 \x01(\tR\x06taskID\".\n" +
+	"\vUserTaskRes\x12\x1f\n" +
+	"\x04task\x18\x01 \x01(\v2\v.types.TaskR\x04task\"*\n" +
+	"\fUserTasksReq\x12\x1a\n" +
+	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\"1\n" +
+	"\fUserTasksRes\x12!\n" +
+	"\x05tasks\x18\x01 \x03(\v2\v.types.TaskR\x05tasksB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -4431,7 +4624,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 87)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 91)
 var file_types_proto_goTypes = []any{
 	(*Error)(nil),                          // 0: types.Error
 	(*PID)(nil),                            // 1: types.PID
@@ -4520,17 +4713,21 @@ var file_types_proto_goTypes = []any{
 	(*DeviceTypes)(nil),                    // 84: types.DeviceTypes
 	(*CreateDevice)(nil),                   // 85: types.CreateDevice
 	(*AcceptCreateDevice)(nil),             // 86: types.AcceptCreateDevice
-	(*timestamppb.Timestamp)(nil),          // 87: google.protobuf.Timestamp
+	(*UserTaskReq)(nil),                    // 87: types.UserTaskReq
+	(*UserTaskRes)(nil),                    // 88: types.UserTaskRes
+	(*UserTasksReq)(nil),                   // 89: types.UserTasksReq
+	(*UserTasksRes)(nil),                   // 90: types.UserTasksRes
+	(*timestamppb.Timestamp)(nil),          // 91: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
-	87, // 0: types.User.las_time_online:type_name -> google.protobuf.Timestamp
+	91, // 0: types.User.las_time_online:type_name -> google.protobuf.Timestamp
 	3,  // 1: types.User.personal:type_name -> types.Personal
-	87, // 2: types.Message.sent_at:type_name -> google.protobuf.Timestamp
-	87, // 3: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
-	87, // 4: types.Task.completionDate:type_name -> google.protobuf.Timestamp
-	87, // 5: types.Task.deadline:type_name -> google.protobuf.Timestamp
+	91, // 2: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	91, // 3: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
+	91, // 4: types.Task.completionDate:type_name -> google.protobuf.Timestamp
+	91, // 5: types.Task.deadline:type_name -> google.protobuf.Timestamp
 	9,  // 6: types.Pin.location:type_name -> types.Location
-	87, // 7: types.Pin.lastOnline:type_name -> google.protobuf.Timestamp
+	91, // 7: types.Pin.lastOnline:type_name -> google.protobuf.Timestamp
 	1,  // 8: types.LoginUser.pid:type_name -> types.PID
 	1,  // 9: types.GetLoggedInUUID.pid:type_name -> types.PID
 	5,  // 10: types.CreateUnit.unit:type_name -> types.Unit
@@ -4558,11 +4755,13 @@ var file_types_proto_depIdxs = []int32{
 	11, // 32: types.Pins.pins:type_name -> types.Pin
 	10, // 33: types.CurrentTask.task:type_name -> types.Task
 	8,  // 34: types.CreateDevice.device:type_name -> types.Device
-	35, // [35:35] is the sub-list for method output_type
-	35, // [35:35] is the sub-list for method input_type
-	35, // [35:35] is the sub-list for extension type_name
-	35, // [35:35] is the sub-list for extension extendee
-	0,  // [0:35] is the sub-list for field type_name
+	10, // 35: types.UserTaskRes.task:type_name -> types.Task
+	10, // 36: types.UserTasksRes.tasks:type_name -> types.Task
+	37, // [37:37] is the sub-list for method output_type
+	37, // [37:37] is the sub-list for method input_type
+	37, // [37:37] is the sub-list for extension type_name
+	37, // [37:37] is the sub-list for extension extendee
+	0,  // [0:37] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }
@@ -4581,7 +4780,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   87,
+			NumMessages:   91,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
