@@ -1,6 +1,7 @@
 package loginstate
 
 import (
+	"strings"
 	"time"
 
 	"github.com/janicaleksander/bcs/application/statesmanager"
@@ -11,7 +12,7 @@ import (
 func (l *LoginScene) Reset() {
 	l.loginSection.isLoginButtonPressed = false
 	l.errorSection.loginErrorMessage = ""
-
+	l.loginSection.loginButton.Active()
 }
 
 //user has to connect to the server -> critical error but this is on main file lvl
@@ -21,7 +22,7 @@ func (l *LoginScene) Reset() {
 func (l *LoginScene) Login() {
 	email := l.loginSection.emailInput.GetText()
 	pwd := l.loginSection.passwordInput.GetText()
-	if len(email) <= 0 || len(pwd) <= 0 {
+	if len(strings.TrimSpace(email)) <= 0 || len(strings.TrimSpace(pwd)) <= 0 {
 		l.errorSection.loginErrorMessage = "zero length inbox input"
 		l.errorSection.errorPopup.Show()
 		l.scheduler.After((3 * time.Second).Seconds(), func() {

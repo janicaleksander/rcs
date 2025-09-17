@@ -88,8 +88,11 @@ func (s *Server) Receive(ctx *actor.Context) {
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		users, err := s.storage.GetUsersWithLVL(c, int(msg.Lower), int(msg.Upper))
-		if err == nil {
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
 			ctx.Respond(&proto.UsersAboveLVL{Users: users})
+
 		}
 	case *proto.CreateUnit:
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -104,8 +107,11 @@ func (s *Server) Receive(ctx *actor.Context) {
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		units, err := s.storage.GetAllUnits(c)
-		if err == nil {
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
 			ctx.Respond(&proto.AllUnits{Units: units})
+
 		}
 
 	case *proto.GetUsersInUnit:
@@ -113,9 +119,11 @@ func (s *Server) Receive(ctx *actor.Context) {
 		defer cancel()
 		unitID := msg.UnitID
 		users, err := s.storage.GetUsersInUnit(c, unitID)
-		if err == nil {
-			fmt.Println(users)
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
 			ctx.Respond(&proto.UsersInUnit{Users: users})
+
 		}
 	case *proto.CreateUser:
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)

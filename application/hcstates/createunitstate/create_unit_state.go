@@ -17,7 +17,16 @@ type CreateUnitScene struct {
 	errorSection   ErrorSection
 	infoSection    InfoSection
 }
+type NewUnitSection struct {
+	acceptButton    component.Button
+	isAcceptPressed bool
+	nameInput       component.InputBox
+	usersDropdown   component.ListSlider
+}
 
+// setup error is only used in setup section
+// if true button will disable
+// and you can't make a further request
 type ErrorSection struct {
 	isSetupError  bool
 	isCreateError bool
@@ -30,13 +39,6 @@ type InfoSection struct {
 	infoPopup     component.Popup
 }
 
-type NewUnitSection struct {
-	acceptButton    component.Button
-	isAcceptPressed bool
-	nameInput       component.InputBox
-	usersDropdown   component.ListSlider
-}
-
 func (c *CreateUnitScene) CreateUnitSceneSetup(state *statesmanager.StateManager, cfg *utils.SharedConfig) {
 	c.cfg = cfg
 	c.stateManager = state
@@ -44,19 +46,22 @@ func (c *CreateUnitScene) CreateUnitSceneSetup(state *statesmanager.StateManager
 	c.FetchUsers()
 
 	//name of unit
+	xPos := float32(rl.GetScreenWidth()/2 - 60)
+	yPos := float32(245)
 	c.newUnitSection.nameInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2-60),
-		245,
+		xPos,
+		yPos,
 		240, 30,
 	))
 
 	//dropdown with users
+	yPos += 90
 	c.newUnitSection.usersDropdown.IdxScroll = 0
 	c.newUnitSection.usersDropdown.IdxActiveElement = 0
 	c.newUnitSection.usersDropdown.Bounds = rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2-60),
-		320,
-		240, 80,
+		xPos,
+		yPos,
+		240, 50,
 	)
 	//accept button
 	c.newUnitSection.acceptButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
@@ -72,19 +77,17 @@ func (c *CreateUnitScene) CreateUnitSceneSetup(state *statesmanager.StateManager
 		150,
 		50), "Go back", false)
 
-	c.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPERRORBG)), rl.NewRectangle(
+	popupRect := rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-215),
 		float32(rl.GetScreenHeight()-200),
 		350,
 		35,
-	), &c.errorSection.errorMessage)
+	)
+	c.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPERRORBG)),
+		popupRect, &c.errorSection.errorMessage)
 
-	c.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPINFOBG)), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2)-215,
-		float32(rl.GetScreenHeight()-200),
-		350,
-		35,
-	), &c.infoSection.infoMessage)
+	c.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPINFOBG)),
+		popupRect, &c.infoSection.infoMessage)
 
 }
 
@@ -107,9 +110,13 @@ func (c *CreateUnitScene) UpdateCreateUnitState() {
 		c.stateManager.Add(statesmanager.GoBackState)
 		return
 	}
-	//TODO add other from render
 	if c.errorSection.isSetupError {
 		c.errorSection.errorMessage = "Setup error, can't do this now!"
+		c.errorSection.errorPopup.Show()
+		c.scheduler.After(1, func() {
+			c.errorSection.errorPopup.Hide()
+		})
+		c.newUnitSection.acceptButton.Deactivate()
 		return
 	}
 
@@ -140,9 +147,3 @@ func (c *CreateUnitScene) RenderCreateUnitState() {
 	)
 
 }
-
-//scene HC unit info  dodac guziki w polu desxc podzielnic na 4 kwadraty i np mapa, opis mzoe urzadzenia itd itd
-// a scena dla dowodcy jednego unityu moze to samo ale dla 1 unitu
-//moze jakies panele ze mozna sobie potem w innym oknie tworzyc wlasnie np mapa + cos id
-
-//a tam gdzie opis soldierow to dac guziki np ze wyslij wiadomosc, albo info o itd

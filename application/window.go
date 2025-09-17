@@ -6,6 +6,7 @@ import (
 	"runtime"
 
 	"github.com/anthdm/hollywood/actor"
+	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/application/commonstates/createtaskstate"
 	"github.com/janicaleksander/bcs/application/commonstates/inboxstate"
@@ -156,6 +157,7 @@ func (w *Window) setupSceneForState(state statesmanager.GameState) {
 }
 func (w *Window) update() {
 	w.running = !rl.WindowShouldClose()
+	gui.SetStyle(gui.LISTVIEW, gui.LIST_ITEMS_HEIGHT, 40)
 	switch w.stateManager.CurrentState {
 	case statesmanager.LoginState:
 		w.loginScene.UpdateLoginState()
