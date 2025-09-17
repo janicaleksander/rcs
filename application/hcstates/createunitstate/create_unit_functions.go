@@ -1,6 +1,7 @@
 package createunitstate
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,21 +15,19 @@ func (c *CreateUnitScene) Reset() {
 	c.infoSection.isInfoMessage = false
 	c.infoSection.infoMessage = ""
 	c.errorSection.errorMessage = ""
+	c.newUnitSection.acceptButton.Active()
 }
 func (c *CreateUnitScene) FetchUsers() {
-	//TODO get proper lvl value
 	res, err := utils.MakeRequest(utils.NewRequest(c.cfg.Ctx, c.cfg.ServerPID, &proto.GetUserAboveLVL{
-		Lower: -1,
-		Upper: 10,
-	})) //TODO
+		Lower: 0,
+		Upper: 1,
+	}))
 	if err != nil {
-		//context deadline exceeded
-		//do sth with that
 		c.errorSection.isSetupError = true
+		return
 	}
-
 	if v, ok := res.(*proto.UsersAboveLVL); ok {
-		c.newUnitSection.usersDropdown.Strings = make([]string, 0, 64)
+		c.newUnitSection.usersDropdown.Strings = make([]string, 0, 16)
 		c.newUnitSection.usersDropdown.Strings = append(c.newUnitSection.usersDropdown.Strings,
 			"Choose user by his ID")
 		for _, user := range v.Users {
@@ -36,6 +35,8 @@ func (c *CreateUnitScene) FetchUsers() {
 				user.Id+"\n"+user.Email)
 		}
 	} else {
+		v, _ := res.(*proto.Error)
+		c.errorSection.errorMessage = v.Content
 		c.errorSection.isSetupError = true
 	}
 
@@ -43,12 +44,12 @@ func (c *CreateUnitScene) FetchUsers() {
 func (c *CreateUnitScene) CreateUnit() {
 	name := c.newUnitSection.nameInput.GetText()
 	user := c.newUnitSection.usersDropdown.IdxActiveElement
-	if len(name) <= 0 || user <= 0 {
+	if len(strings.TrimSpace(name)) <= 0 || user <= 0 {
+		c.errorSection.errorPopup.Show()
+		c.errorSection.errorMessage = "Zero length error"
 		c.scheduler.After((3 * time.Second).Seconds(), func() {
 			c.errorSection.errorPopup.Hide()
 		})
-		c.errorSection.errorPopup.Show()
-		c.errorSection.errorMessage = "Zero length error"
 	} else {
 		//user can be only in one unit in the same time -> error
 		res, err := utils.MakeRequest(utils.NewRequest(c.cfg.Ctx, c.cfg.ServerPID, &proto.CreateUnit{
@@ -56,30 +57,30 @@ func (c *CreateUnitScene) CreateUnit() {
 				Id:   uuid.New().String(),
 				Name: name,
 			},
-			UserID: c.newUnitSection.usersDropdown.Strings[user],
+			UserID: c.newUnitSection.usersDropdown.Strings[user][:36],
 		}))
 
 		if err != nil {
-			//context deadline exceeded
+			c.errorSection.errorPopup.Show()
+			c.errorSection.errorMessage = err.Error()
 			c.scheduler.After((3 * time.Second).Seconds(), func() {
 				c.errorSection.errorPopup.Hide()
 			})
-			c.errorSection.errorPopup.Show()
-			c.errorSection.errorMessage = err.Error()
 			return
 		}
 		if _, ok := res.(*proto.AcceptCreateUnit); ok {
+			c.infoSection.infoPopup.Show()
+			c.infoSection.infoMessage = "Success!"
 			c.scheduler.After((3 * time.Second).Seconds(), func() {
 				c.infoSection.infoPopup.Hide()
 			})
-			c.infoSection.infoPopup.Show()
-			c.infoSection.infoMessage = "Success!"
 		} else {
+			v, _ := res.(*proto.Error)
+			c.errorSection.errorMessage = v.Content
+			c.errorSection.errorPopup.Show()
 			c.scheduler.After((3 * time.Second).Seconds(), func() {
 				c.errorSection.errorPopup.Hide()
 			})
-			c.errorSection.errorPopup.Show()
-			c.errorSection.errorMessage = "Error!"
 
 		}
 

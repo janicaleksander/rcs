@@ -30,27 +30,29 @@ func (l *LoginScene) LoginSceneSetup(state *statesmanager.StateManager, cfg *uti
 	l.cfg = cfg
 	l.stateManager = state
 	l.Reset()
-
+	xPos := float32(rl.GetScreenWidth()/2 - 100)
+	yPos := float32(rl.GetScreenHeight()/2 - 140)
+	l.loginSection.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
+		xPos,
+		yPos,
+		200, 30,
+	))
+	yPos += 60
+	l.loginSection.passwordInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
+		xPos,
+		yPos,
+		200, 30,
+	))
+	yPos += 80
 	l.loginSection.loginButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2-100),
-		float32(rl.GetScreenHeight()/2),
+		xPos,
+		yPos,
 		200, 50,
 	), "LOGIN", false)
 
-	l.loginSection.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2-100),
-		float32(rl.GetScreenHeight()/2-140),
-		200, 30,
-	))
-
-	l.loginSection.passwordInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2-100),
-		float32(rl.GetScreenHeight()/2-80),
-		200, 30,
-	))
 	l.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPERRORBG)), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2.0-100.0),
-		float32(rl.GetScreenHeight()/2.0+60.0),
+		xPos,
+		float32(rl.GetScreenHeight()/2+60),
 		200,
 		40), &l.errorSection.loginErrorMessage)
 }
