@@ -49,6 +49,20 @@ func (d *Device) Receive(ctx *actor.Context) {
 		} else {
 			ctx.Respond(res)
 		}
+	case *proto.UpdateCurrentTaskReq:
+		res, err := utils.MakeRequest(utils.NewRequest(ctx, d.unitPID, msg))
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(res)
+		}
+	case *proto.DeleteTaskReq:
+		res, err := utils.MakeRequest(utils.NewRequest(ctx, d.unitPID, msg))
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(res)
+		}
 
 	default:
 		_ = msg

@@ -14,6 +14,8 @@ import (
 	"github.com/janicaleksander/bcs/utils"
 )
 
+// TODO refactor to use err from actor. now i sue unsuported but
+// i cast to Err proto msg ang then read that error
 type Handler struct {
 	ctx        *actor.Context
 	serverPID  *actor.PID
@@ -189,4 +191,67 @@ func (h *Handler) userTasks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&resp)
+}
+
+// task/current/{userID}?deviceID=123
+/*
+taskID: ""
+*/
+func (h *Handler) updateCurrentTask(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userID")
+	deviceID := r.URL.Query().Get("deviceID")
+	reqBody := struct {
+		TaskID string `json:"taskID"`
+	}{}
+	err := json.NewDecoder(r.Body).Decode(&reqBody)
+	if err != nil {
+		render.Render(w, r, ErrInvalidRequestBody(err))
+		return
+	}
+	if len(strings.TrimSpace(userID)) == 0 || len(strings.TrimSpace(deviceID)) == 0 {
+		render.Render(w, r, ErrBadQueryParam(errors.New("params are empty")))
+		return
+	}
+	res, err := utils.MakeRequest(utils.NewRequest(h.ctx, h.ctx.PID(), &proto.UpdateCurrentTaskReq{
+		DeviceID: deviceID,
+		TaskID:   reqBody.TaskID,
+		UserID:   userID,
+	}))
+	if err != nil {
+		render.Render(w, r, ErrActorMakeRequest(errors.ErrUnsupported))
+		return
+	}
+	if _, ok := res.(*proto.UpdateCurrentTaskRes); !ok {
+		render.Render(w, r, ErrUpdateCurrentTask(errors.New("bad actor response")))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&res)
+
+}
+
+func (h *Handler) deleteTask(w http.ResponseWriter, r *http.Request) {
+	taskID := chi.URLParam(r, "taskID")
+	deviceID := r.URL.Query().Get("deviceID")
+	if len(strings.TrimSpace(taskID)) == 0 || len(strings.TrimSpace(deviceID)) == 0 {
+		render.Render(w, r, ErrBadQueryParam(errors.New("params are empty")))
+		return
+	}
+	res, err := utils.MakeRequest(utils.NewRequest(h.ctx, h.ctx.PID(), &proto.DeleteTaskReq{
+		DeviceID: deviceID,
+		TaskID:   taskID,
+	}))
+	if err != nil {
+		render.Render(w, r, ErrActorMakeRequest(errors.ErrUnsupported))
+		return
+	}
+	if _, ok := res.(*proto.DeleteTaskRes); !ok {
+		render.Render(w, r, ErrDeleteTask(errors.New("bad actor response")))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&res)
 }

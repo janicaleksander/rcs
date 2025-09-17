@@ -4363,6 +4363,190 @@ func (x *UserTasksRes) GetTasks() []*Task {
 	return nil
 }
 
+type UpdateCurrentTaskReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserID        string                 `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty"`
+	TaskID        string                 `protobuf:"bytes,2,opt,name=taskID,proto3" json:"taskID,omitempty"`
+	DeviceID      string                 `protobuf:"bytes,3,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateCurrentTaskReq) Reset() {
+	*x = UpdateCurrentTaskReq{}
+	mi := &file_types_proto_msgTypes[91]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateCurrentTaskReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateCurrentTaskReq) ProtoMessage() {}
+
+func (x *UpdateCurrentTaskReq) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[91]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateCurrentTaskReq.ProtoReflect.Descriptor instead.
+func (*UpdateCurrentTaskReq) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{91}
+}
+
+func (x *UpdateCurrentTaskReq) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+func (x *UpdateCurrentTaskReq) GetTaskID() string {
+	if x != nil {
+		return x.TaskID
+	}
+	return ""
+}
+
+func (x *UpdateCurrentTaskReq) GetDeviceID() string {
+	if x != nil {
+		return x.DeviceID
+	}
+	return ""
+}
+
+type UpdateCurrentTaskRes struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateCurrentTaskRes) Reset() {
+	*x = UpdateCurrentTaskRes{}
+	mi := &file_types_proto_msgTypes[92]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateCurrentTaskRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateCurrentTaskRes) ProtoMessage() {}
+
+func (x *UpdateCurrentTaskRes) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[92]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateCurrentTaskRes.ProtoReflect.Descriptor instead.
+func (*UpdateCurrentTaskRes) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{92}
+}
+
+type DeleteTaskReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DeviceID      string                 `protobuf:"bytes,1,opt,name=deviceID,proto3" json:"deviceID,omitempty"`
+	TaskID        string                 `protobuf:"bytes,2,opt,name=taskID,proto3" json:"taskID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteTaskReq) Reset() {
+	*x = DeleteTaskReq{}
+	mi := &file_types_proto_msgTypes[93]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteTaskReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteTaskReq) ProtoMessage() {}
+
+func (x *DeleteTaskReq) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[93]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteTaskReq.ProtoReflect.Descriptor instead.
+func (*DeleteTaskReq) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{93}
+}
+
+func (x *DeleteTaskReq) GetDeviceID() string {
+	if x != nil {
+		return x.DeviceID
+	}
+	return ""
+}
+
+func (x *DeleteTaskReq) GetTaskID() string {
+	if x != nil {
+		return x.TaskID
+	}
+	return ""
+}
+
+type DeleteTaskRes struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteTaskRes) Reset() {
+	*x = DeleteTaskRes{}
+	mi := &file_types_proto_msgTypes[94]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteTaskRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteTaskRes) ProtoMessage() {}
+
+func (x *DeleteTaskRes) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[94]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteTaskRes.ProtoReflect.Descriptor instead.
+func (*DeleteTaskRes) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{94}
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
@@ -4610,7 +4794,16 @@ const file_types_proto_rawDesc = "" +
 	"\fUserTasksReq\x12\x1a\n" +
 	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\"1\n" +
 	"\fUserTasksRes\x12!\n" +
-	"\x05tasks\x18\x01 \x03(\v2\v.types.TaskR\x05tasksB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
+	"\x05tasks\x18\x01 \x03(\v2\v.types.TaskR\x05tasks\"b\n" +
+	"\x14UpdateCurrentTaskReq\x12\x16\n" +
+	"\x06userID\x18\x01 \x01(\tR\x06userID\x12\x16\n" +
+	"\x06taskID\x18\x02 \x01(\tR\x06taskID\x12\x1a\n" +
+	"\bdeviceID\x18\x03 \x01(\tR\bdeviceID\"\x16\n" +
+	"\x14UpdateCurrentTaskRes\"C\n" +
+	"\rDeleteTaskReq\x12\x1a\n" +
+	"\bdeviceID\x18\x01 \x01(\tR\bdeviceID\x12\x16\n" +
+	"\x06taskID\x18\x02 \x01(\tR\x06taskID\"\x0f\n" +
+	"\rDeleteTaskResB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -4624,7 +4817,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 91)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 95)
 var file_types_proto_goTypes = []any{
 	(*Error)(nil),                          // 0: types.Error
 	(*PID)(nil),                            // 1: types.PID
@@ -4717,17 +4910,21 @@ var file_types_proto_goTypes = []any{
 	(*UserTaskRes)(nil),                    // 88: types.UserTaskRes
 	(*UserTasksReq)(nil),                   // 89: types.UserTasksReq
 	(*UserTasksRes)(nil),                   // 90: types.UserTasksRes
-	(*timestamppb.Timestamp)(nil),          // 91: google.protobuf.Timestamp
+	(*UpdateCurrentTaskReq)(nil),           // 91: types.UpdateCurrentTaskReq
+	(*UpdateCurrentTaskRes)(nil),           // 92: types.UpdateCurrentTaskRes
+	(*DeleteTaskReq)(nil),                  // 93: types.DeleteTaskReq
+	(*DeleteTaskRes)(nil),                  // 94: types.DeleteTaskRes
+	(*timestamppb.Timestamp)(nil),          // 95: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
-	91, // 0: types.User.las_time_online:type_name -> google.protobuf.Timestamp
+	95, // 0: types.User.las_time_online:type_name -> google.protobuf.Timestamp
 	3,  // 1: types.User.personal:type_name -> types.Personal
-	91, // 2: types.Message.sent_at:type_name -> google.protobuf.Timestamp
-	91, // 3: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
-	91, // 4: types.Task.completionDate:type_name -> google.protobuf.Timestamp
-	91, // 5: types.Task.deadline:type_name -> google.protobuf.Timestamp
+	95, // 2: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	95, // 3: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
+	95, // 4: types.Task.completionDate:type_name -> google.protobuf.Timestamp
+	95, // 5: types.Task.deadline:type_name -> google.protobuf.Timestamp
 	9,  // 6: types.Pin.location:type_name -> types.Location
-	91, // 7: types.Pin.lastOnline:type_name -> google.protobuf.Timestamp
+	95, // 7: types.Pin.lastOnline:type_name -> google.protobuf.Timestamp
 	1,  // 8: types.LoginUser.pid:type_name -> types.PID
 	1,  // 9: types.GetLoggedInUUID.pid:type_name -> types.PID
 	5,  // 10: types.CreateUnit.unit:type_name -> types.Unit
@@ -4780,7 +4977,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   91,
+			NumMessages:   95,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

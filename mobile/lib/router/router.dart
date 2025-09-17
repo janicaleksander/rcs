@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/pages/home_page/home_page.dart';
 import 'package:mobile/pages/login_page/login_page.dart';
+import 'package:mobile/pages/tasks_page/tasks_details.dart';
 import 'package:mobile/pages/tasks_page/tasks_page.dart';
 
 final GoRouter router = GoRouter(
@@ -25,5 +26,13 @@ final GoRouter router = GoRouter(
           return const TasksPage();
         },
     ),
+      GoRoute(
+        path: '/taskd',
+        builder: (BuildContext context, GoRouterState state) {
+          final task = state.extra as UserTask?;
+          return TaskDetail(task: task);
+        },
+      ),
+
   ]
 );

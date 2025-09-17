@@ -129,6 +129,8 @@ type Storage interface {
 	GetTask(ctx context.Context, taskID string) (*proto.Task, error)
 	GetUserTasks(ctx context.Context, deviceID string) ([]*proto.Task, error)
 	GetCurrentTask(ctx context.Context, deviceID string) (*proto.CurrentTask, error)
+	UpdateCurrentTask(ctx context.Context, newTaskID, userID string) error
+	DeleteTask(ctx context.Context, taskID string) error
 	GetDeviceTypes(ctx context.Context) ([]int32, error)
 	InsertDevice(ctx context.Context, device *proto.Device) error
 }

@@ -56,6 +56,23 @@ func (d *DeviceActor) Receive(ctx *actor.Context) {
 		} else {
 			d.ctx.Respond(res)
 		}
+	case *proto.UpdateCurrentTaskReq:
+		res, err := utils.MakeRequest(
+			utils.NewRequest(ctx, d.connections[msg.DeviceID], msg))
+		if err != nil {
+			d.ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			d.ctx.Respond(res)
+		}
+	case *proto.DeleteTaskReq:
+		res, err := utils.MakeRequest(
+			utils.NewRequest(ctx, d.connections[msg.DeviceID], msg))
+		if err != nil {
+			d.ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			d.ctx.Respond(res)
+		}
+
 	default:
 		utils.Logger.Info("Unrecognized message!")
 		_ = msg

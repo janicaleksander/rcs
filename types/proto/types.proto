@@ -395,3 +395,17 @@ message UserTasksReq{
 message UserTasksRes{
   repeated Task tasks =1;
 }
+
+
+message UpdateCurrentTaskReq{
+  string userID =1;
+  string taskID =2;
+  string deviceID=3;
+}
+message UpdateCurrentTaskRes{}
+
+message DeleteTaskReq{
+  string deviceID =1;
+  string taskID = 2;
+}
+message DeleteTaskRes{}

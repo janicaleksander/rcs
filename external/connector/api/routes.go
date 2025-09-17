@@ -43,13 +43,14 @@ func (h *Handler) SetupRouter() {
 }
 func (h *Handler) loadRoutes() {
 	h.router.Post("/login", h.Login)
-
 	//have to be logged in
 	h.router.Group(func(r chi.Router) {
 		r.Use(GetAuthMiddlewareFunc())
 		r.Get("/home", h.Home)
 		r.Post("/location", h.updateLocation)
-		r.Get("/task/{taskID}", h.userTask) // /task/{taskID}?deviceID=123
+		r.Get("/task/{taskID}", h.userTask)                   // /task/{taskID}?deviceID=123
+		r.Delete("/task/{taskID}", h.deleteTask)              // /task/{taskID}?deviceID=123
+		r.Post("/task/current/{userID}", h.updateCurrentTask) //task/current/{userID}?deviceID=123
 		r.Get("/tasks/{deviceID}", h.userTasks)
 	})
 }

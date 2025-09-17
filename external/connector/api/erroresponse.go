@@ -93,3 +93,18 @@ func ErrGetUserTask(err error) render.Renderer {
 		err.Error(),
 	)
 }
+func ErrUpdateCurrentTask(err error) render.Renderer {
+	return NewErrorResponse(
+		http.StatusBadRequest,
+		"Can't update user task",
+		err.Error(),
+	)
+}
+
+func ErrDeleteTask(err error) render.Renderer {
+	return NewErrorResponse(
+		http.StatusBadRequest,
+		"Can't delete that task",
+		err.Error(),
+	)
+}

@@ -640,7 +640,7 @@ func (p *Postgres) GetCurrentTask(ctx context.Context, deviceID string) (*proto.
 func (p *Postgres) GetTask(ctx context.Context, taskID string) (*proto.Task, error) {
 	row := p.Conn.QueryRowContext(ctx, `SELECT t.id,t.name,t.description,t.state,t.completion_date,t.deadline
 				FROM task t 
-				WHERE t.id = $1`, taskID)
+				WHERE t.id = $1 ORDER BY t.deadline`, taskID)
 
 	t := &proto.Task{
 		Id:             "",
@@ -671,7 +671,7 @@ func (p *Postgres) GetUserTasks(ctx context.Context, deviceID string) ([]*proto.
 				FROM task t
 				INNER JOIN user_to_task utt ON utt.task_id  = t.id
 				INNER JOIN device d ON d.owner = utt.user_id
-				WHERE d.id = $1;
+				WHERE d.id = $1 ORDER BY t.deadline;
 				`, deviceID)
 	if err != nil {
 		return nil, err
@@ -706,6 +706,43 @@ func (p *Postgres) GetUserTasks(ctx context.Context, deviceID string) ([]*proto.
 		return nil, errors.New("no tasks")
 	}
 	return tasks, nil
+}
+
+func (p *Postgres) UpdateCurrentTask(ctx context.Context, newTaskID, userID string) error {
+	tx, err := p.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx,
+		`INSERT INTO current_user_task (user_id,task_id) 
+				VALUES ($1,$2) ON CONFLICT (user_id)
+				DO UPDATE SET user_id=excluded.user_id,task_id=excluded.task_id`, userID, newTaskID)
+
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Postgres) DeleteTask(ctx context.Context, taskID string) error {
+	tx, err := p.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, `DELETE FROM task WHERE task.id = $1`, taskID)
+	if err != nil {
+		return err
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+
 }
 
 func (p *Postgres) GetDeviceTypes(ctx context.Context) ([]int32, error) {

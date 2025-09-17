@@ -23,18 +23,13 @@ class LocationService {
         return false;
       }
     }
-    /*
+//TODO
     _location.changeSettings(
       accuracy: LocationAccuracy.high,
       interval: 5000,
-      distanceFilter: 3,
+      distanceFilter: 3000,
     );
-     */
-    _location.changeSettings(
-      accuracy: LocationAccuracy.high,
-      interval: 1000,
-      distanceFilter: 0,
-    );
+
 
     return true;
   }

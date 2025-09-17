@@ -92,6 +92,24 @@ func (u *Unit) Receive(ctx *actor.Context) {
 		} else {
 			ctx.Respond(&proto.UserTasksRes{Tasks: tasks})
 		}
+	case *proto.UpdateCurrentTaskReq:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := u.storage.UpdateCurrentTask(c, msg.TaskID, msg.UserID)
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(&proto.UpdateCurrentTaskRes{})
+		}
+	case *proto.DeleteTaskReq:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := u.storage.DeleteTask(c, msg.TaskID)
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(&proto.DeleteTaskRes{})
+		}
 
 	default:
 		utils.Logger.Warn("Unit got unknown message", "Type", reflect.TypeOf(msg).String())
