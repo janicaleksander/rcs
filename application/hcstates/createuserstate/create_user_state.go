@@ -40,30 +40,31 @@ func (c *CreateUserScene) CreateUserSceneSetup(state *statesmanager.StateManager
 	c.cfg = cfg
 	c.stateManager = state
 	c.Reset()
-	c.scheduler.Update(float64(rl.GetFrameTime()))
-
+	xPos := float32(rl.GetScreenWidth()/2) - 100
+	yPos := float32(rl.GetScreenHeight()/2 - 300)
 	c.newUserSection.emailInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2)-100,
-			float32(rl.GetScreenHeight()/2-300),
+			xPos,
+			yPos,
 			200,
 			40,
 		))
-
+	yPos += 100
 	c.newUserSection.passwordInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2)-100,
-			float32(rl.GetScreenHeight()/2)-200,
+			xPos,
+			yPos,
 			200,
 			40))
 
+	yPos += 100
 	c.newUserSection.rePasswordInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2)-100,
-			float32(rl.GetScreenHeight()/2)-100,
+			xPos,
+			yPos,
 			200,
 			40))
 
@@ -77,27 +78,28 @@ func (c *CreateUserScene) CreateUserSceneSetup(state *statesmanager.StateManager
 			rl.NewRectangle(732, 370, 100, 40),
 		},
 	}
-
+	yPos += 200
 	c.newUserSection.nameInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2)-100,
-			float32(rl.GetScreenHeight()/2)+100,
+			xPos,
+			yPos,
 			200,
 			40))
 
+	yPos += 100
 	c.newUserSection.surnameInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2)-100,
-			float32(rl.GetScreenHeight()/2)+200,
+			xPos,
+			yPos,
 			200,
 			40,
 		))
-
+	yPos += 80
 	c.newUserSection.acceptButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
-		float32(rl.GetScreenWidth()/2)-100,
-		float32(rl.GetScreenHeight()/2+280),
+		xPos,
+		yPos,
 		200,
 		50), "ACCEPT", false)
 
@@ -107,25 +109,22 @@ func (c *CreateUserScene) CreateUserSceneSetup(state *statesmanager.StateManager
 		150,
 		50), "GO BACK", false)
 
+	popupRect := rl.NewRectangle(
+		float32(rl.GetScreenWidth()/2)-100,
+		float32(rl.GetScreenHeight()/2+280),
+		200,
+		50)
 	c.errorSection.errorPopup = *component.NewPopup(
 		component.NewPopupConfig(component.WithBgColor(utils.POPUPERRORBG)),
-		rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2)-100,
-			float32(rl.GetScreenHeight()/2+280),
-			200,
-			50),
+		popupRect,
 		&c.errorSection.errorMessage)
 	c.infoSection.infoPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(utils.POPUPINFOBG)),
-		rl.NewRectangle(
-			float32(rl.GetScreenWidth()/2)-100,
-			float32(rl.GetScreenHeight()/2+280),
-			200,
-			50),
+		popupRect,
 		&c.infoSection.acceptMessage)
 }
 
 func (c *CreateUserScene) UpdateCreateUserState() {
-
+	c.scheduler.Update(float64(rl.GetFrameTime()))
 	c.newUserSection.emailInput.Update()
 	c.newUserSection.passwordInput.Update()
 	c.newUserSection.rePasswordInput.Update()
