@@ -89,14 +89,7 @@ class _HomePageState extends State<HomePage> {
                       color: HomeColors.greetingTextColor,
                     ),
                   ),
-                  TextSpan(
-                    text: 'MARK',
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w400,
-                      color: HomeColors.greetingTextColor,
-                    ),
-                  ),
+
                 ],
               ),
             ),
