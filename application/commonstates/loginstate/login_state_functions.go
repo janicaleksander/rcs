@@ -9,16 +9,20 @@ import (
 )
 
 func (l *LoginScene) Reset() {
-	l.isLoginButtonPressed = false
+	l.loginSection.isLoginButtonPressed = false
 	l.errorSection.loginErrorMessage = ""
 
 }
 
+//user has to connect to the server -> critical error but this is on main file lvl
+
+// user has to connect to message service -> not a critical error ->
+// -> we have to disconnect from inbox section and send message in user info
 func (l *LoginScene) Login() {
-	email := l.emailInput.GetText()
-	pwd := l.passwordInput.GetText()
+	email := l.loginSection.emailInput.GetText()
+	pwd := l.loginSection.passwordInput.GetText()
 	if len(email) <= 0 || len(pwd) <= 0 {
-		l.errorSection.loginErrorMessage = "Zero length inboxInput"
+		l.errorSection.loginErrorMessage = "zero length inbox input"
 		l.errorSection.errorPopup.Show()
 		l.scheduler.After((3 * time.Second).Seconds(), func() {
 			l.errorSection.errorPopup.Hide()
@@ -35,7 +39,6 @@ func (l *LoginScene) Login() {
 		Password: pwd,
 	}))
 	if err != nil {
-		//error context deadline exceeded
 		l.errorSection.loginErrorMessage = err.Error()
 		l.errorSection.errorPopup.Show()
 		l.scheduler.After((3 * time.Second).Seconds(), func() {
@@ -44,8 +47,13 @@ func (l *LoginScene) Login() {
 		return
 	}
 
-	if v, ok := res.(*proto.AcceptUserLogin); ok {
-		//to show login is taking to much time add some circle or infobar animation
+	if v, ok := res.(*proto.AcceptUserLogin); !ok {
+		l.errorSection.loginErrorMessage = "Invalid credentials"
+		l.errorSection.errorPopup.Show()
+		l.scheduler.After((3 * time.Second).Seconds(), func() {
+			l.errorSection.errorPopup.Hide()
+		})
+	} else {
 		res, err = utils.MakeRequest(utils.NewRequest(
 			l.cfg.Ctx,
 			l.cfg.MessageServicePID, &proto.RegisterClientInMessageService{
@@ -57,7 +65,6 @@ func (l *LoginScene) Login() {
 			}))
 
 		if err != nil {
-			//context deadline exceeded
 			l.errorSection.loginErrorMessage = err.Error()
 			l.errorSection.errorPopup.Show()
 			l.scheduler.After((3 * time.Second).Seconds(), func() {
@@ -66,30 +73,18 @@ func (l *LoginScene) Login() {
 			return
 		}
 
-		if _, ok := res.(*proto.AcceptRegisterClient); !ok {
-			l.errorSection.loginErrorMessage = "CANT LOGIN TO Service message"
-
-			//TODO but i dont know if this should be critical error to have error below
+		if _, ok = res.(*proto.AcceptRegisterClient); !ok {
+			l.errorSection.loginErrorMessage = "can't login to message service"
 			l.errorSection.errorPopup.Show()
 			l.scheduler.After((3 * time.Second).Seconds(), func() {
 				l.errorSection.errorPopup.Hide()
 			})
 			return
 		}
-		//TODO if role is 5 this else if ... others
-
-		//TO this point we have to determine if we have error in other services
-		// and w.---.messageServiceError = true
-		if v.RuleLevel == 5 {
+		//TODO
+		if v.RuleLevel == 3 {
 			l.stateManager.Add(statesmanager.HCMenuState)
 		}
 
-	} else {
-		//error
-		l.errorSection.loginErrorMessage = "Invalid credentials"
-		l.errorSection.errorPopup.Show()
-		l.scheduler.After((3 * time.Second).Seconds(), func() {
-			l.errorSection.errorPopup.Hide()
-		})
 	}
 }

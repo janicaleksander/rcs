@@ -9,14 +9,17 @@ import (
 
 // LOGIN STATE
 type LoginScene struct {
-	cfg                  *utils.SharedConfig
-	stateManager         *statesmanager.StateManager
-	scheduler            utils.Scheduler
+	cfg          *utils.SharedConfig
+	stateManager *statesmanager.StateManager
+	scheduler    utils.Scheduler
+	loginSection LoginSection
+	errorSection ErrorSection
+}
+type LoginSection struct {
 	loginButton          component.Button
 	emailInput           component.InputBox
 	passwordInput        component.InputBox
 	isLoginButtonPressed bool
-	errorSection         ErrorSection
 }
 type ErrorSection struct {
 	errorPopup        component.Popup
@@ -28,19 +31,19 @@ func (l *LoginScene) LoginSceneSetup(state *statesmanager.StateManager, cfg *uti
 	l.stateManager = state
 	l.Reset()
 
-	l.loginButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
+	l.loginSection.loginButton = *component.NewButton(component.NewButtonConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2),
 		200, 50,
-	), "Login", false)
+	), "LOGIN", false)
 
-	l.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
+	l.loginSection.emailInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-140),
 		200, 30,
 	))
 
-	l.passwordInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
+	l.loginSection.passwordInput = *component.NewInputBox(component.NewInputBoxConfig(), rl.NewRectangle(
 		float32(rl.GetScreenWidth()/2-100),
 		float32(rl.GetScreenHeight()/2-80),
 		200, 30,
@@ -54,34 +57,24 @@ func (l *LoginScene) LoginSceneSetup(state *statesmanager.StateManager, cfg *uti
 
 func (l *LoginScene) UpdateLoginState() {
 	l.scheduler.Update(float64(rl.GetFrameTime()))
-	l.emailInput.Update()
-	l.passwordInput.Update()
-	l.isLoginButtonPressed = l.loginButton.Update()
+	l.loginSection.emailInput.Update()
+	l.loginSection.passwordInput.Update()
+	l.loginSection.isLoginButtonPressed = l.loginSection.loginButton.Update()
 
-	if l.isLoginButtonPressed {
-		//i have to do check services and then mark this somehow to show that user can use it
-		//and maybe use this to not make other request we have to wait if goruitne change this var to false and then???
-		//thiis is to set own presence to cut all messsage service from app
+	if l.loginSection.isLoginButtonPressed {
 		l.Login()
 	}
 
 }
 
-// TOOD during the login is time to connect to all other services e.g messageService
-// (we also are connecting to server but this is what we are doing first because without server
-// we cant live but without messages services we can
-
-// TODO (user can be offline but also error with messageSrvies is reason to set his status to offline
-// even he is logged in
 func (l *LoginScene) RenderLoginState() {
 	rl.ClearBackground(utils.LOGINBGCOLOR)
 	rl.DrawText("LOGIN PAGE", int32(rl.GetScreenWidth()/2)-rl.MeasureText("LOGIN PAGE", 80)/2, 50, 80, rl.DarkGray)
 	rl.DrawText("remote command system", int32(rl.GetScreenWidth()/2)-rl.MeasureText("LOGIN PAGE", 50)/4, 110, 50, rl.DarkGray)
 
 	l.errorSection.errorPopup.Render()
-	//TODO: secret password inboxInput box
-	l.emailInput.Render()
-	l.passwordInput.Render()
-	l.loginButton.Render()
+	l.loginSection.emailInput.Render()
+	l.loginSection.passwordInput.Render()
+	l.loginSection.loginButton.Render()
 
 }
