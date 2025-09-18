@@ -85,6 +85,14 @@ message Pin {
   Location location = 4;
   google.protobuf.Timestamp lastOnline = 5;
 }
+
+message UserInformation{
+  User user = 1;
+  optional Unit unit = 2;
+  optional User UnitCommander =3;
+  repeated  Device device = 4;
+  repeated  Task task = 5;
+}
 // ========================
 // ACTION MESSAGE
 // ========================
@@ -409,3 +417,12 @@ message DeleteTaskReq{
   string taskID = 2;
 }
 message DeleteTaskRes{}
+
+message GetUserInformation{
+  string userID =1;
+}
+
+message UserInformations {
+  UserInformation userInformation =1;
+
+}

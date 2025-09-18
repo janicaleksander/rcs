@@ -89,31 +89,6 @@ func WrapText(maxWidth int32, input string, fontSize int32) string {
 	return output.String()
 }
 
-type Task struct {
-	remaining float64
-	handler   func()
-}
-
-type Scheduler struct {
-	tasks []Task
-}
-
-func (s *Scheduler) After(seconds float64, fn func()) {
-	s.tasks = append(s.tasks, Task{remaining: seconds, handler: fn})
-}
-func (s *Scheduler) Update(dt float64) {
-	remaining := s.tasks[:0]
-	for _, t := range s.tasks {
-		t.remaining -= dt
-		if t.remaining <= 0 {
-			t.handler()
-		} else {
-			remaining = append(remaining, t)
-		}
-	}
-	s.tasks = remaining
-}
-
 type SharedConfig struct {
 	ServerPID         *actor.PID
 	MessageServicePID *actor.PID

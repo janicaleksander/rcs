@@ -30,9 +30,7 @@ func (c *CreateUserScene) CreateUser() {
 		len(rePassword) <= 0 ||
 		len(name) <= 0 || len(surname) <= 0 {
 		c.errorSection.errorMessage = "Zero length input error"
-		c.scheduler.After((3 * time.Second).Seconds(), func() {
-			c.errorSection.errorPopup.Hide()
-		})
+		c.errorSection.errorPopup.ShowFor(time.Second * 3)
 		c.errorSection.errorPopup.Show()
 		return
 	}
@@ -40,9 +38,8 @@ func (c *CreateUserScene) CreateUser() {
 	if lvl > 3 || lvl < 0 {
 		c.errorSection.errorPopup.Show()
 		c.errorSection.errorMessage = "Bad rulelvl input"
-		c.scheduler.After((3 * time.Second).Seconds(), func() {
-			c.errorSection.errorPopup.Hide()
-		})
+		c.errorSection.errorPopup.ShowFor(time.Second * 3)
+
 		return
 	}
 	newUser := user.NewUser(email, password, int32(lvl), name, surname)
@@ -58,15 +55,12 @@ func (c *CreateUserScene) CreateUser() {
 	if err != nil {
 		c.errorSection.errorMessage = err.Error()
 		c.errorSection.errorPopup.Show()
-		c.scheduler.After((3 * time.Second).Seconds(), func() {
-			c.errorSection.errorPopup.Hide()
-		})
+		c.errorSection.errorPopup.ShowFor(time.Second * 3)
+
 	}
 	if _, ok := res.(*proto.AcceptCreateUser); ok {
 		c.infoSection.acceptMessage = "Created successfully"
-		c.scheduler.After((3 * time.Second).Seconds(), func() {
-			c.infoSection.infoPopup.Hide()
-		})
+		c.errorSection.errorPopup.ShowFor(time.Second * 3)
 		c.infoSection.infoPopup.Show()
 		c.newUserSection.emailInput.Clear()
 		c.newUserSection.passwordInput.Clear()
@@ -77,9 +71,7 @@ func (c *CreateUserScene) CreateUser() {
 		v, _ := res.(*proto.Error)
 		c.errorSection.errorPopup.Show()
 		c.errorSection.errorMessage = v.Content
-		c.scheduler.After((3 * time.Second).Seconds(), func() {
-			c.errorSection.errorPopup.Hide()
-		})
+		c.errorSection.errorPopup.ShowFor(time.Second * 3)
 	}
 
 }

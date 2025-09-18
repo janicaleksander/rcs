@@ -1,6 +1,8 @@
 package createunitstate
 
 import (
+	"time"
+
 	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/application/component"
@@ -11,7 +13,6 @@ import (
 type CreateUnitScene struct {
 	cfg            *utils.SharedConfig
 	stateManager   *statesmanager.StateManager
-	scheduler      utils.Scheduler
 	backButton     component.Button
 	newUnitSection NewUnitSection
 	errorSection   ErrorSection
@@ -92,7 +93,6 @@ func (c *CreateUnitScene) CreateUnitSceneSetup(state *statesmanager.StateManager
 }
 
 func (c *CreateUnitScene) UpdateCreateUnitState() {
-	c.scheduler.Update(float64(rl.GetFrameTime()))
 
 	//go back button
 	if rl.IsMouseButtonPressed(rl.MouseButtonLeft) {
@@ -112,10 +112,7 @@ func (c *CreateUnitScene) UpdateCreateUnitState() {
 	}
 	if c.errorSection.isSetupError {
 		c.errorSection.errorMessage = "Setup error, can't do this now!"
-		c.errorSection.errorPopup.Show()
-		c.scheduler.After(1, func() {
-			c.errorSection.errorPopup.Hide()
-		})
+		c.errorSection.errorPopup.ShowFor(time.Second * 3)
 		c.newUnitSection.acceptButton.Deactivate()
 		return
 	}
@@ -137,6 +134,7 @@ func (c *CreateUnitScene) RenderCreateUnitState() {
 	c.errorSection.errorPopup.Render()
 	c.infoSection.infoPopup.Render()
 	c.backButton.Render()
+	c.errorSection.errorPopup.Render()
 
 	gui.ListViewEx(
 		c.newUnitSection.usersDropdown.Bounds,

@@ -236,10 +236,19 @@ func (s *Server) Receive(ctx *actor.Context) {
 		defer cancel()
 		err := s.storage.InsertDevice(c, msg.Device)
 		if err != nil {
-			fmt.Println(err)
 			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
 			ctx.Respond(&proto.AcceptCreateDevice{})
+		}
+	case *proto.GetUserInformation:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		information, err := s.storage.GetUserInformation(c, msg.UserID)
+		if err != nil {
+			fmt.Println(err)
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(&proto.UserInformations{UserInformation: information})
 		}
 	default:
 		utils.Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())

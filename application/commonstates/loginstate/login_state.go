@@ -11,7 +11,6 @@ import (
 type LoginScene struct {
 	cfg          *utils.SharedConfig
 	stateManager *statesmanager.StateManager
-	scheduler    utils.Scheduler
 	loginSection LoginSection
 	errorSection ErrorSection
 }
@@ -58,7 +57,6 @@ func (l *LoginScene) LoginSceneSetup(state *statesmanager.StateManager, cfg *uti
 }
 
 func (l *LoginScene) UpdateLoginState() {
-	l.scheduler.Update(float64(rl.GetFrameTime()))
 	l.loginSection.emailInput.Update()
 	l.loginSection.passwordInput.Update()
 	l.loginSection.isLoginButtonPressed = l.loginSection.loginButton.Update()

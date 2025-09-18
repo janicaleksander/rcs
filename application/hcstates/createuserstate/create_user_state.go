@@ -11,7 +11,6 @@ import (
 type CreateUserScene struct {
 	cfg            *utils.SharedConfig
 	stateManager   *statesmanager.StateManager
-	scheduler      utils.Scheduler
 	backButton     component.Button
 	newUserSection NewUserSection
 	errorSection   ErrorSection
@@ -124,7 +123,6 @@ func (c *CreateUserScene) CreateUserSceneSetup(state *statesmanager.StateManager
 }
 
 func (c *CreateUserScene) UpdateCreateUserState() {
-	c.scheduler.Update(float64(rl.GetFrameTime()))
 	c.newUserSection.emailInput.Update()
 	c.newUserSection.passwordInput.Update()
 	c.newUserSection.rePasswordInput.Update()

@@ -122,7 +122,7 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		}
 	case *proto.SendMessage: // if no ok it means that sb is not online in chat
 		if _, ok := cm.conversations[msg.Message.ConversationID]; !ok {
-			panic("XDDD")
+			//panic("XDDD")
 			//or sendign through profile also active this, like click send also actobve openadnload conv but in other message
 		}
 		orgSender := ctx.Sender()
@@ -130,7 +130,7 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		resp := ctx.Request(cm.conversations[msg.Message.ConversationID], msg, utils.WaitTime)
 		res, err := resp.Result()
 		if err != nil {
-			panic(err.Error() + "cnv manager")
+			//panic(err.Error() + "cnv manager")
 		}
 		//here actor receive another message form this resp and change a orignal ctx of messageservicePID so cause of that
 		//we had to memorize orgSender
