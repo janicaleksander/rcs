@@ -19,10 +19,11 @@ func (c *CreateUnitScene) Reset() {
 }
 func (c *CreateUnitScene) FetchUsers() {
 	res, err := utils.MakeRequest(utils.NewRequest(c.cfg.Ctx, c.cfg.ServerPID, &proto.GetUserAboveLVL{
-		Lower: 0,
-		Upper: 1,
+		Lower: 2,
+		Upper: 2,
 	}))
 	if err != nil {
+		c.errorSection.errorMessage = err.Error()
 		c.errorSection.isSetupError = true
 		return
 	}
@@ -37,7 +38,8 @@ func (c *CreateUnitScene) FetchUsers() {
 	} else {
 		v, _ := res.(*proto.Error)
 		c.errorSection.errorMessage = v.Content
-		c.errorSection.isSetupError = true
+		c.errorSection.errorPopup.ShowFor(time.Second * 3)
+		c.errorSection.isSetupError = true //TODO??
 	}
 
 }
@@ -45,11 +47,7 @@ func (c *CreateUnitScene) CreateUnit() {
 	name := c.newUnitSection.nameInput.GetText()
 	user := c.newUnitSection.usersDropdown.IdxActiveElement
 	if len(strings.TrimSpace(name)) <= 0 || user <= 0 {
-		c.errorSection.errorPopup.Show()
-		c.errorSection.errorMessage = "Zero length error"
-		c.scheduler.After((3 * time.Second).Seconds(), func() {
-			c.errorSection.errorPopup.Hide()
-		})
+		c.errorSection.errorPopup.ShowFor(time.Second * 3)
 	} else {
 		//user can be only in one unit in the same time -> error
 		res, err := utils.MakeRequest(utils.NewRequest(c.cfg.Ctx, c.cfg.ServerPID, &proto.CreateUnit{
@@ -61,27 +59,19 @@ func (c *CreateUnitScene) CreateUnit() {
 		}))
 
 		if err != nil {
-			c.errorSection.errorPopup.Show()
 			c.errorSection.errorMessage = err.Error()
-			c.scheduler.After((3 * time.Second).Seconds(), func() {
-				c.errorSection.errorPopup.Hide()
-			})
+			c.errorSection.errorPopup.ShowFor(time.Second * 3)
 			return
 		}
 		if _, ok := res.(*proto.AcceptCreateUnit); ok {
 			c.infoSection.infoPopup.Show()
 			c.infoSection.infoMessage = "Success!"
-			c.scheduler.After((3 * time.Second).Seconds(), func() {
-				c.infoSection.infoPopup.Hide()
-			})
+			c.infoSection.infoPopup.ShowFor(time.Second * 3)
 		} else {
 			v, _ := res.(*proto.Error)
 			c.errorSection.errorMessage = v.Content
 			c.errorSection.errorPopup.Show()
-			c.scheduler.After((3 * time.Second).Seconds(), func() {
-				c.errorSection.errorPopup.Hide()
-			})
-
+			c.errorSection.errorPopup.ShowFor(time.Second * 3)
 		}
 
 	}

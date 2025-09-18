@@ -133,4 +133,6 @@ type Storage interface {
 	DeleteTask(ctx context.Context, taskID string) error
 	GetDeviceTypes(ctx context.Context) ([]int32, error)
 	InsertDevice(ctx context.Context, device *proto.Device) error
+	GetUserInformation(ctx context.Context, userID string) (*proto.UserInformation, error)
+	GetUnitCommander(ctx context.Context, unitID string) (*proto.User, error)
 }

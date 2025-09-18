@@ -10,9 +10,8 @@ import (
 )
 
 type InfoUnitScene struct {
-	cfg          *utils.SharedConfig
-	stateManager *statesmanager.StateManager
-	//scheduler TODO
+	cfg                      *utils.SharedConfig
+	stateManager             *statesmanager.StateManager
 	backButton               component.Button
 	unitsSection             UnitsSection
 	usersSection             UsersSection

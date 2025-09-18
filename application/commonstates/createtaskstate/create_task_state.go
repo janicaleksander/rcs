@@ -10,7 +10,6 @@ import (
 type CreateTaskScene struct {
 	cfg          *utils.SharedConfig
 	stateManager *statesmanager.StateManager
-	scheduler    utils.Scheduler
 	errorSection ErrorSection
 	infoSection  InfoSection
 }
@@ -36,8 +35,6 @@ func (c *CreateTaskScene) CreateTaskSceneSetup(state *statesmanager.StateManager
 }
 
 func (c *CreateTaskScene) UpdateCreateTaskState() {
-	c.scheduler.Update(float64(rl.GetFrameTime()))
-
 }
 func (c *CreateTaskScene) RenderCreateTaskState() {
 	rl.ClearBackground(utils.CREATEUNITBG)

@@ -12,7 +12,6 @@ import (
 type CreateDeviceScene struct {
 	cfg              *utils.SharedConfig
 	state            *statesmanager.StateManager
-	scheduler        utils.Scheduler
 	backButton       component.Button
 	newDeviceSection NewDeviceSection
 	errorSection     ErrorSection
@@ -91,7 +90,6 @@ func (d *CreateDeviceScene) CreateDeviceSceneSetup(stateManager *statesmanager.S
 		60), &d.infoSection.info)
 }
 func (d *CreateDeviceScene) UpdateCreateDeviceState() {
-	d.scheduler.Update(float64(rl.GetFrameTime()))
 	d.newDeviceSection.nameInput.Update()
 
 	if d.backButton.Update() {

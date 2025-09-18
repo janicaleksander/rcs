@@ -24,10 +24,7 @@ func (l *LoginScene) Login() {
 	pwd := l.loginSection.passwordInput.GetText()
 	if len(strings.TrimSpace(email)) <= 0 || len(strings.TrimSpace(pwd)) <= 0 {
 		l.errorSection.loginErrorMessage = "zero length inbox input"
-		l.errorSection.errorPopup.Show()
-		l.scheduler.After((3 * time.Second).Seconds(), func() {
-			l.errorSection.errorPopup.Hide()
-		})
+		l.errorSection.errorPopup.ShowFor(time.Second * 3)
 		return
 	}
 
@@ -41,19 +38,13 @@ func (l *LoginScene) Login() {
 	}))
 	if err != nil {
 		l.errorSection.loginErrorMessage = err.Error()
-		l.errorSection.errorPopup.Show()
-		l.scheduler.After((3 * time.Second).Seconds(), func() {
-			l.errorSection.errorPopup.Hide()
-		})
+		l.errorSection.errorPopup.ShowFor(time.Second * 3)
 		return
 	}
 
 	if v, ok := res.(*proto.AcceptUserLogin); !ok {
 		l.errorSection.loginErrorMessage = "Invalid credentials"
-		l.errorSection.errorPopup.Show()
-		l.scheduler.After((3 * time.Second).Seconds(), func() {
-			l.errorSection.errorPopup.Hide()
-		})
+		l.errorSection.errorPopup.ShowFor(time.Second * 3)
 	} else {
 		res, err = utils.MakeRequest(utils.NewRequest(
 			l.cfg.Ctx,
@@ -67,19 +58,12 @@ func (l *LoginScene) Login() {
 
 		if err != nil {
 			l.errorSection.loginErrorMessage = err.Error()
-			l.errorSection.errorPopup.Show()
-			l.scheduler.After((3 * time.Second).Seconds(), func() {
-				l.errorSection.errorPopup.Hide()
-			})
+			l.errorSection.errorPopup.ShowFor(time.Second * 3)
 			return
 		}
-
 		if _, ok = res.(*proto.AcceptRegisterClient); !ok {
 			l.errorSection.loginErrorMessage = "can't login to message service"
-			l.errorSection.errorPopup.Show()
-			l.scheduler.After((3 * time.Second).Seconds(), func() {
-				l.errorSection.errorPopup.Hide()
-			})
+			l.errorSection.errorPopup.ShowFor(time.Second * 3)
 			return
 		}
 		//TODO

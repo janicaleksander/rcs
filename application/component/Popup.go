@@ -1,15 +1,23 @@
 package component
 
 import (
+	"time"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/janicaleksander/bcs/utils"
 )
 
 type Popup struct {
-	show   bool
-	text   *string
-	bounds rl.Rectangle
-	cfg    PopupConfig
+	show      bool
+	text      *string
+	bounds    rl.Rectangle
+	cfg       PopupConfig
+	expiresAt time.Time
+}
+
+func (p *Popup) ShowFor(t time.Duration) {
+	p.Show()
+	p.expiresAt = time.Now().Add(t)
 }
 
 type PopupConfig struct {
@@ -34,13 +42,16 @@ func NewPopupConfig(opts ...func(*PopupConfig)) *PopupConfig {
 }
 
 func NewPopup(cfg *PopupConfig, bounds rl.Rectangle, text *string) *Popup {
+	if text == nil {
+		emptyText := ""
+		text = &emptyText
+	}
 	return &Popup{
 		show:   false,
 		text:   text,
 		bounds: bounds,
 		cfg:    *cfg,
 	}
-
 }
 
 func WithBgColor(color rl.Color) func(*PopupConfig) {
@@ -56,7 +67,7 @@ func WithFontColor(color rl.Color) func(*PopupConfig) {
 func (p *Popup) Show() { p.show = true }
 func (p *Popup) Hide() { p.show = false }
 func (p *Popup) Render() {
-	if p.show {
+	if p.show && p.text != nil && !time.Now().After(p.expiresAt) {
 		rl.DrawRectangle(
 			int32(p.bounds.X),
 			int32(p.bounds.Y),
@@ -68,5 +79,8 @@ func (p *Popup) Render() {
 }
 
 func (p *Popup) GetText() string {
-	return *p.text
+	if p.text != nil {
+		return *p.text
+	}
+	return "DEFAULT ERR"
 }

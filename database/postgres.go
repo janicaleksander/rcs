@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/janicaleksander/bcs/types/proto"
@@ -12,6 +13,8 @@ import (
 	_ "github.com/lib/pq"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+var EmptyResError error = errors.New("empty result")
 
 // Struct that is made to implement Storage interface
 // It holds connection to make queries to PostgreSQL.
@@ -120,7 +123,7 @@ func (p *Postgres) GetUsersWithLVL(ctx context.Context, lower, upper int) ([]*pr
 		users = append(users, u)
 	}
 	if len(users) == 0 {
-		return nil, errors.New("no users")
+		return nil, EmptyResError
 	}
 	return users, nil
 }
@@ -177,7 +180,7 @@ func (p *Postgres) GetAllUnits(ctx context.Context) ([]*proto.Unit, error) {
 		units = append(units, unit)
 	}
 	if len(units) == 0 {
-		return nil, errors.New("no units")
+		return nil, EmptyResError
 	}
 	return units, nil
 }
@@ -216,7 +219,7 @@ func (p *Postgres) GetUsersInUnit(ctx context.Context, unitID string) ([]*proto.
 		users = append(users, u)
 	}
 	if len(users) == 0 {
-		return nil, errors.New("no users")
+		return nil, EmptyResError
 	}
 	return users, nil
 }
@@ -423,7 +426,7 @@ ORDER BY m.sent_at DESC NULLS LAST ;`, id)
 	}
 
 	if len(conversationsSummary) == 0 {
-		return nil, errors.New("no cnvs summary")
+		return nil, EmptyResError
 	}
 	return conversationsSummary, nil
 
@@ -458,7 +461,7 @@ func (p *Postgres) LoadConversation(ctx context.Context, cnvID string) ([]*proto
 		messages = append(messages, m)
 	}
 	if len(messages) == 0 {
-		return nil, errors.New("no messages")
+		return nil, EmptyResError
 	}
 	return messages, nil
 }
@@ -497,7 +500,7 @@ func (p *Postgres) SelectUsersToNewConversation(ctx context.Context, userID stri
 		users = append(users, usr)
 	}
 	if len(users) == 0 {
-		return nil, errors.New("no users")
+		return nil, EmptyResError
 	}
 	return users, nil
 }
@@ -536,7 +539,7 @@ func (p *Postgres) DoesUserHaveDevice(ctx context.Context, userID string) (bool,
 		return false, nil, err
 	}
 	if len(devices) == 0 {
-		return false, nil, errors.New("no devices")
+		return false, nil, EmptyResError
 	}
 	return true, devices, nil
 }
@@ -598,7 +601,7 @@ func (p *Postgres) GetPins(ctx context.Context) ([]*proto.Pin, error) {
 		pins = append(pins, pin)
 	}
 	if len(pins) == 0 {
-		return nil, errors.New("no pins")
+		return nil, EmptyResError
 	}
 	return pins, nil
 }
@@ -703,7 +706,7 @@ func (p *Postgres) GetUserTasks(ctx context.Context, deviceID string) ([]*proto.
 		tasks = append(tasks, t)
 	}
 	if len(tasks) == 0 {
-		return nil, errors.New("no tasks")
+		return nil, EmptyResError
 	}
 	return tasks, nil
 }
@@ -762,7 +765,7 @@ func (p *Postgres) GetDeviceTypes(ctx context.Context) ([]int32, error) {
 		types = append(types, t)
 	}
 	if len(types) == 0 {
-		return nil, errors.New("no types")
+		return nil, EmptyResError
 	}
 	return types, nil
 }
@@ -789,4 +792,87 @@ func (p *Postgres) InsertDevice(ctx context.Context, device *proto.Device) error
 		return err
 	}
 	return nil
+}
+
+func (p *Postgres) GetUserInformation(ctx context.Context, userID string) (*proto.UserInformation, error) {
+	usr := &proto.User{}
+	unit := &proto.Unit{}
+	unitCommander := &proto.User{}
+	devices := make([]*proto.Device, 0, 16)
+	tasks := make([]*proto.Task, 0, 8)
+	var err error
+
+	// #1 selected user information
+	usr, err = p.GetUser(ctx, userID)
+	if err != nil {
+		fmt.Printf("[GetUserInformation][#1] error getting user %s: %v", userID, err)
+		return nil, err
+	}
+
+	// #2 check if user is in unit
+	row := p.Conn.QueryRowContext(ctx, `SELECT 
+    								u.id,u.name 
+									FROM unit u 
+									INNER JOIN user_to_unit utu ON utu.unit_id=u.id
+									WHERE utu.user_id = $1`, userID)
+	err = row.Scan(&unit.Id, &unit.Name)
+	if errors.Is(err, sql.ErrNoRows) {
+		unit = nil
+	} else if err != nil {
+		fmt.Printf("[GetUserInformation][#2] error scanning unit for user %s: %v", userID, err)
+		return nil, err
+	}
+
+	// #3 unit commander
+	if unit != nil {
+		unitCommander, err = p.GetUnitCommander(ctx, unit.Id)
+		if err != nil {
+			fmt.Printf("[GetUserInformation][#3] error getting commander for unit %s: %v", unit.Id, err)
+			return nil, err
+		}
+	} else {
+		unitCommander = nil
+	}
+
+	// #4 check user devices
+	_, devices, err = p.DoesUserHaveDevice(ctx, userID)
+	if errors.Is(err, EmptyResError) || errors.Is(err, sql.ErrNoRows) {
+		devices = make([]*proto.Device, 0)
+	} else if err != nil {
+		fmt.Printf("[GetUserInformation][#4] error getting devices for user %s: %v", userID, err)
+		return nil, err
+	} else {
+		// #5 tasks for the first device
+		tasks, err = p.GetUserTasks(ctx, devices[0].Id)
+		if errors.Is(err, EmptyResError) || errors.Is(err, sql.ErrNoRows) {
+			tasks = make([]*proto.Task, 0)
+		} else if err != nil {
+			fmt.Printf("[GetUserInformation][#5] error getting tasks for device %s (user %s): %v", devices[0].Id, userID, err)
+			return nil, err
+		}
+	}
+
+	// #6 final struct
+	userInformation := &proto.UserInformation{
+		User:          usr,
+		Unit:          unit,
+		UnitCommander: unitCommander,
+		Device:        devices,
+		Task:          tasks,
+	}
+	return userInformation, nil
+}
+
+func (p *Postgres) GetUnitCommander(ctx context.Context, unitID string) (*proto.User, error) {
+	row := p.Conn.QueryRowContext(ctx, `
+										SELECT u.id 
+										FROM users u
+										INNER JOIN user_to_unit utu ON u.id = utu.user_id
+										WHERE (utu.unit_id =$1 AND u.rule_level=$2)`, unitID, 2)
+	var userID string
+	err := row.Scan(&userID)
+	if err != nil {
+		return nil, err
+	}
+	return p.GetUser(ctx, userID)
 }

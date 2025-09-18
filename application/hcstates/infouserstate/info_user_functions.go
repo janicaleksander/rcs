@@ -23,251 +23,74 @@ func (i *InfoUserScene) Reset() {
 	i.userListSection.currSelectedUserID = ""
 	i.userListSection.isInUnit = false
 }
-
-func (i *InfoUserScene) UpdateDescription() {
-
-	currentUserIdx := i.userListSection.usersList.IdxActiveElement
-	if currentUserIdx != -1 && currentUserIdx != i.userListSection.lastProcessedUserIdx {
-		user := i.userListSection.users[i.userListSection.usersList.IdxActiveElement]
-		i.userListSection.currSelectedUserID = user.Id
-		if _, ok := i.unitListSection.userToUnitCache[user.Id]; ok {
-			i.userListSection.isInUnit = true
-		} else {
-			i.userListSection.isInUnit = false
-		}
-		//
-		i.descriptionSection.descriptionName = user.Personal.Name
-		i.descriptionSection.descriptionSurname = user.Personal.Surname
-		i.descriptionSection.descriptionLVL = strconv.Itoa(int(user.RuleLvl))
-		i.userListSection.lastProcessedUserIdx = currentUserIdx
-	}
-
-}
-
-func (i *InfoUserScene) AddToUnit() {
-	if !i.userListSection.isInUnit { // shows add to unit
-		//fil userUnits ( TODO in v2 for loop through many units)
-		if i.actionSection.showAddModal {
-			for _, unit := range i.unitListSection.units {
-				i.addActionSection.unitsToAssignSlider.Strings = append(i.addActionSection.unitsToAssignSlider.Strings, unit.Id)
-				/*
-					cacheUnit := i.userToUnitCache[i.currSelectedUserID]
-					if cacheUnit == unit.Id {
-						continue
-					}
-					in v2 version. we dont need to show units that we are already enrolled in
-				*/
-
-			}
-			//i.actionSection.showAddModal = true
-		}
-
-		if i.addActionSection.isConfirmAddButtonPressed {
-			if i.addActionSection.unitsToAssignSlider.IdxActiveElement >= 0 {
-				unit := i.unitListSection.units[i.addActionSection.unitsToAssignSlider.IdxActiveElement]
-
-				res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.AssignUserToUnit{
-					UserID: i.userListSection.currSelectedUserID,
-					UnitID: unit.Id,
-				}))
-				if err != nil {
-					//context error deadline
-				}
-				if _, ok := res.(*proto.AcceptAssignUserToUnit); ok {
-					// TODO failure
-					i.unitListSection.userToUnitCache[i.userListSection.currSelectedUserID] = unit.Id
-					i.userListSection.isInUnit = true
-				} else {
-					//error
-				}
-			}
-
-		}
-	} else {
-		rl.DrawRectangle(int32(i.actionSection.inUnitBackground.X),
-			int32(i.actionSection.inUnitBackground.Y),
-			int32(i.actionSection.inUnitBackground.Width),
-			int32(i.actionSection.inUnitBackground.Height),
-			rl.Gray)
-		rl.DrawText(
-			"User is \n in unit",
-			int32(i.actionSection.inUnitBackground.X),
-			int32(i.actionSection.inUnitBackground.Y),
-			16,
-			rl.White)
-
-	}
-
-}
-
-func (i *InfoUserScene) RemoveFromUnit() {
-	if i.userListSection.isInUnit { // shows remove  unit
-		if i.actionSection.showRemoveModal {
-			i.removeActionSection.usersUnitsSlider.Strings =
-				append(
-					i.removeActionSection.usersUnitsSlider.Strings,
-					i.unitListSection.userToUnitCache[i.userListSection.currSelectedUserID])
-			//	i.showRemoveModal = true
-		}
-		if i.removeActionSection.isConfirmRemoveButtonPressed {
-			if i.removeActionSection.usersUnitsSlider.IdxActiveElement >= 0 {
-				unit := i.unitListSection.units[i.removeActionSection.usersUnitsSlider.IdxActiveElement]
-
-				res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.DeleteUserFromUnit{
-					UserID: i.userListSection.currSelectedUserID,
-					UnitID: unit.Id,
-				}))
-				if err != nil {
-					//error context deadline exceeded
-				}
-
-				if _, ok := res.(*proto.AcceptDeleteUserFromUnit); ok {
-					//TODO success
-
-					//TODO in v2 map str->[]str and then we have to iterate through
-					// this slice and delete exact unit
-					delete(i.unitListSection.userToUnitCache, i.userListSection.currSelectedUserID)
-					i.userListSection.isInUnit = false
-
-				} else {
-					//todo error
-				}
-
-			}
-
-		}
-	} else {
-		rl.DrawRectangle(
-			int32(i.actionSection.notInUnitBackground.X),
-			int32(i.actionSection.notInUnitBackground.Y),
-			int32(i.actionSection.notInUnitBackground.Width),
-			int32(i.actionSection.notInUnitBackground.Height),
-			rl.Gray)
-		rl.DrawText(
-			"User is not \n in unit",
-			int32(i.actionSection.notInUnitBackground.X),
-			int32(i.actionSection.notInUnitBackground.Y),
-			16,
-			rl.White)
-
-	}
-
-}
-
-func (i *InfoUserScene) SendMessage() {
-	if i.actionSection.showInboxModal {
-		res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.IsOnline{
-			UserID: i.userListSection.currSelectedUserID,
-		}))
-
+func (i *InfoUserScene) GetUserInformation() {
+	for _, usr := range i.userListSection.users {
+		res, err := utils.MakeRequest(
+			utils.NewRequest(
+				i.cfg.Ctx,
+				i.cfg.ServerPID,
+				&proto.GetUserInformation{
+					UserID: usr.Id},
+			))
 		if err != nil {
-			//error context deadline exceeded
+			i.errorSection.errorMessage = err.Error()
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+			return
 		}
-
-		if _, ok := res.(*proto.Online); ok {
-			i.sendMessageSection.activeUserCircle.Color = rl.Green
+		if v, ok := res.(*proto.UserInformations); ok {
+			i.userListSection.userInformation[usr.Id] = v.UserInformation
 		} else {
-			i.sendMessageSection.activeUserCircle.Color = rl.Red
+			v, _ := res.(*proto.Error)
+			i.errorSection.errorMessage = v.Content
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
 		}
-	}
-	if i.sendMessageSection.isSendMessageButtonPressed {
-		message := i.sendMessageSection.inboxInput.GetText()
-
-		res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetLoggedInUUID{
-			Pid: &proto.PID{
-				Address: i.cfg.Ctx.PID().Address,
-				Id:      i.cfg.Ctx.PID().ID}}))
-
-		if err != nil {
-			//error context deadline exceeded
-		}
-
-		var sender string
-		if v, ok := res.(*proto.LoggedInUUID); !ok {
-			//todo error return
-		} else {
-			sender = v.Id
-		}
-
-		res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.FillConversationID{
-			SenderID:   sender,
-			ReceiverID: i.userListSection.currSelectedUserID,
-		}))
-
-		//TOOD finish the err handling sth like messenger type of send error some maybe red circle idk
-		if err != nil {
-			//ctx error
-		}
-		var cnvID string
-		if v, ok := res.(*proto.FilledConversationID); ok {
-			cnvID = v.Id
-		} else {
-			//todo
-			panic("ERROR CNV ID")
-		}
-		n := time.Now()
-
-		res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.SendMessage{
-			Receiver: i.userListSection.currSelectedUserID,
-			Message: &proto.Message{
-				Id:             uuid.New().String(),
-				SenderID:       sender,
-				ConversationID: cnvID,
-				Content:        message,
-				SentAt:         timestamppb.Now(),
-			}}))
-
-		//TOOD finish the err handling sth like messenger type of send error some maybe red circle idk
-		if err != nil {
-			//todo error
-			panic(err.Error())
-		}
-
-		if _, ok := res.(*proto.AcceptSend); !ok {
-			//todo error
-		}
-
-		fmt.Println("CZAS SENDINGu", time.Since(n))
-		i.sendMessageSection.inboxInput.Clear()
 	}
 
 }
 
 func (i *InfoUserScene) FetchUnits() {
-
 	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetAllUnits{}))
 	if err != nil {
-		// context deadline exceeded
+		i.errorSection.errorMessage = err.Error()
+		i.errorSection.errorPopup.Show()
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+		return
 	}
-
-	i.unitListSection.units = make([]*proto.Unit, 0, 64)
-
 	if v, ok := res.(*proto.AllUnits); ok {
 		for _, unit := range v.Units {
 			i.unitListSection.units = append(i.unitListSection.units, unit)
 		}
 	} else {
-		// TODO error
+		v, _ := res.(*proto.Error)
+		i.errorSection.errorMessage = v.Content
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
 	}
 
 }
 
 func (i *InfoUserScene) FetchUsers() {
 	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetUserAboveLVL{
-		Lower: -1,
-		Upper: 10,
-	})) //TODO
+		Lower: 0,
+		Upper: 3,
+	}))
 	if err != nil {
-		// context deadline exceeded
-	}
+		i.errorSection.errorMessage = err.Error()
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
 
-	i.userListSection.users = make([]*proto.User, 0, 64)
+		return
+	}
 	if v, ok := res.(*proto.UsersAboveLVL); ok {
 		for _, user := range v.Users {
 			i.userListSection.users = append(i.userListSection.users, user)
 		}
 	} else {
-		// TODO error
+		v, _ := res.(*proto.Error)
+		i.errorSection.errorMessage = v.Content
+		i.errorSection.errorPopup.Show()
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
 	}
 
 	//cache users information
@@ -284,15 +107,15 @@ func (i *InfoUserScene) FetchUsers() {
 			defer wg.Done()
 			res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.IsUserInUnit{Id: userID}))
 			if err != nil {
-				//context deadline exceeded
+				utils.Logger.Error(err.Error())
+			} else {
+				if v, ok := res.(*proto.UserIsInUnit); ok {
+					cacheChan <- struct {
+						userID string
+						unitID string
+					}{userID: userID, unitID: v.UnitID}
+				}
 			}
-			if v, ok := res.(*proto.UserIsInUnit); ok {
-				cacheChan <- struct {
-					userID string
-					unitID string
-				}{userID: userID, unitID: v.UnitID}
-			}
-
 		}(&waitGroup, user.Id)
 	}
 	go func() {
@@ -301,6 +124,225 @@ func (i *InfoUserScene) FetchUsers() {
 	}()
 	for v := range cacheChan {
 		i.unitListSection.userToUnitCache[v.userID] = v.unitID
+	}
+}
+
+func (i *InfoUserScene) UpdateDescription() {
+	currentUserIdx := i.userListSection.usersList.IdxActiveElement
+	if currentUserIdx != -1 && currentUserIdx != i.userListSection.lastProcessedUserIdx && len(i.userListSection.users) > 0 {
+		user := i.userListSection.users[i.userListSection.usersList.IdxActiveElement]
+		i.userListSection.currSelectedUserID = user.Id
+		if i.userListSection.userInformation == nil {
+			fmt.Println("ERROR: userInformation map is nil")
+			return
+		}
+		userInfo, exists := i.userListSection.userInformation[user.Id]
+		if !exists {
+			fmt.Printf("ERROR: No information found for user ID: %s\n", user.Id)
+			return
+		}
+		if userInfo == nil {
+			fmt.Printf("ERROR: User information is nil for user ID: %s\n", user.Id)
+			return
+		}
+		if _, ok := i.unitListSection.userToUnitCache[user.Id]; ok {
+			i.userListSection.isInUnit = true
+		} else {
+			i.userListSection.isInUnit = false
+		}
+		i.descriptionSection.descriptionName = user.Personal.Name
+		i.descriptionSection.descriptionSurname = user.Personal.Surname
+		i.descriptionSection.descriptionLVL = strconv.Itoa(int(user.RuleLvl))
+		i.descriptionSection.descriptionID = userInfo.User.Id
+		i.descriptionSection.descriptionEmail = userInfo.User.Email
+		i.descriptionSection.descriptionTaskPart = prepareTaskPart(userInfo)
+		i.descriptionSection.descriptionUnitPart = prepareUnitPart(userInfo)
+		i.descriptionSection.descriptionDevicePart = prepareDevicePart(userInfo)
+
+		i.userListSection.lastProcessedUserIdx = currentUserIdx
+	}
+}
+
+// TODO if we delete from unit commande -> whole unit is deleted
+func prepareTaskPart(userInfo *proto.UserInformation) string {
+	n := len(userInfo.Task)
+	if n > 0 {
+		return fmt.Sprintf("Has %v task/s", n)
+	}
+	return fmt.Sprint("Does not have any tasks")
+}
+
+func prepareDevicePart(userInfo *proto.UserInformation) string {
+	n := len(userInfo.Device)
+	if n > 0 {
+		return fmt.Sprintf("Has %v device/s", n)
+	}
+	return fmt.Sprint("Does not have any devices")
+}
+func prepareUnitPart(userInfo *proto.UserInformation) string {
+	if userInfo.Unit != nil {
+		return fmt.Sprintf("Is in unit %v\nCommander of unit %v %v %v",
+			userInfo.Unit.Id,
+			userInfo.UnitCommander.Personal.Name,
+			userInfo.UnitCommander.Personal.Surname,
+			userInfo.UnitCommander.Email)
+	}
+	return fmt.Sprint("Is not in unit")
+}
+
+func (i *InfoUserScene) AddToUnit() {
+	if !i.userListSection.isInUnit { // shows add to unit
+		if i.addActionSection.isConfirmAddButtonPressed {
+			if i.addActionSection.unitsToAssignSlider.IdxActiveElement >= 0 {
+
+				unit := i.unitListSection.units[i.addActionSection.unitsToAssignSlider.IdxActiveElement]
+				res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.AssignUserToUnit{
+					UserID: i.userListSection.currSelectedUserID,
+					UnitID: unit.Id,
+				}))
+				if err != nil {
+					i.errorSection.errorMessage = err.Error()
+					i.errorSection.errorPopup.ShowFor(time.Second * 3)
+					return
+				}
+				if _, ok := res.(*proto.AcceptAssignUserToUnit); ok {
+					i.unitListSection.userToUnitCache[i.userListSection.currSelectedUserID] = unit.Id
+					i.userListSection.isInUnit = true
+					i.infoSection.infoMessage = "Success!"
+					i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+				} else {
+					v, _ := res.(*proto.Error)
+					i.errorSection.errorMessage = v.Content
+					i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+				}
+			}
+		}
+	}
+
+}
+
+func (i *InfoUserScene) RemoveFromUnit() {
+	if i.userListSection.isInUnit { // shows remove  unit
+		if i.removeActionSection.isConfirmRemoveButtonPressed {
+			unit := i.unitListSection.userToUnitCache[i.userListSection.currSelectedUserID]
+			res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.DeleteUserFromUnit{
+				UserID: i.userListSection.currSelectedUserID,
+				UnitID: unit,
+			}))
+			if err != nil {
+				i.errorSection.errorMessage = err.Error()
+				i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+			}
+			if _, ok := res.(*proto.AcceptDeleteUserFromUnit); ok {
+				//TODO in v2 map str->[]str and then we have to iterate through
+				// this slice and delete exact unit
+				delete(i.unitListSection.userToUnitCache, i.userListSection.currSelectedUserID)
+				i.userListSection.isInUnit = false
+				i.infoSection.infoMessage = "Success!"
+				i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+			} else {
+				v, _ := res.(*proto.Error)
+				i.errorSection.errorMessage = v.Content
+				i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+			}
+		}
+	}
+}
+
+func (i *InfoUserScene) SendMessage() {
+	if i.actionSection.showInboxModal {
+		res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.IsOnline{
+			UserID: i.userListSection.currSelectedUserID,
+		}))
+		if err != nil {
+			i.errorSection.errorMessage = err.Error()
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+			return
+		}
+		if _, ok := res.(*proto.Online); ok {
+			i.sendMessageSection.activeUserCircle.Color = rl.Green
+		} else {
+			i.sendMessageSection.activeUserCircle.Color = rl.Red
+		}
+	}
+	if i.sendMessageSection.isSendMessageButtonPressed {
+		message := i.sendMessageSection.inboxInput.GetText()
+		res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetLoggedInUUID{
+			Pid: &proto.PID{
+				Address: i.cfg.Ctx.PID().Address,
+				Id:      i.cfg.Ctx.PID().ID},
+		},
+		))
+		if err != nil {
+			i.errorSection.errorMessage = err.Error()
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+			return
+		}
+		var sender string
+		if v, ok := res.(*proto.LoggedInUUID); ok {
+			sender = v.Id
+		} else {
+			v, _ := res.(*proto.Error)
+			i.errorSection.errorMessage = v.Content
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+			return
+		}
+
+		res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.FillConversationID{
+			SenderID:   sender,
+			ReceiverID: i.userListSection.currSelectedUserID,
+		}))
+
+		if err != nil {
+			i.errorSection.errorMessage = err.Error()
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+			return
+		}
+		var cnvID string
+		if v, ok := res.(*proto.FilledConversationID); ok {
+			cnvID = v.Id
+		} else {
+			v, _ := res.(*proto.Error)
+			i.errorSection.errorMessage = v.Content
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+		}
+		res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.SendMessage{
+			Receiver: i.userListSection.currSelectedUserID,
+			Message: &proto.Message{
+				Id:             uuid.New().String(),
+				SenderID:       sender,
+				ConversationID: cnvID,
+				Content:        message,
+				SentAt:         timestamppb.Now(),
+			}}))
+		if err != nil {
+			i.errorSection.errorMessage = err.Error()
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+			return
+		}
+		if _, ok := res.(*proto.AcceptSend); !ok {
+			v, _ := res.(*proto.Error)
+			i.errorSection.errorMessage = v.Content
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+		} else {
+			i.infoSection.infoMessage = "Message has sent!"
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
+			i.sendMessageSection.inboxInput.Clear()
+		}
 	}
 }
 
@@ -376,14 +418,6 @@ func (i *InfoUserScene) updateMap() {
 		i.trackUserLocationSection.LocationMap.camera.Target.X,
 		i.trackUserLocationSection.LocationMap.camera.Target.Y,
 	)
-	//TODO
-	/*
-		tm.mu.Lock()
-		defer tm.mu.Unlock()
-		for _, tile := range tm.tiles {
-			tile.unload()
-		}
-	*/
 
 }
 
@@ -393,13 +427,17 @@ func (i *InfoUserScene) FetchPins() {
 		i.cfg.ServerPID,
 		&proto.GetPins{}))
 	if err != nil {
-		//TODO
+		i.errorSection.errorMessage = err.Error()
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
 	}
 	if v, ok := res.(*proto.Pins); !ok {
-		//error
+		v, _ := res.(*proto.Error)
+		i.errorSection.errorMessage = v.Content
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
 		return
 	} else {
-		//map with pins information
 		for _, p := range v.Pins {
 			x, y := latLonToPixel(p.Location.Latitude, p.Location.Longitude, ZOOM)
 			i.trackUserLocationSection.locationMapInformation.MapPinInformation[p.DeviceID] = &component.PinInformation{
@@ -410,7 +448,6 @@ func (i *InfoUserScene) FetchPins() {
 				LastTimeOnline: p.LastOnline.AsTime(),
 			}
 		}
-		//map with last task tab information
 		var waitGroup sync.WaitGroup
 		for _, p := range v.Pins {
 			go func(wg *sync.WaitGroup) {
@@ -422,7 +459,9 @@ func (i *InfoUserScene) FetchPins() {
 						i.cfg.ServerPID,
 						&proto.GetCurrentTask{DeviceID: p.DeviceID}))
 				if err != nil {
-					//todo
+					i.errorSection.errorMessage = err.Error()
+					i.errorSection.errorPopup.ShowFor(time.Second * 3)
+
 				} else {
 					if v, ok := res.(*proto.CurrentTask); ok {
 						i.trackUserLocationSection.locationMapInformation.MapCurrentTask[p.DeviceID] = &component.CurrentTaskTab{
@@ -565,7 +604,6 @@ func (i *InfoUserScene) drawInfoTab(currentTaskTab *component.CurrentTaskTab) {
 		int32(i.trackUserLocationSection.currentTaskTab.Height),
 		rl.NewColor(250, 250, 250, 255))
 
-	//TODO repair what if I dont have any current task
 	text := utils.WrapText(
 		int32(i.trackUserLocationSection.currentTaskTab.Width),
 		currentTaskTab.Task.Description,
