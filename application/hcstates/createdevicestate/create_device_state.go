@@ -39,9 +39,6 @@ func (d *CreateDeviceScene) CreateDeviceSceneSetup(stateManager *statesmanager.S
 	d.cfg = cfg
 	d.state = stateManager
 	d.Reset()
-	d.FetchUsers()
-	d.FetchDeviceTypes()
-
 	d.newDeviceSection.nameInput = *component.NewInputBox(
 		component.NewInputBoxConfig(),
 		rl.NewRectangle(
@@ -54,7 +51,7 @@ func (d *CreateDeviceScene) CreateDeviceSceneSetup(stateManager *statesmanager.S
 	d.newDeviceSection.ownerSlider.Bounds = rl.NewRectangle(
 		d.newDeviceSection.nameInput.Bounds.X,
 		d.newDeviceSection.nameInput.Bounds.Y+d.newDeviceSection.nameInput.Bounds.Height+10,
-		240, 80,
+		240, 50,
 	)
 
 	d.newDeviceSection.typesToggle.Labels = []string{"Mobile (0)"}
@@ -88,14 +85,12 @@ func (d *CreateDeviceScene) CreateDeviceSceneSetup(stateManager *statesmanager.S
 		d.newDeviceSection.acceptButton.Bounds.Y+d.newDeviceSection.acceptButton.Bounds.Height+10,
 		d.newDeviceSection.acceptButton.Bounds.Width,
 		60), &d.infoSection.info)
+
+	d.FetchUsers()
+	d.FetchDeviceTypes()
 }
 func (d *CreateDeviceScene) UpdateCreateDeviceState() {
 	d.newDeviceSection.nameInput.Update()
-
-	if d.backButton.Update() {
-		d.state.Add(statesmanager.GoBackState)
-		return
-	}
 	for i := range d.newDeviceSection.typesToggle.Labels {
 		toggleState := d.newDeviceSection.typesToggle.Selected == i
 		if gui.Toggle(
@@ -109,6 +104,10 @@ func (d *CreateDeviceScene) UpdateCreateDeviceState() {
 			d.CreateDevice()
 		}
 	}
+	if d.backButton.Update() {
+		d.state.Add(statesmanager.GoBackState)
+		return
+	}
 
 }
 func (d *CreateDeviceScene) RenderCreateDeviceState() {
@@ -116,6 +115,14 @@ func (d *CreateDeviceScene) RenderCreateDeviceState() {
 	d.backButton.Render()
 	d.newDeviceSection.acceptButton.Render()
 	d.newDeviceSection.nameInput.Render()
+
+	rl.DrawText(
+		"CREATE DEVICE",
+		int32(rl.GetScreenWidth()/2)-int32(rl.MeasureText("CREATE DEVICE", 50)/2),
+		50,
+		50,
+		rl.DarkGray,
+	)
 	rl.DrawText(
 		"NAME",
 		int32(d.newDeviceSection.nameInput.Bounds.X)-180,
@@ -147,8 +154,3 @@ func (d *CreateDeviceScene) RenderCreateDeviceState() {
 	d.errorSection.errorPopup.Render()
 	d.infoSection.infoPopup.Render()
 }
-
-// need slider for device types
-// need slider for users to assign ownership
-
-//TODO think about logic to login to mobile app and pc app, distinguish this
