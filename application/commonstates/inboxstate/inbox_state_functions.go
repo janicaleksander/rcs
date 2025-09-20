@@ -255,7 +255,7 @@ func (i *InboxScene) SendMessage() {
 		return
 	}
 
-	if _, ok := res.(*proto.AcceptSend); !ok {
+	if _, ok := res.(*proto.AcceptSend); ok {
 		i.AppendMessage(msg)
 	} else {
 		v, _ := res.(*proto.Error)

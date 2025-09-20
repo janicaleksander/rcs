@@ -33,6 +33,7 @@ func (i *InfoUserScene) GetUserInformation() {
 					UserID: usr.Id},
 			))
 		if err != nil {
+			fmt.Println("XD 1")
 			i.errorSection.errorMessage = err.Error()
 			i.errorSection.errorPopup.ShowFor(time.Second * 3)
 			return
@@ -51,6 +52,8 @@ func (i *InfoUserScene) GetUserInformation() {
 func (i *InfoUserScene) FetchUnits() {
 	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.ServerPID, &proto.GetAllUnits{}))
 	if err != nil {
+		fmt.Println("XD 3")
+
 		i.errorSection.errorMessage = err.Error()
 		i.errorSection.errorPopup.Show()
 		i.errorSection.errorPopup.ShowFor(time.Second * 3)
@@ -62,6 +65,8 @@ func (i *InfoUserScene) FetchUnits() {
 			i.unitListSection.units = append(i.unitListSection.units, unit)
 		}
 	} else {
+		fmt.Println("XD 4")
+
 		v, _ := res.(*proto.Error)
 		i.errorSection.errorMessage = v.Content
 		i.errorSection.errorPopup.ShowFor(time.Second * 3)
@@ -78,6 +83,7 @@ func (i *InfoUserScene) FetchUsers() {
 	if err != nil {
 		i.errorSection.errorMessage = err.Error()
 		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+		fmt.Println("XD 5")
 
 		return
 	}
@@ -87,6 +93,8 @@ func (i *InfoUserScene) FetchUsers() {
 		}
 	} else {
 		v, _ := res.(*proto.Error)
+		fmt.Println("XD 6")
+
 		i.errorSection.errorMessage = v.Content
 		i.errorSection.errorPopup.Show()
 		i.errorSection.errorPopup.ShowFor(time.Second * 3)
@@ -203,6 +211,8 @@ func (i *InfoUserScene) AddToUnit() {
 				if err != nil {
 					i.errorSection.errorMessage = err.Error()
 					i.errorSection.errorPopup.ShowFor(time.Second * 3)
+					fmt.Println("XD 7")
+
 					return
 				}
 				if _, ok := res.(*proto.AcceptAssignUserToUnit); ok {
@@ -212,6 +222,8 @@ func (i *InfoUserScene) AddToUnit() {
 					i.errorSection.errorPopup.ShowFor(time.Second * 3)
 
 				} else {
+					fmt.Println("XD 8")
+
 					v, _ := res.(*proto.Error)
 					i.errorSection.errorMessage = v.Content
 					i.errorSection.errorPopup.ShowFor(time.Second * 3)
@@ -232,6 +244,8 @@ func (i *InfoUserScene) RemoveFromUnit() {
 				UnitID: unit,
 			}))
 			if err != nil {
+				fmt.Println("XD ")
+
 				i.errorSection.errorMessage = err.Error()
 				i.errorSection.errorPopup.ShowFor(time.Second * 3)
 
@@ -246,6 +260,8 @@ func (i *InfoUserScene) RemoveFromUnit() {
 
 			} else {
 				v, _ := res.(*proto.Error)
+				fmt.Println("XD 10")
+
 				i.errorSection.errorMessage = v.Content
 				i.errorSection.errorPopup.ShowFor(time.Second * 3)
 
@@ -260,6 +276,7 @@ func (i *InfoUserScene) SendMessage() {
 			UserID: i.userListSection.currSelectedUserID,
 		}))
 		if err != nil {
+			panic("1")
 			i.errorSection.errorMessage = err.Error()
 			i.errorSection.errorPopup.ShowFor(time.Second * 3)
 
@@ -282,7 +299,6 @@ func (i *InfoUserScene) SendMessage() {
 		if err != nil {
 			i.errorSection.errorMessage = err.Error()
 			i.errorSection.errorPopup.ShowFor(time.Second * 3)
-
 			return
 		}
 		var sender string
@@ -292,7 +308,6 @@ func (i *InfoUserScene) SendMessage() {
 			v, _ := res.(*proto.Error)
 			i.errorSection.errorMessage = v.Content
 			i.errorSection.errorPopup.ShowFor(time.Second * 3)
-
 			return
 		}
 
@@ -304,7 +319,6 @@ func (i *InfoUserScene) SendMessage() {
 		if err != nil {
 			i.errorSection.errorMessage = err.Error()
 			i.errorSection.errorPopup.ShowFor(time.Second * 3)
-
 			return
 		}
 		var cnvID string
@@ -345,7 +359,6 @@ func (i *InfoUserScene) SendMessage() {
 		if err != nil {
 			i.errorSection.errorMessage = err.Error()
 			i.errorSection.errorPopup.ShowFor(time.Second * 3)
-
 			return
 		}
 		if _, ok := res.(*proto.AcceptSend); !ok { //??? TODO
@@ -354,7 +367,7 @@ func (i *InfoUserScene) SendMessage() {
 			i.errorSection.errorPopup.ShowFor(time.Second * 3)
 		} else {
 			i.infoSection.infoMessage = "Message has sent!"
-			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+			i.infoSection.infoPopup.ShowFor(time.Second * 3)
 			i.sendMessageSection.inboxInput.Clear()
 		}
 	}

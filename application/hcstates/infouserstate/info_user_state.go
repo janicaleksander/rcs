@@ -192,7 +192,7 @@ func (i *InfoUserScene) InfoUserSceneSetup(state *statesmanager.StateManager, cf
 		"Go back",
 		false)
 	if len(i.userListSection.users) > 0 {
-		i.userListSection.usersList.IdxActiveElement = 0
+		i.userListSection.usersList.IdxActiveElement = -1
 	} else {
 		i.userListSection.usersList.IdxActiveElement = -1
 	}
@@ -324,7 +324,11 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 	modalRemoveOpen := i.actionSection.showRemoveModal
 	modalSendOpen := i.actionSection.showInboxModal
 	modalLocationOpen := i.actionSection.showLocationModal
-	cond := !modalAddOpen && !modalRemoveOpen && !modalSendOpen && !modalLocationOpen
+
+	idx := i.userListSection.usersList.IdxActiveElement
+
+	cond := !modalAddOpen && !modalRemoveOpen && !modalSendOpen && !modalLocationOpen && idx != -1
+
 	i.sendMessageSection.inboxInput.SetActive(!cond)
 	i.actionSection.addButton.SetActive(cond)
 	i.actionSection.removeButton.SetActive(cond)
@@ -334,10 +338,20 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 	//i.removeActionSection.acceptRemoveButton.SetActive(cond)
 	//i.sendMessageSection.sendMessage.SetActive(cond)
 	i.backButton.SetActive(cond)
-	if cond {
+
+	if idx == -1 {
 		i.userListSection.usersList.Focus = 1
+		i.backButton.Active()
 	} else {
-		i.userListSection.usersList.Focus = 0
+		if cond {
+			i.userListSection.usersList.Focus = 1
+		} else {
+			i.userListSection.usersList.Focus = 0
+		}
+	}
+	if i.backButton.Update() {
+		i.stateManager.Add(statesmanager.GoBackState)
+		return
 	}
 
 	i.sendMessageSection.inboxInput.Update()
@@ -361,10 +375,7 @@ func (i *InfoUserScene) UpdateInfoUserState() {
 	i.addActionSection.isConfirmAddButtonPressed = i.addActionSection.acceptAddButton.Update()
 	i.removeActionSection.isConfirmRemoveButtonPressed = i.removeActionSection.acceptRemoveButton.Update()
 	i.sendMessageSection.isSendMessageButtonPressed = i.sendMessageSection.sendMessage.Update()
-	if i.backButton.Update() {
-		i.stateManager.Add(statesmanager.GoBackState)
-		return
-	}
+
 	if i.actionSection.showLocationModal {
 		i.updateMap()
 	}
@@ -449,6 +460,7 @@ func (i *InfoUserScene) RenderInfoUserState() {
 
 	i.actionSection.inboxButton.Render()
 	i.actionSection.trackLocation.Render()
+
 	if i.userListSection.usersList.Focus == 0 {
 		gui.Disable()
 		gui.ListViewEx(
