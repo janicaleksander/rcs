@@ -36,12 +36,11 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		utils.Logger.Info("Conversation manager has started")
 	case actor.Stopped:
 		utils.Logger.Info("Conversation manager has stooped")
-	case *proto.CreateConversation:
+	case *proto.CreateConversation: // ?
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		exists, _, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
 		if exists || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
-			utils.Logger.Error("Here x1", err, exists)
 			ctx.Respond(&proto.Error{Content: err.Error()})
 			return
 		}
@@ -52,26 +51,22 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		}
 		err = cm.storage.CreateConversation(c, cnv)
 		if err != nil {
-			utils.Logger.Error("Here x2")
-
 			ctx.Respond(&proto.Error{Content: err.Error()})
 			return
 		} else {
-			utils.Logger.Error("Here x3")
-
 			ctx.Respond(&proto.AcceptCreateConversation{})
 			return
 		}
 	case *proto.OpenAndLoadConversation:
-		cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID), "conversation")
+		if _, ok := cm.conversations[msg.ConversationID]; !ok {
+			cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID, cm.storage), "conversation")
+		}
 		// db call
-		fmt.Println(cm.conversations)
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		fmt.Println(msg.ConversationID)
 		msgs, err := cm.storage.LoadConversation(c, msg.ConversationID)
 		if err != nil {
-			//TODO
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
 			ctx.Respond(&proto.LoadedConversation{Messages: msgs})
 		}
@@ -121,36 +116,20 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			ctx.Respond(message)
 		}
 	case *proto.SendMessage: // if no ok it means that sb is not online in chat
+		orgSender := ctx.Sender()
 		if _, ok := cm.conversations[msg.Message.ConversationID]; !ok {
-			//panic("XDDD")
+			panic("XDDD")
 			//or sendign through profile also active this, like click send also actobve openadnload conv but in other message
 		}
-		orgSender := ctx.Sender()
 		//after ctx.Request->result ctx.Sender() is changing to actor that answering on request
-		resp := ctx.Request(cm.conversations[msg.Message.ConversationID], msg, utils.WaitTime)
-		res, err := resp.Result()
+		res, err := utils.MakeRequest(utils.NewRequest(ctx, cm.conversations[msg.Message.ConversationID], msg))
 		if err != nil {
-			//panic(err.Error() + "cnv manager")
-		}
-		//here actor receive another message form this resp and change a orignal ctx of messageservicePID so cause of that
-		//we had to memorize orgSender
-		if message, ok := res.(*proto.AcceptSend); ok {
-			ctx.Send(orgSender, message)
+			ctx.Send(orgSender, &proto.Error{Content: err.Error()})
 		} else {
-			ctx.Send(orgSender, message)
+			ctx.Send(orgSender, res)
 		}
-		fmt.Println("SENDER po", ctx.Sender())
-	case *proto.StoreMessage:
-		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		err := cm.storage.InsertMessage(c, msg.Message)
-		if err != nil {
-			ctx.Respond(&proto.Error{Content: err.Error()})
-		} else {
-			ctx.Respond(&proto.AcceptStoreMessage{})
-		}
+
 	case *proto.DeliverMessage:
-		fmt.Println("odebralem od cnv", msg.Message, ctx.Parent())
 		ctx.Send(ctx.Parent(), msg)
 	case *proto.GetUsersToNewConversation:
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -162,6 +141,7 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.UsersToNewConversation{Users: users})
 		}
 	default:
+		fmt.Println("#2")
 		_ = msg
 	}
 }

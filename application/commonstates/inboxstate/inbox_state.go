@@ -11,7 +11,17 @@ import (
 	"github.com/janicaleksander/bcs/utils"
 )
 
-// TODO add here scheduler and repair error in modal and other place
+type InboxScene struct {
+	cfg                 *utils.SharedConfig
+	stateManager        *statesmanager.StateManager
+	tempUserID          string // id of current logged in a user
+	toolboxSection      ToolboxSection
+	modalSection        ModalSection
+	MessageSection      MessageSection
+	conversationSection ConversationSection
+	errorSection        ErrorSection
+}
+
 type ToolboxSection struct {
 	toolboxArea                rl.Rectangle     // area with navigation buttons
 	backButton                 component.Button // go back button
@@ -26,13 +36,9 @@ type ToolboxSection struct {
 type ModalSection struct { // Modal add conversation
 	addConversationModal           component.Modal
 	usersSlider                    component.ListSlider // user slider inside modals
-	users                          []*proto.User        // users from DB without logged in user
+	users                          []*proto.User        // users from DB without logged-in user
 	acceptAddConversationButton    component.Button     // button inside modal to confirm
 	isAcceptAddConversationPressed bool
-	//error inside modal
-	errorBoxModal  rl.Rectangle
-	isErrorModal   bool
-	textErrorModal string
 }
 
 type MessageSection struct {
@@ -58,17 +64,6 @@ type ConversationSection struct {
 	nameOnTheWindow         string
 }
 
-type InboxScene struct {
-	cfg *utils.SharedConfig
-	//scheduler
-	stateManager        *statesmanager.StateManager
-	tempUserID          string // id of current logged in a user
-	toolboxSection      ToolboxSection
-	modalSection        ModalSection
-	MessageSection      MessageSection
-	conversationSection ConversationSection
-}
-
 type conversationPanelLayout struct {
 	currHeight  float32
 	panelHeight float32
@@ -84,6 +79,11 @@ type messagePanelLayout struct {
 	leftSide        float32
 	rightSide       float32
 	mu              sync.RWMutex
+}
+
+type ErrorSection struct {
+	errorPopup component.Popup
+	message    string
 }
 
 // TODO maybe use redis for fast cache to e.g user UUID
@@ -170,11 +170,12 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 			25),
 		"Add conversation", false)
 
-	i.modalSection.errorBoxModal = rl.NewRectangle(
-		i.modalSection.usersSlider.Bounds.X,
-		i.modalSection.usersSlider.Bounds.Y+8*addConversationModalPadding,
-		i.modalSection.usersSlider.Bounds.Width,
-		75)
+	i.errorSection.message = ""
+	i.errorSection.errorPopup = *component.NewPopup(component.NewPopupConfig(component.WithBgColor(rl.Red)), rl.NewRectangle(
+		float32(rl.GetScreenWidth()/2)-200./2.,
+		float32(rl.GetScreenHeight()-150),
+		200,
+		75), &i.errorSection.message)
 
 	//conversationPanel slider
 	i.conversationSection.conversationPanel.Bounds = rl.NewRectangle(
@@ -246,11 +247,9 @@ func (i *InboxScene) SetupInboxScene(state *statesmanager.StateManager, cfg *uti
 			i.AppendMessage(msg)
 		}
 	}()
-
 }
 
 func (i *InboxScene) UpdateInboxState() {
-
 	modalOpen := i.toolboxSection.showAddConversationModal
 	i.toolboxSection.backButton.SetActive(!modalOpen)
 	i.toolboxSection.addConversationButton.SetActive(!modalOpen)
@@ -354,6 +353,12 @@ func (i *InboxScene) RenderInboxState() {
 			int32(movingY),
 			15,
 			rl.White)
+		rl.DrawText(
+			i.MessageSection.messages[k].SentAt,
+			int32(i.MessageSection.messages[k].Bounds.X)+5,
+			int32(movingY)+int32(i.MessageSection.messages[k].Bounds.Height)+5,
+			15,
+			rl.Black)
 
 	}
 
@@ -423,15 +428,8 @@ func (i *InboxScene) RenderInboxState() {
 			i.modalSection.usersSlider.Focus)
 
 		i.modalSection.acceptAddConversationButton.Render()
-		if i.modalSection.isErrorModal {
-			rl.DrawRectangle(
-				int32(i.modalSection.errorBoxModal.X),
-				int32(i.modalSection.errorBoxModal.Y),
-				int32(i.modalSection.errorBoxModal.Width),
-				int32(i.modalSection.errorBoxModal.Height),
-				rl.LightGray)
-			rl.DrawText(i.modalSection.textErrorModal, int32(i.modalSection.errorBoxModal.X), int32(i.modalSection.errorBoxModal.Y), 15, rl.Red)
-		}
+
 	}
+	i.errorSection.errorPopup.Render()
 
 }

@@ -426,3 +426,7 @@ message UserInformations {
   UserInformation userInformation =1;
 
 }
+
+message KillConversation {
+  string conversationID =1;
+}

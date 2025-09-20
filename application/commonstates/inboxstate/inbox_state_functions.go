@@ -3,6 +3,7 @@ package inboxstate
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/google/uuid"
@@ -14,11 +15,10 @@ import (
 
 func (i *InboxScene) Reset() {
 	i.toolboxSection.isGoBackButtonPressed = false
-	i.toolboxSection.showAddConversationModal = false // if we want to show window to add new conversation
+	i.toolboxSection.showAddConversationModal = false
 	i.toolboxSection.isRefreshConversationPressed = false
 	i.modalSection.isAcceptAddConversationPressed = false
-	i.modalSection.isErrorModal = false
-	i.modalSection.textErrorModal = ""
+	i.errorSection.message = ""
 	i.MessageSection.isSendButtonPressed = false
 	i.conversationSection.isConversationSelected = false
 	i.MessageSection.messages = i.MessageSection.messages[:0]
@@ -33,28 +33,35 @@ func (i *InboxScene) GetLoggedID() {
 		},
 	}))
 	if err != nil {
-		//TODO error ctx deadline exceeded
+		i.errorSection.message = err.Error()
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+		return
 	}
 	if v, ok := res.(*proto.LoggedInUUID); ok {
 		i.tempUserID = v.Id
 	} else {
-		//TODO some general error and if its true we cant go further (maybe some error screen)
+		v, _ := res.(*proto.Error)
+		i.errorSection.message = v.Content
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
 	}
-}
+} //TODO Maybe setup error and its block next actions
 func (i *InboxScene) GetUserConversation() {
-
 	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID,
 		&proto.GetUserConversations{
 			Id: i.tempUserID},
 	))
 	if err != nil {
-		//TODO error ctx deadline exceeded
+		i.errorSection.message = err.Error()
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+		return
 	}
 
 	if v, ok := res.(*proto.UserConversations); ok {
 		i.conversationSection.usersConversations = v.ConvSummary
 	} else {
-		// maybe one message proto.Error with msg
+		v, _ := res.(*proto.Error)
+		i.errorSection.message = v.Content
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
 	}
 
 }
@@ -63,15 +70,20 @@ func (i *InboxScene) GetUserToNewConversation() {
 	res, err := utils.MakeRequest(utils.NewRequest(
 		i.cfg.Ctx,
 		i.cfg.MessageServicePID,
-		&proto.GetUsersToNewConversation{UserID: i.tempUserID}))
+		&proto.GetUsersToNewConversation{
+			UserID: i.tempUserID}))
 	if err != nil {
-		//TODO error ctx deadline exceeded
+		i.errorSection.message = err.Error()
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+		return
 	}
 
 	if v, ok := res.(*proto.UsersToNewConversation); ok {
 		i.modalSection.users = v.Users
 	} else {
-		// maybe one message proto.Error with msg
+		v, _ := res.(*proto.Error)
+		i.errorSection.message = v.Content
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
 	}
 }
 
@@ -101,6 +113,7 @@ func (i *InboxScene) AppendMessage(msg *proto.Message) {
 			i.MessageSection.messagePanelLayout.messageWidth,
 			height),
 		Content:   content,
+		SentAt:    msg.SentAt.AsTime().Format("02 Jan 2006 15:04"),
 		OriginalY: i.MessageSection.messagePanelLayout.currHeight,
 	})
 
@@ -109,15 +122,12 @@ func (i *InboxScene) AppendMessage(msg *proto.Message) {
 	i.MessageSection.messagePanelLayout.mu.Unlock()
 	i.MessageSection.messagePanel.Content.Height = i.MessageSection.messagePanelLayout.currHeight
 	i.MessageSection.messagePanel.Scroll.Y = -i.MessageSection.messagePanel.Content.Height
-	// - or +?
 }
 
 func (i *InboxScene) addNewConversation() {
-	i.modalSection.isErrorModal = false
-	i.modalSection.textErrorModal = ""
 	if i.modalSection.usersSlider.IdxActiveElement == -1 {
-		i.modalSection.isErrorModal = true
-		i.modalSection.textErrorModal = "Select user!"
+		i.errorSection.message = "Select user!"
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
 	} else {
 		selectedUSer := i.modalSection.users[i.modalSection.usersSlider.IdxActiveElement]
 		res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.CreateConversation{
@@ -127,17 +137,16 @@ func (i *InboxScene) addNewConversation() {
 		}))
 		if err != nil {
 			//context deadline exceeded
-			i.modalSection.isErrorModal = true
-			i.modalSection.textErrorModal = "Error" + err.Error()
-
+			i.errorSection.message = err.Error()
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+			return
 		}
-
 		if _, ok := res.(*proto.AcceptCreateConversation); ok {
 			i.refreshConversationsPanel()
 		} else {
-			i.modalSection.isErrorModal = true
-			i.modalSection.textErrorModal = "Error"
-			//error
+			v, _ := res.(*proto.Error)
+			i.errorSection.message = v.Content
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
 		}
 	}
 
@@ -152,13 +161,18 @@ func (i *InboxScene) refreshConversationsPanel() {
 		i.cfg.MessageServicePID,
 		&proto.GetUserConversations{Id: i.tempUserID}))
 	if err != nil {
-		//TODO context deadline exceeded
+		i.errorSection.message = err.Error()
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+		return
 	}
 	if v, ok := res.(*proto.UserConversations); ok {
 		fmt.Println(v.ConvSummary)
 		i.conversationSection.usersConversations = v.ConvSummary
 	} else {
-		//TODO error
+		v, _ := res.(*proto.Error)
+		i.errorSection.message = v.Content
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+		return
 	}
 
 	i.conversationSection.conversationPanelLayout.currHeight = i.conversationSection.conversationPanelLayout.startHeight
@@ -206,7 +220,9 @@ func (i *InboxScene) LoadMessages(tab *component.ConversationTab) {
 	},
 	))
 	if err != nil {
-		//TODO context deadline exceeded
+		i.errorSection.message = err.Error()
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+		return
 	}
 	i.MessageSection.messages = i.MessageSection.messages[:0]
 	i.MessageSection.messagePanelLayout.currHeight = i.MessageSection.messagePanel.Bounds.Y + 3*i.MessageSection.messagePanelLayout.padding
@@ -215,28 +231,36 @@ func (i *InboxScene) LoadMessages(tab *component.ConversationTab) {
 			i.AppendMessage(msg)
 		}
 	} else {
-		//TODO err
+		v, _ := res.(*proto.Error)
+		i.errorSection.message = v.Content
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
 	}
 }
 
 func (i *InboxScene) SendMessage() {
+	msg := &proto.Message{
+		Id:             uuid.New().String(),
+		SenderID:       i.tempUserID,
+		ConversationID: i.conversationSection.activeConversationID,
+		Content:        i.MessageSection.textInput.GetText(),
+		SentAt:         timestamppb.Now(),
+	}
 	res, err := utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.SendMessage{
 		Receiver: i.conversationSection.activeWithID,
-		Message: &proto.Message{
-			Id:             uuid.New().String(),
-			SenderID:       i.tempUserID,
-			ConversationID: i.conversationSection.activeConversationID,
-			Content:        i.MessageSection.textInput.GetText(),
-			SentAt:         timestamppb.Now(),
-		},
+		Message:  msg,
 	}))
 	if err != nil {
-		// context deadline exceed
+		i.errorSection.message = err.Error()
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
+		return
 	}
 
-	if v, ok := res.(*proto.DeliverMessage); ok {
-		i.AppendMessage(v.Message)
+	if _, ok := res.(*proto.AcceptSend); !ok {
+		i.AppendMessage(msg)
 	} else {
-		//error
+		v, _ := res.(*proto.Error)
+		i.errorSection.message = v.Content
+		i.errorSection.errorPopup.ShowFor(time.Second * 3)
 	}
+
 }
