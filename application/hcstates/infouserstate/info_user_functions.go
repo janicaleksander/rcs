@@ -316,6 +316,23 @@ func (i *InfoUserScene) SendMessage() {
 			i.errorSection.errorPopup.ShowFor(time.Second * 3)
 
 		}
+		res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.OpenConversation{
+			UserID:         sender,
+			ReceiverID:     i.userListSection.currSelectedUserID,
+			ConversationID: cnvID,
+		}))
+		if err != nil {
+			i.errorSection.errorMessage = err.Error()
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+			return
+		}
+
+		if _, ok := res.(*proto.OpenedConversation); !ok {
+			i.errorSection.errorMessage = "Can't open conversation"
+			i.errorSection.errorPopup.ShowFor(time.Second * 3)
+			return
+		}
+
 		res, err = utils.MakeRequest(utils.NewRequest(i.cfg.Ctx, i.cfg.MessageServicePID, &proto.SendMessage{
 			Receiver: i.userListSection.currSelectedUserID,
 			Message: &proto.Message{
@@ -331,16 +348,13 @@ func (i *InfoUserScene) SendMessage() {
 
 			return
 		}
-		if _, ok := res.(*proto.AcceptSend); !ok {
+		if _, ok := res.(*proto.AcceptSend); !ok { //??? TODO
 			v, _ := res.(*proto.Error)
 			i.errorSection.errorMessage = v.Content
 			i.errorSection.errorPopup.ShowFor(time.Second * 3)
-
 		} else {
 			i.infoSection.infoMessage = "Message has sent!"
 			i.errorSection.errorPopup.ShowFor(time.Second * 3)
-			i.errorSection.errorPopup.ShowFor(time.Second * 3)
-
 			i.sendMessageSection.inboxInput.Clear()
 		}
 	}

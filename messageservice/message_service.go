@@ -1,6 +1,8 @@
 package messageservice
 
 import (
+	"reflect"
+
 	"github.com/anthdm/hollywood/actor"
 	"github.com/janicaleksander/bcs/database"
 	"github.com/janicaleksander/bcs/types/proto"
@@ -71,6 +73,13 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 		} else {
 			ctx.Respond(res)
 		}
+	case *proto.OpenConversation:
+		res, err := utils.MakeRequest(utils.NewRequest(ctx, ms.conversationManger, msg))
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(res)
+		}
 	case *proto.GetUserConversations:
 		res, err := utils.MakeRequest(utils.NewRequest(ctx, ms.conversationManger, msg))
 		if err != nil {
@@ -109,7 +118,7 @@ func (ms *MessageService) Receive(ctx *actor.Context) {
 			ctx.Respond(res)
 		}
 	default:
+		utils.Logger.Info("Unsupported type of message", reflect.TypeOf(msg).String())
 
-		_ = msg
 	}
 }

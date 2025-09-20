@@ -284,6 +284,14 @@ message UpdatePresence{
   PresenceType presence = 2;
 }
 
+message OpenConversation{
+  string userID =1;
+  string receiverID=2;
+  string conversationID =3;
+}
+message OpenedConversation{
+
+}
 message OpenAndLoadConversation{
   string userID =1;
   string receiverID=2;

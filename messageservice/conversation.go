@@ -7,6 +7,7 @@ import (
 	"github.com/janicaleksander/bcs/database"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
+	"reflect"
 	"time"
 )
 
@@ -39,7 +40,6 @@ func (c *Conversation) Receive(ctx *actor.Context) {
 		utils.Logger.Info("Conversation has stooped")
 
 	case *proto.SendMessage:
-		n := time.Now()
 		ctxx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		err := c.storage.InsertMessage(ctxx, msg.Message)
@@ -49,12 +49,8 @@ func (c *Conversation) Receive(ctx *actor.Context) {
 			c.sendMessage(ctx, msg)
 			ctx.Respond(&proto.AcceptSend{})
 		}
-
-		fmt.Println("w conv", time.Since(n))
-
 	default:
-		fmt.Println("XD1")
-		_ = msg
+		utils.Logger.Info("Unsupported type of message", reflect.TypeOf(msg).String())
 
 	}
 }

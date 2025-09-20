@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -57,6 +57,11 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.AcceptCreateConversation{})
 			return
 		}
+	case *proto.OpenConversation:
+		if _, ok := cm.conversations[msg.ConversationID]; !ok {
+			cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID, cm.storage), "conversation")
+		}
+		ctx.Respond(&proto.OpenedConversation{})
 	case *proto.OpenAndLoadConversation:
 		if _, ok := cm.conversations[msg.ConversationID]; !ok {
 			cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID, cm.storage), "conversation")
@@ -76,8 +81,6 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		conversations, err := cm.storage.GetUserConversations(c, msg.Id)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
-			fmt.Println(err)
-			//TODO
 		} else {
 			ctx.Respond(&proto.UserConversations{ConvSummary: conversations})
 		}
@@ -87,12 +90,13 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		ok, id, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
-				utils.Logger.Error("DB ERROR fillconversationDB x1", "ERR:", err)
 				ctx.Respond(&proto.Error{Content: err.Error()})
 				return
 			}
 		}
-		if !ok {
+		if ok {
+			ctx.Respond(&proto.FilledConversationID{Id: id})
+		} else {
 			cnv := &proto.Conversation{
 				Id:         uuid.New().String(),
 				SenderID:   msg.SenderID,
@@ -101,21 +105,18 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			err = cm.storage.CreateConversation(c, cnv)
 			if err != nil {
 				ctx.Respond(&proto.Error{Content: err.Error()})
-				utils.Logger.Error("DB ERROR fillconversationDB x2", "ERR", err)
+			} else {
+				ctx.Respond(&proto.FilledConversationID{Id: cnv.Id})
 			}
-			ctx.Respond(&proto.FilledConversationID{Id: cnv.Id})
-			return
 		}
-		ctx.Respond(&proto.FilledConversationID{Id: id})
 	case *proto.GetPresence:
-		resp := ctx.Request(ctx.Parent(), msg, utils.WaitTime)
-		res, _ := resp.Result()
-		if message, ok := res.(*proto.Presence); ok {
-			ctx.Respond(message)
+		res, err := utils.MakeRequest(utils.NewRequest(ctx, ctx.Parent(), msg))
+		if err != nil {
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(message)
+			ctx.Respond(res)
 		}
-	case *proto.SendMessage: // if no ok it means that sb is not online in chat
+	case *proto.SendMessage: // if no ok it means that sb is not online in chat ?? TODO
 		orgSender := ctx.Sender()
 		if _, ok := cm.conversations[msg.Message.ConversationID]; !ok {
 			panic("XDDD")
@@ -141,7 +142,6 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.UsersToNewConversation{Users: users})
 		}
 	default:
-		fmt.Println("#2")
-		_ = msg
+		utils.Logger.Info("Unsupported type of message", reflect.TypeOf(msg).String())
 	}
 }
