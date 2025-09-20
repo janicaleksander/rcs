@@ -8,15 +8,13 @@ import (
 	"github.com/anthdm/hollywood/remote"
 	db "github.com/janicaleksander/bcs/database"
 	"github.com/janicaleksander/bcs/messageservice"
-	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
 )
 
 func main() {
 	config := struct {
 		Messageservice struct {
-			Addr       string `toml:"addr"`
-			ServerAddr string `toml:"serverAddr"`
+			Addr string `toml:"addr"`
 		}
 	}{}
 	_, err := toml.DecodeFile("configproduction/messageservice.toml", &config)
@@ -24,8 +22,7 @@ func main() {
 		utils.Logger.Error(err.Error())
 		return
 	}
-	if len(strings.TrimSpace(config.Messageservice.Addr)) == 0 ||
-		len(strings.TrimSpace(config.Messageservice.ServerAddr)) == 0 {
+	if len(strings.TrimSpace(config.Messageservice.Addr)) == 0 {
 		utils.Logger.Error("bad server cfg file")
 		return
 	}
@@ -42,17 +39,8 @@ func main() {
 	}
 	dbase := dbManager.GetDB()
 	pg := &db.Postgres{Conn: dbase}
-	//TODO I don't know if i need a connection between MSSVC and server
-	serverPID := actor.NewPID(config.Messageservice.ServerAddr, "server/primary")
-	//ping server
-	resp := e.Request(serverPID, &proto.IsServerRunning{}, utils.WaitTime)
-	_, err = resp.Result()
-	if err != nil {
-		utils.Logger.Error("server is not running", "err: ", err)
-		return
-	}
 	utils.Logger.Info("messageservice is running on: ", "Address: ", config.Messageservice.Addr)
-	messageService := messageservice.NewMessageService(serverPID, pg)
+	messageService := messageservice.NewMessageService(pg)
 	e.Spawn(messageService, "messageService", actor.WithID("primary")) //this is creating new app
 
 	//we need a block because actor is non-blocking,

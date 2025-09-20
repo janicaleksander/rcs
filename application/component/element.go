@@ -42,6 +42,7 @@ type ConversationTab struct {
 type Message struct {
 	Bounds    rl.Rectangle
 	Content   string
+	SentAt    string
 	OriginalY float32
 }
 

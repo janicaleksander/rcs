@@ -1,11 +1,14 @@
 package messageservice
 
 import (
+	"context"
 	"fmt"
-
 	"github.com/anthdm/hollywood/actor"
+	"github.com/janicaleksander/bcs/database"
 	"github.com/janicaleksander/bcs/types/proto"
 	"github.com/janicaleksander/bcs/utils"
+	"reflect"
+	"time"
 )
 
 // TODO   we have to stop actor when presence change
@@ -13,13 +16,15 @@ import (
 type Conversation struct {
 	id        string
 	receivers []string
+	storage   database.Storage
 }
 
-func NewConversation(receivers []string, id string) actor.Producer {
+func NewConversation(receivers []string, id string, storage database.Storage) actor.Producer {
 	return func() actor.Receiver {
 		return &Conversation{
 			receivers: receivers,
 			id:        id,
+			storage:   storage,
 		}
 	}
 
@@ -33,55 +38,37 @@ func (c *Conversation) Receive(ctx *actor.Context) {
 		utils.Logger.Info("Conversation has started")
 	case actor.Stopped:
 		utils.Logger.Info("Conversation has stooped")
+
 	case *proto.SendMessage:
-		//if store success then ->
-		resp := ctx.Request(ctx.Parent(), &proto.StoreMessage{Message: msg.Message}, utils.WaitTime)
-		res, err := resp.Result()
+		ctxx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := c.storage.InsertMessage(ctxx, msg.Message)
 		if err != nil {
-			panic(err.Error() + "cnv")
-		}
-		if _, ok := res.(*proto.AcceptStoreMessage); ok {
-			ctx.Respond(&proto.AcceptSend{})
-		} else {
 			ctx.Respond(&proto.Error{Content: err.Error()})
-			utils.Logger.Error("SOME ERROR in sending ")
-			return
+		} else {
+			c.sendMessage(ctx, msg)
+			ctx.Respond(&proto.AcceptSend{})
 		}
-		c.sendMessage(ctx, msg)
 	default:
-		_ = msg
+		utils.Logger.Info("Unsupported type of message", reflect.TypeOf(msg).String())
 
 	}
 }
 
 func (c *Conversation) sendMessage(ctx *actor.Context, msg *proto.SendMessage) {
+	n := time.Now()
 	// i think i will do this: sender makes a messange in instant its added to []Message on client
 	// then is sending throguh ctx request to send to receiver
 	for _, receiver := range c.receivers { // cause i cant push directly to message ???
-		if true || receiver != msg.Message.SenderID {
-			resp := ctx.Request(ctx.Parent(), &proto.GetPresence{Id: receiver}, utils.WaitTime)
-			//TODO do this _ err
-			res, err := resp.Result()
-			if err != nil {
-				panic("error conversation sendMessage")
-			}
-			if message, ok := res.(*proto.Presence); ok {
-				switch message.Presence.Type.(type) {
-				case *proto.PresenceType_Outbox:
-					//only to db in receive loop
-				case *proto.PresenceType_Inbox:
-					//send
-					ctx.Send(ctx.Parent(), &proto.DeliverMessage{
-						Receiver: receiver,
-						Message:  msg.Message,
-					})
-					fmt.Println("WYSYLAM", msg.Message, "do", ctx.Parent())
-				default:
-					utils.Logger.Error("Brak ustawionego typu")
-				}
-			}
+		if receiver != msg.Message.SenderID {
+
+			ctx.Send(ctx.Parent(), &proto.DeliverMessage{
+				Receiver: receiver,
+				Message:  msg.Message,
+			})
 		}
 	}
+	fmt.Println("XD", time.Since(n))
 }
 
 //we have to kill this actor somehow

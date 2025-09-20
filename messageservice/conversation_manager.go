@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
@@ -36,12 +36,11 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		utils.Logger.Info("Conversation manager has started")
 	case actor.Stopped:
 		utils.Logger.Info("Conversation manager has stooped")
-	case *proto.CreateConversation:
+	case *proto.CreateConversation: // ?
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		exists, _, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
 		if exists || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
-			utils.Logger.Error("Here x1", err, exists)
 			ctx.Respond(&proto.Error{Content: err.Error()})
 			return
 		}
@@ -52,26 +51,27 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		}
 		err = cm.storage.CreateConversation(c, cnv)
 		if err != nil {
-			utils.Logger.Error("Here x2")
-
 			ctx.Respond(&proto.Error{Content: err.Error()})
 			return
 		} else {
-			utils.Logger.Error("Here x3")
-
 			ctx.Respond(&proto.AcceptCreateConversation{})
 			return
 		}
+	case *proto.OpenConversation:
+		if _, ok := cm.conversations[msg.ConversationID]; !ok {
+			cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID, cm.storage), "conversation")
+		}
+		ctx.Respond(&proto.OpenedConversation{})
 	case *proto.OpenAndLoadConversation:
-		cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID), "conversation")
+		if _, ok := cm.conversations[msg.ConversationID]; !ok {
+			cm.conversations[msg.ConversationID] = ctx.SpawnChild(NewConversation([]string{msg.UserID, msg.ReceiverID}, msg.ConversationID, cm.storage), "conversation")
+		}
 		// db call
-		fmt.Println(cm.conversations)
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		fmt.Println(msg.ConversationID)
 		msgs, err := cm.storage.LoadConversation(c, msg.ConversationID)
 		if err != nil {
-			//TODO
+			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
 			ctx.Respond(&proto.LoadedConversation{Messages: msgs})
 		}
@@ -81,8 +81,6 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		conversations, err := cm.storage.GetUserConversations(c, msg.Id)
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
-			fmt.Println(err)
-			//TODO
 		} else {
 			ctx.Respond(&proto.UserConversations{ConvSummary: conversations})
 		}
@@ -92,12 +90,13 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 		ok, id, err := cm.storage.DoConversationExists(c, msg.SenderID, msg.ReceiverID)
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
-				utils.Logger.Error("DB ERROR fillconversationDB x1", "ERR:", err)
 				ctx.Respond(&proto.Error{Content: err.Error()})
 				return
 			}
 		}
-		if !ok {
+		if ok {
+			ctx.Respond(&proto.FilledConversationID{Id: id})
+		} else {
 			cnv := &proto.Conversation{
 				Id:         uuid.New().String(),
 				SenderID:   msg.SenderID,
@@ -106,51 +105,32 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			err = cm.storage.CreateConversation(c, cnv)
 			if err != nil {
 				ctx.Respond(&proto.Error{Content: err.Error()})
-				utils.Logger.Error("DB ERROR fillconversationDB x2", "ERR", err)
+			} else {
+				ctx.Respond(&proto.FilledConversationID{Id: cnv.Id})
 			}
-			ctx.Respond(&proto.FilledConversationID{Id: cnv.Id})
-			return
 		}
-		ctx.Respond(&proto.FilledConversationID{Id: id})
 	case *proto.GetPresence:
-		resp := ctx.Request(ctx.Parent(), msg, utils.WaitTime)
-		res, _ := resp.Result()
-		if message, ok := res.(*proto.Presence); ok {
-			ctx.Respond(message)
-		} else {
-			ctx.Respond(message)
-		}
-	case *proto.SendMessage: // if no ok it means that sb is not online in chat
-		if _, ok := cm.conversations[msg.Message.ConversationID]; !ok {
-			//panic("XDDD")
-			//or sendign through profile also active this, like click send also actobve openadnload conv but in other message
-		}
-		orgSender := ctx.Sender()
-		//after ctx.Request->result ctx.Sender() is changing to actor that answering on request
-		resp := ctx.Request(cm.conversations[msg.Message.ConversationID], msg, utils.WaitTime)
-		res, err := resp.Result()
-		if err != nil {
-			//panic(err.Error() + "cnv manager")
-		}
-		//here actor receive another message form this resp and change a orignal ctx of messageservicePID so cause of that
-		//we had to memorize orgSender
-		if message, ok := res.(*proto.AcceptSend); ok {
-			ctx.Send(orgSender, message)
-		} else {
-			ctx.Send(orgSender, message)
-		}
-		fmt.Println("SENDER po", ctx.Sender())
-	case *proto.StoreMessage:
-		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		err := cm.storage.InsertMessage(c, msg.Message)
+		res, err := utils.MakeRequest(utils.NewRequest(ctx, ctx.Parent(), msg))
 		if err != nil {
 			ctx.Respond(&proto.Error{Content: err.Error()})
 		} else {
-			ctx.Respond(&proto.AcceptStoreMessage{})
+			ctx.Respond(res)
 		}
+	case *proto.SendMessage: // if no ok it means that sb is not online in chat ?? TODO
+		orgSender := ctx.Sender()
+		if _, ok := cm.conversations[msg.Message.ConversationID]; !ok {
+			panic("XDDD")
+			//or sendign through profile also active this, like click send also actobve openadnload conv but in other message
+		}
+		//after ctx.Request->result ctx.Sender() is changing to actor that answering on request
+		res, err := utils.MakeRequest(utils.NewRequest(ctx, cm.conversations[msg.Message.ConversationID], msg))
+		if err != nil {
+			ctx.Send(orgSender, &proto.Error{Content: err.Error()})
+		} else {
+			ctx.Send(orgSender, res)
+		}
+
 	case *proto.DeliverMessage:
-		fmt.Println("odebralem od cnv", msg.Message, ctx.Parent())
 		ctx.Send(ctx.Parent(), msg)
 	case *proto.GetUsersToNewConversation:
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -162,6 +142,6 @@ func (cm *ConversationManager) Receive(ctx *actor.Context) {
 			ctx.Respond(&proto.UsersToNewConversation{Users: users})
 		}
 	default:
-		_ = msg
+		utils.Logger.Info("Unsupported type of message", reflect.TypeOf(msg).String())
 	}
 }
