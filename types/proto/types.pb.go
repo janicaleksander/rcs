@@ -4851,6 +4851,118 @@ func (x *KillConversation) GetConversationID() string {
 	return ""
 }
 
+type GetUnitInformation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UnitID        string                 `protobuf:"bytes,1,opt,name=unitID,proto3" json:"unitID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUnitInformation) Reset() {
+	*x = GetUnitInformation{}
+	mi := &file_types_proto_msgTypes[101]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUnitInformation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUnitInformation) ProtoMessage() {}
+
+func (x *GetUnitInformation) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[101]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUnitInformation.ProtoReflect.Descriptor instead.
+func (*GetUnitInformation) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{101}
+}
+
+func (x *GetUnitInformation) GetUnitID() string {
+	if x != nil {
+		return x.UnitID
+	}
+	return ""
+}
+
+type UnitInformation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UnitID        string                 `protobuf:"bytes,1,opt,name=unitID,proto3" json:"unitID,omitempty"`
+	Users         []*User                `protobuf:"bytes,2,rep,name=users,proto3" json:"users,omitempty"`
+	Devices       []*Device              `protobuf:"bytes,3,rep,name=devices,proto3" json:"devices,omitempty"`
+	Tasks         []*Task                `protobuf:"bytes,4,rep,name=tasks,proto3" json:"tasks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnitInformation) Reset() {
+	*x = UnitInformation{}
+	mi := &file_types_proto_msgTypes[102]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnitInformation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnitInformation) ProtoMessage() {}
+
+func (x *UnitInformation) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[102]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnitInformation.ProtoReflect.Descriptor instead.
+func (*UnitInformation) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{102}
+}
+
+func (x *UnitInformation) GetUnitID() string {
+	if x != nil {
+		return x.UnitID
+	}
+	return ""
+}
+
+func (x *UnitInformation) GetUsers() []*User {
+	if x != nil {
+		return x.Users
+	}
+	return nil
+}
+
+func (x *UnitInformation) GetDevices() []*Device {
+	if x != nil {
+		return x.Devices
+	}
+	return nil
+}
+
+func (x *UnitInformation) GetTasks() []*Task {
+	if x != nil {
+		return x.Tasks
+	}
+	return nil
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 const file_types_proto_rawDesc = "" +
@@ -5128,7 +5240,14 @@ const file_types_proto_rawDesc = "" +
 	"\x10UserInformations\x12@\n" +
 	"\x0fuserInformation\x18\x01 \x01(\v2\x16.types.UserInformationR\x0fuserInformation\":\n" +
 	"\x10KillConversation\x12&\n" +
-	"\x0econversationID\x18\x01 \x01(\tR\x0econversationIDB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
+	"\x0econversationID\x18\x01 \x01(\tR\x0econversationID\",\n" +
+	"\x12GetUnitInformation\x12\x16\n" +
+	"\x06unitID\x18\x01 \x01(\tR\x06unitID\"\x98\x01\n" +
+	"\x0fUnitInformation\x12\x16\n" +
+	"\x06unitID\x18\x01 \x01(\tR\x06unitID\x12!\n" +
+	"\x05users\x18\x02 \x03(\v2\v.types.UserR\x05users\x12'\n" +
+	"\adevices\x18\x03 \x03(\v2\r.types.DeviceR\adevices\x12!\n" +
+	"\x05tasks\x18\x04 \x03(\v2\v.types.TaskR\x05tasksB&Z$github.com/janicaleksander/bcs/protob\x06proto3"
 
 var (
 	file_types_proto_rawDescOnce sync.Once
@@ -5142,7 +5261,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 101)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 103)
 var file_types_proto_goTypes = []any{
 	(*Error)(nil),                          // 0: types.Error
 	(*PID)(nil),                            // 1: types.PID
@@ -5245,17 +5364,19 @@ var file_types_proto_goTypes = []any{
 	(*GetUserInformation)(nil),             // 98: types.GetUserInformation
 	(*UserInformations)(nil),               // 99: types.UserInformations
 	(*KillConversation)(nil),               // 100: types.KillConversation
-	(*timestamppb.Timestamp)(nil),          // 101: google.protobuf.Timestamp
+	(*GetUnitInformation)(nil),             // 101: types.GetUnitInformation
+	(*UnitInformation)(nil),                // 102: types.UnitInformation
+	(*timestamppb.Timestamp)(nil),          // 103: google.protobuf.Timestamp
 }
 var file_types_proto_depIdxs = []int32{
-	101, // 0: types.User.las_time_online:type_name -> google.protobuf.Timestamp
+	103, // 0: types.User.las_time_online:type_name -> google.protobuf.Timestamp
 	3,   // 1: types.User.personal:type_name -> types.Personal
-	101, // 2: types.Message.sent_at:type_name -> google.protobuf.Timestamp
-	101, // 3: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
-	101, // 4: types.Task.completionDate:type_name -> google.protobuf.Timestamp
-	101, // 5: types.Task.deadline:type_name -> google.protobuf.Timestamp
+	103, // 2: types.Message.sent_at:type_name -> google.protobuf.Timestamp
+	103, // 3: types.Device.last_time_online:type_name -> google.protobuf.Timestamp
+	103, // 4: types.Task.completionDate:type_name -> google.protobuf.Timestamp
+	103, // 5: types.Task.deadline:type_name -> google.protobuf.Timestamp
 	9,   // 6: types.Pin.location:type_name -> types.Location
-	101, // 7: types.Pin.lastOnline:type_name -> google.protobuf.Timestamp
+	103, // 7: types.Pin.lastOnline:type_name -> google.protobuf.Timestamp
 	4,   // 8: types.UserInformation.user:type_name -> types.User
 	5,   // 9: types.UserInformation.unit:type_name -> types.Unit
 	4,   // 10: types.UserInformation.UnitCommander:type_name -> types.User
@@ -5291,11 +5412,14 @@ var file_types_proto_depIdxs = []int32{
 	10,  // 40: types.UserTaskRes.task:type_name -> types.Task
 	10,  // 41: types.UserTasksRes.tasks:type_name -> types.Task
 	12,  // 42: types.UserInformations.userInformation:type_name -> types.UserInformation
-	43,  // [43:43] is the sub-list for method output_type
-	43,  // [43:43] is the sub-list for method input_type
-	43,  // [43:43] is the sub-list for extension type_name
-	43,  // [43:43] is the sub-list for extension extendee
-	0,   // [0:43] is the sub-list for field type_name
+	4,   // 43: types.UnitInformation.users:type_name -> types.User
+	8,   // 44: types.UnitInformation.devices:type_name -> types.Device
+	10,  // 45: types.UnitInformation.tasks:type_name -> types.Task
+	46,  // [46:46] is the sub-list for method output_type
+	46,  // [46:46] is the sub-list for method input_type
+	46,  // [46:46] is the sub-list for extension type_name
+	46,  // [46:46] is the sub-list for extension extendee
+	0,   // [0:46] is the sub-list for field type_name
 }
 
 func init() { file_types_proto_init() }
@@ -5315,7 +5439,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_types_proto_rawDesc), len(file_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   101,
+			NumMessages:   103,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

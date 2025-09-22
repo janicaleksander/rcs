@@ -250,6 +250,16 @@ func (s *Server) Receive(ctx *actor.Context) {
 		} else {
 			ctx.Respond(&proto.UserInformations{UserInformation: information})
 		}
+	case *proto.GetUnitInformation:
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		usrInformation, err := s.storage.GetUnitInformation(c, msg.UnitID)
+		if err != nil {
+			fmt.Println(err)
+			ctx.Respond(&proto.Error{Content: err.Error()})
+		} else {
+			ctx.Respond(usrInformation)
+		}
 	default:
 		utils.Logger.Warn("server got unknown message", reflect.TypeOf(msg).String())
 
