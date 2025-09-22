@@ -135,4 +135,5 @@ type Storage interface {
 	InsertDevice(ctx context.Context, device *proto.Device) error
 	GetUserInformation(ctx context.Context, userID string) (*proto.UserInformation, error)
 	GetUnitCommander(ctx context.Context, unitID string) (*proto.User, error)
+	GetUnitInformation(ctx context.Context, unitID string) (*proto.UnitInformation, error)
 }

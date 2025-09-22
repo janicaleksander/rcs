@@ -876,3 +876,41 @@ func (p *Postgres) GetUnitCommander(ctx context.Context, unitID string) (*proto.
 	}
 	return p.GetUser(ctx, userID)
 }
+
+func (p *Postgres) GetUnitInformation(ctx context.Context, unitID string) (*proto.UnitInformation, error) {
+	users, err := p.GetUsersInUnit(ctx, unitID)
+	if errors.Is(err, EmptyResError) || errors.Is(err, sql.ErrNoRows) {
+		users = make([]*proto.User, 0)
+	} else if err != nil {
+		return nil, err
+	}
+	devices := make([]*proto.Device, 0, 8)
+	for _, usr := range users {
+		ok, userDevices, err := p.DoesUserHaveDevice(ctx, usr.Id)
+		if err != nil {
+			utils.Logger.Error(err.Error())
+			continue
+		}
+		if ok {
+			devices = append(devices, userDevices...)
+		}
+	}
+
+	tasks := make([]*proto.Task, 0, 8)
+	for _, device := range devices {
+		userTask, err := p.GetUserTasks(ctx, device.Id)
+		if err != nil {
+			utils.Logger.Error(err.Error())
+			continue
+		}
+		tasks = append(tasks, userTask...)
+	}
+
+	ui := &proto.UnitInformation{
+		UnitID:  unitID,
+		Users:   users,
+		Devices: devices,
+		Tasks:   tasks,
+	}
+	return ui, nil
+}

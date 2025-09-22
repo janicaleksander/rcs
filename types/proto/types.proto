@@ -438,3 +438,14 @@ message UserInformations {
 message KillConversation {
   string conversationID =1;
 }
+
+message GetUnitInformation {
+  string unitID = 1;
+}
+message UnitInformation{
+  string unitID = 1;
+  repeated User users = 2;
+  repeated Device devices = 3;
+  repeated Task tasks = 4;
+
+}
