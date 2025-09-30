@@ -30,6 +30,12 @@ Key highlights:
 
 ---
 
+## Configuration
+
+Whole applicaiton is configured by TOML comfiguration files, where user hase to specify IP addresses on which app components should work.
+
+---
+
 ## Tech Stack
 
 - **Backend:** Go, Actor Paradigm  
